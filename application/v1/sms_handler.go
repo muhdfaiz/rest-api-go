@@ -73,7 +73,7 @@ func (sh *SmsHandler) Send(c *gin.Context) {
 	// os.Exit(0)
 
 	smsService := &SmsService{DB: tx}
-	sentSmsData, err := smsService.SendVerificationCode("60174862127", smsData.UserGUID)
+	sentSmsData, err := smsService.SendVerificationCode(smsData.RecipientNo, smsData.UserGUID)
 
 	if err != nil {
 		statusCode, _ := strconv.Atoi(err.Error.Status)

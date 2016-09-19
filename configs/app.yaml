@@ -1,0 +1,29 @@
+# Set applicatication environment.
+# Available value:
+# - local
+# - staging
+# - production
+environment: "local"
+
+# Debug App Status
+debug: "true"
+
+# Debug Database Status
+debug_database: "true"
+
+# Facebook App ID and Secret
+facebook_app_id: "1113476092073214"
+facebook_app_secret: "78ec78c23c1db2b31da2aabb2e66ee59"
+
+# AWS Configs
+aws_access_key_id: "AKIAISDRKR2IUDLU44FA"
+aws_secret_access_key: "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"
+aws_bucket_name: "shoppermate-test"
+aws_region_name: "ap-southeast-1"
+aws_url: "https://s3-ap-southeast-1.amazonaws.com/"
+
+# JWT Secret
+jwt_token_secret: "gN2T5znLzeSTBvdeKPGZBAUdFb6fSrjK"
+
+# Upload Path
+storage_path: "src/bitbucket.org/shoppermate/storages/"

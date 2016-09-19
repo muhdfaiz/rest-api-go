@@ -1,0 +1,16 @@
+# Set Database Host
+db_host: "localhost"
+
+# Set Database Port
+db_port: "3306"
+
+# Set Database Name
+db_name: "shoppermate"
+
+# Set Database Username
+db_username: "root"
+
+# Set Database Password
+db_password: ""
+
+

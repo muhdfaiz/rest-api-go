@@ -1,0 +1,10 @@
+development:
+  driver: mysql
+  open: root:@tcp(localhost:3306)/shoppermate
+  dialect: mysql
+
+test:
+  driver: mysql
+  open: root:@tcp(localhost:3306)/shoppermate_test
+  dialect: mysql
+  import: github.com/go-sql-driver/mysql

@@ -5,7 +5,7 @@ import (
 
 	"github.com/jinzhu/gorm"
 
-	"bitbucket.org/shoppermate/systems"
+	"bitbucket.org/shoppermate-api/systems"
 )
 
 type SmsFactory struct {

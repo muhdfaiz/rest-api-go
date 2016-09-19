@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/jinzhu/gorm"
-	"bitbucket.org/shoppermate/services/filesystem"
-	"bitbucket.org/shoppermate/systems"
+	"bitbucket.org/shoppermate-api/services/filesystem"
+	"bitbucket.org/shoppermate-api/systems"
 )
 
 type UserService struct {
@@ -22,11 +22,11 @@ func (auc *AmazonS3UploadConfig) SetAmazonS3UploadPath() string {
 }
 
 func (auc *AmazonS3UploadConfig) SetLocalUploadPath() string {
-	return os.Getenv("GOPATH") + "src/bitbucket.org/shoppermate/storages/"
+	return os.Getenv("GOPATH") + "src/bitbucket.org/shoppermate-api/storages/"
 }
 
 func (auc *AmazonS3UploadConfig) SetBucketName() string {
-	return Config.Get("app.yaml", "aws_bucket_name", "shoppermate")
+	return Config.Get("app.yaml", "aws_bucket_name", "shoppermate-api")
 }
 
 // UploadProfileImage function used to upload profile image to Amazon S3 if profile_image exist in the request

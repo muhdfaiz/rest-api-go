@@ -6,14 +6,14 @@ import (
 	"log"
 	"os"
 
-	"bitbucket.org/shoppermate/systems"
+	"bitbucket.org/shoppermate-api/systems"
 
 	"github.com/gin-gonic/gin"
 )
 
 // Bootstrap func will initialize application with default configurations
 func Bootstrap() *gin.Engine {
-	fileErrorLog, err := os.OpenFile(fmt.Sprintf("%s/shoppermate_error.log", os.Getenv("GOPATH")), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0777)
+	fileErrorLog, err := os.OpenFile(fmt.Sprintf("%s/shoppermate-api_error.log", os.Getenv("GOPATH")), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0777)
 
 	if err != nil {
 		log.Fatalf("Error opening log file: %v", err)

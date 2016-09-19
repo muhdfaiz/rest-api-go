@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"bitbucket.org/shoppermate/systems"
+	"bitbucket.org/shoppermate-api/systems"
 
 	validator "gopkg.in/go-playground/validator.v8"
 

@@ -4,7 +4,7 @@ import (
 	"github.com/fatih/structs"
 	"github.com/jinzhu/gorm"
 	uuid "github.com/satori/go.uuid"
-	"bitbucket.org/shoppermate/systems"
+	"bitbucket.org/shoppermate-api/systems"
 )
 
 // DeviceFactory will handle all function to create, update and delete device

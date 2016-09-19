@@ -4,7 +4,7 @@ import (
 	"github.com/jinzhu/gorm"
 	uuid "github.com/satori/go.uuid"
 
-	"bitbucket.org/shoppermate/systems"
+	"bitbucket.org/shoppermate-api/systems"
 )
 
 type ReferralCashbackFactory struct {

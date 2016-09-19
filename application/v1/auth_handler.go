@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"bitbucket.org/shoppermate/systems"
+	"bitbucket.org/shoppermate-api/systems"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"

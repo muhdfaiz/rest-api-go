@@ -37,7 +37,7 @@ func (j *Jwt) GenerateJWTToken(userGUID string, phoneNo string, deviceUUID strin
 			ExpiresAt: expired,
 			Id:        deviceUUID,
 			IssuedAt:  currentTimestamp,
-			Issuer:    "http://api.shoppermate.com",
+			Issuer:    "http://api.shoppermate-api.com",
 			NotBefore: currentTimestamp,
 			Subject:   userGUID,
 		},

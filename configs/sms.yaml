@@ -1,6 +1,6 @@
 # SMS Configurations
 mocean_sms_url: "http://183.81.161.84:13016/cgi-bin/sendsms"
-mocean_sms_username: "shoppermate"
+mocean_sms_username: "shoppermate-api"
 mocean_sms_password: "s28Dua3p"
 mocean_sms_coding: 1
 mcoean_sms_subject: "Shopper Mate"

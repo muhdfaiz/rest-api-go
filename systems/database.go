@@ -26,7 +26,7 @@ func (database *Database) setConfigs() {
 	dbPort := configs.Get("database.yaml", "db_port", "3306")
 	dbUsername := configs.Get("database.yaml", "db_username", "root")
 	dbPassword := configs.Get("database.yaml", "db_password", "")
-	dbName := configs.Get("database.yaml", "db_name", "shoppermate")
+	dbName := configs.Get("database.yaml", "db_name", "shoppermate-api")
 
 	database.host = dbHost
 	database.port = dbPort

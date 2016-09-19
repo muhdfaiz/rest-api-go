@@ -1,9 +1,9 @@
 package v1
 
 import (
-	"bitbucket.org/shoppermate/services/facebook"
-	"bitbucket.org/shoppermate/services/filesystem"
-	"bitbucket.org/shoppermate/systems"
+	"bitbucket.org/shoppermate-api/services/facebook"
+	"bitbucket.org/shoppermate-api/services/filesystem"
+	"bitbucket.org/shoppermate-api/systems"
 )
 
 var (

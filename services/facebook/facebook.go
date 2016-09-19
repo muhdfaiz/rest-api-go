@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	fb "github.com/huandu/facebook"
-	"bitbucket.org/shoppermate/systems"
+	"bitbucket.org/shoppermate-api/systems"
 )
 
 var (

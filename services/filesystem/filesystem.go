@@ -8,7 +8,7 @@ import (
 
 	uuid "github.com/satori/go.uuid"
 
-	"bitbucket.org/shoppermate/systems"
+	"bitbucket.org/shoppermate-api/systems"
 	filetype "gopkg.in/h2non/filetype.v0"
 )
 

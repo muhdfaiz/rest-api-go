@@ -1,7 +1,7 @@
 package middlewares
 
 import (
-	"bitbucket.org/shoppermate/systems"
+	"bitbucket.org/shoppermate-api/systems"
 )
 
 var (

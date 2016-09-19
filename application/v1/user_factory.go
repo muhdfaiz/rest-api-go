@@ -1,7 +1,7 @@
 package v1
 
 import (
-	"bitbucket.org/shoppermate/systems"
+	"bitbucket.org/shoppermate-api/systems"
 
 	"github.com/fatih/structs"
 	"github.com/jinzhu/gorm"

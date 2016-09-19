@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"strings"
 
-	"bitbucket.org/shoppermate/application/v1"
-	"bitbucket.org/shoppermate/systems"
+	"bitbucket.org/shoppermate-api/application/v1"
+	"bitbucket.org/shoppermate-api/systems"
 
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"

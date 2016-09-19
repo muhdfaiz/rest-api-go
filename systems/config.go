@@ -14,7 +14,7 @@ type Configs struct {
 // Get value from config file using Simple YAML package
 func (conf *Configs) Get(fileName string, key string, defaultValue string) string {
 	helpers := &Helpers{}
-	file := helpers.StrConcat(os.Getenv("GOPATH"), "src/bitbucket.org/shoppermate/configs/", fileName)
+	file := helpers.StrConcat(os.Getenv("GOPATH"), "src/bitbucket.org/shoppermate-api/configs/", fileName)
 
 	// Read YAML Config File
 	source, err := ioutil.ReadFile(file)

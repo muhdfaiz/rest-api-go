@@ -2,9 +2,9 @@ package application
 
 import (
 	"github.com/gin-gonic/gin"
-	"bitbucket.org/shoppermate/application/v1"
-	"bitbucket.org/shoppermate/middlewares"
-	"bitbucket.org/shoppermate/systems"
+	"bitbucket.org/shoppermate-api/application/v1"
+	"bitbucket.org/shoppermate-api/middlewares"
+	"bitbucket.org/shoppermate-api/systems"
 )
 
 func Database() gin.HandlerFunc {

@@ -10,7 +10,7 @@ package filesystem
 // 	"strings"
 // 	"time"
 
-// 	"bitbucket.org/shoppermate/systems"
+// 	"bitbucket.org/shoppermate-api/systems"
 
 // 	filetype "gopkg.in/h2non/filetype.v0"
 
@@ -55,12 +55,12 @@ package filesystem
 
 // // Get function used to retrieve storage path for file
 // func (s *Storage) Get() string {
-// 	return os.Getenv("GOPATH") + "src/bitbucket.org/shoppermate/storage/"
+// 	return os.Getenv("GOPATH") + "src/bitbucket.org/shoppermate-api/storage/"
 // }
 
 // // Get function used to retrieve bucket name for Amazon S3
 // func (a *AmazonS3) Get() string {
-// 	return Config.Get("app.yaml", "aws_bucket_name", "shoppermate")
+// 	return Config.Get("app.yaml", "aws_bucket_name", "shoppermate-api")
 // }
 
 // // UploadToAmazonS3Storage is a function to upload file to Amazon S3.

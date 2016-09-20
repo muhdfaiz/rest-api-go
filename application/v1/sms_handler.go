@@ -117,7 +117,7 @@ func (sh *SmsHandler) Verify(c *gin.Context) {
 
 	// Return error message if device uuid not exist
 	if device.UUID == "" {
-		c.JSON(http.StatusBadRequest, Error.ResourceNotFoundError("Device", "phone_no", smsData.DeviceUUID))
+		c.JSON(http.StatusBadRequest, Error.ResourceNotFoundError("Device", "uuid", smsData.DeviceUUID))
 		return
 	}
 

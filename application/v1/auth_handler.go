@@ -1,7 +1,6 @@
 package v1
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -13,32 +12,32 @@ import (
 
 type AuthHandler struct{}
 
+// LoginViaPhone used to login user via phone no.
 func (ah *AuthHandler) LoginViaPhone(c *gin.Context) {
+	c.Writer.Header().Set("Content-Type", "application/json; charset=utf-8")
+
 	db := c.MustGet("DB").(*gorm.DB)
 	tx := db.Begin()
 
-	c.Writer.Header().Set("Content-Type", "application/json; charset=utf-8")
-
 	authData := &LoginViaPhone{}
 
-	// Bind request based on content type and validate request data
+	// Bind request based on content type and validate request data.
 	if err := Binding.Bind(authData, c); err != nil {
-		statusCode, _ := strconv.Atoi(err.Error.Status)
-		c.JSON(statusCode, err)
+		c.JSON(http.StatusBadRequest, err)
 		return
 	}
 
+	// Retrieve user by phone_no.
 	userRepository := &UserRepository{DB: tx}
 	user := userRepository.GetByPhoneNo(authData.PhoneNo)
 
+	// If user phone_no empty return error message.
 	if user.PhoneNo == "" {
-		c.JSON(http.StatusBadRequest, ErrorMesg.GenericError(strconv.Itoa(http.StatusBadRequest), systems.ResourceNotFound,
-			fmt.Sprintf(systems.TitleResourceNotFoundError, "User"), "message",
-			fmt.Sprintf(systems.ErrorResourceNotFound, "User", "phone_no", user.PhoneNo)))
+		c.JSON(http.StatusBadRequest, Error.ResourceNotFoundError("User", "phone_no", user.PhoneNo))
 		return
 	}
 
-	// Send SMS verification code and soft delete device if user change the phone no
+	// Send SMS verification code and soft delete device if user change the phone no.
 	smsService := &SmsService{DB: tx}
 	_, err := smsService.SendVerificationCode(user.PhoneNo, user.GUID)
 
@@ -47,55 +46,58 @@ func (ah *AuthHandler) LoginViaPhone(c *gin.Context) {
 		c.JSON(errorCode, err)
 		return
 	}
-	tx.Commit()
+
 	result := make(map[string]string)
 	result["message"] = "Successfully sent sms to " + user.PhoneNo
+
+	tx.Commit()
 	c.JSON(http.StatusOK, gin.H{"data": result})
 }
 
+// LoginViaFacebook function used to login user via facebook
 func (ah *AuthHandler) LoginViaFacebook(c *gin.Context) {
+	c.Writer.Header().Set("Content-Type", "application/json; charset=utf-8")
+
 	db := c.MustGet("DB").(*gorm.DB)
 	tx := db.Begin()
-
-	c.Writer.Header().Set("Content-Type", "application/json; charset=utf-8")
 
 	authData := &LoginViaFacebook{}
 
 	// Bind request based on content type and validate request data
 	if err := Binding.Bind(authData, c); err != nil {
-		statusCode, _ := strconv.Atoi(err.Error.Status)
-		c.JSON(statusCode, err)
+		c.JSON(http.StatusBadRequest, err)
 		return
 	}
 
+	// Retrieve user bu facebook_id
 	userRepository := &UserRepository{DB: tx}
 	user := userRepository.GetFacebookID(authData.FacebookID)
 
-	if user.GUID == "" {
-		c.JSON(http.StatusBadRequest, ErrorMesg.GenericError(strconv.Itoa(http.StatusBadRequest), systems.ResourceNotFound,
-			fmt.Sprintf(systems.TitleResourceNotFoundError, "User"), "message",
-			fmt.Sprintf(systems.ErrorResourceNotFound, "User", "facebook_id", authData.FacebookID)))
+	// If facebook_id empty return error message
+	if user.FacebookID == "" {
+		c.JSON(http.StatusBadRequest, Error.ResourceNotFoundError("User", "facebook_id", authData.FacebookID))
 		return
 	}
 
+	// Retrieve device by UUID and GUID and ignored deleted_at column
 	deviceRepository := DeviceRepository{DB: tx}
 	device := deviceRepository.GetByUUIDAndUserGUIDUnscoped(authData.DeviceUUID, user.GUID)
 
 	// Return error message if device uuid not exist
 	if device.UUID == "" {
-		c.JSON(http.StatusBadRequest, ErrorMesg.GenericError(strconv.Itoa(http.StatusBadRequest), systems.ResourceNotFound,
-			fmt.Sprintf(systems.TitleResourceNotFoundError, "Device"), "message",
-			fmt.Sprintf(systems.ErrorResourceNotFound, "Device", "uuid", device.UUID)))
+		c.JSON(http.StatusBadRequest, Error.ResourceNotFoundError("Device", "uuid", device.UUID))
 		return
 	}
 
+	// Reactivate device by set null to deleted_at column in devices table
 	result := tx.Unscoped().Model(&Device{}).Update("deleted_at", nil)
 	if result.Error != nil || result.RowsAffected == 0 {
 		tx.Rollback()
-		c.JSON(http.StatusInternalServerError, ErrorMesg.InternalServerError(result.Error, systems.DatabaseError))
+		c.JSON(http.StatusInternalServerError, Error.InternalServerError(result.Error, systems.DatabaseError))
 		return
 	}
 
+	// Generate new JWT Token
 	jwt := &systems.Jwt{}
 	jwtToken, err := jwt.GenerateJWTToken(user.GUID, user.PhoneNo, device.UUID)
 
@@ -108,23 +110,41 @@ func (ah *AuthHandler) LoginViaFacebook(c *gin.Context) {
 
 }
 
+// Refresh function used to refresh device token. Example when user close the app and open the app again,
+// app must request this endpoint to avoid token expired
+func (ah *AuthHandler) Refresh(c *gin.Context) {
+	tokenData := c.MustGet("Token").(map[string]string)
+
+	// Generate new JWT Token
+	jwt := &systems.Jwt{}
+	jwtToken, err := jwt.GenerateJWTToken(tokenData["user_guid"], tokenData["user_phone_no"], tokenData["device_uuid"])
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err)
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": jwtToken})
+}
+
+// Logout function used to logout user from application.
+// System will soft delete device by set the time value to column deleted_at
 func (ah *AuthHandler) Logout(c *gin.Context) {
 	db := c.MustGet("DB").(*gorm.DB)
 	tx := db.Begin()
 
 	tokenData := c.MustGet("Token").(map[string]string)
 
+	// Retrieve device by UUID and User GUID
 	deviceRepository := DeviceRepository{DB: tx}
 	device := deviceRepository.GetByUUIDAndUserGUID(tokenData["device_uuid"], tokenData["user_guid"])
 
-	// Return error message if device uuid not exist
+	// If device uuid empty return error message
 	if device.UUID == "" {
-		c.JSON(http.StatusBadRequest, ErrorMesg.GenericError(strconv.Itoa(http.StatusBadRequest), systems.ResourceNotFound,
-			fmt.Sprintf(systems.TitleResourceNotFoundError, "Device"), "message",
-			fmt.Sprintf(systems.ErrorResourceNotFound, "Device", "uuid", device.UUID)))
+		c.JSON(http.StatusBadRequest, Error.ResourceNotFoundError("Device", "uuid", device.UUID))
 		return
 	}
 
+	// Soft delete device by set current time to deleted_at column
 	deviceFactory := &DeviceFactory{DB: tx}
 	err := deviceFactory.Delete("uuid", device.UUID)
 
@@ -134,8 +154,10 @@ func (ah *AuthHandler) Logout(c *gin.Context) {
 		return
 	}
 
-	tx.Commit()
+	// Response data
 	result := make(map[string]string)
 	result["message"] = "Successfully logout"
+
+	tx.Commit()
 	c.JSON(http.StatusOK, gin.H{"data": result})
 }

@@ -7,18 +7,14 @@ import (
 	"mime/multipart"
 	"os"
 
+	"bitbucket.org/shoppermate-api/systems"
+
 	filetype "gopkg.in/h2non/filetype.v0"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
-
-	"bitbucket.org/shoppermate-api/systems"
-)
-
-var (
-	Config = &systems.Configs{}
 )
 
 type AmazonS3ServiceUpload struct {
@@ -45,7 +41,7 @@ func (asu *AmazonS3ServiceUpload) Upload(s3uploadConfig S3UploadConfigInterface,
 	// Read file
 	localFile, err1 := os.Open(s3uploadConfig.SetLocalUploadPath() + uploadedFile["name"])
 	if err1 != nil {
-		return nil, ErrorMesg.InternalServerError(err1.Error(), systems.CannotReadFile)
+		return nil, Error.InternalServerError(err1.Error(), systems.CannotReadFile)
 	}
 	defer localFile.Close()
 
@@ -76,13 +72,13 @@ func (asu *AmazonS3ServiceUpload) Upload(s3uploadConfig S3UploadConfigInterface,
 
 	_, err2 := awsSession.PutObject(params)
 	if err2 != nil {
-		return nil, ErrorMesg.InternalServerError(err2.Error(), systems.ErrorAmazonService)
+		return nil, Error.InternalServerError(err2.Error(), systems.ErrorAmazonService)
 	}
 
 	// Remove Local File
 	err2 = os.Remove(uploadedFile["path"])
 	if err2 != nil {
-		return nil, ErrorMesg.InternalServerError(err2.Error(), systems.CannotDeleteFile)
+		return nil, Error.InternalServerError(err2.Error(), systems.CannotDeleteFile)
 	}
 
 	uploadedFile["path"] = fmt.Sprintf("https://s3-%s.amazonaws.com/%s%s%s", Config.Get("app.yaml", "aws_region_name", "ap-southeast-1"),
@@ -100,12 +96,12 @@ func (asu *AmazonS3ServiceUpload) GetFileType(filePath string) (string, *systems
 	buffer, err := ioutil.ReadFile(filePath)
 
 	if err != nil {
-		return "", ErrorMesg.InternalServerError(err.Error(), systems.CannotReadFile)
+		return "", Error.InternalServerError(err.Error(), systems.CannotReadFile)
 	}
 
 	filetype, err := filetype.Match(buffer)
 	if err != nil {
-		return "", ErrorMesg.InternalServerError(err.Error(), systems.CannotDetectFileType)
+		return "", Error.InternalServerError(err.Error(), systems.CannotDetectFileType)
 	}
 
 	return filetype.Extension, nil
@@ -117,7 +113,7 @@ func (asu *AmazonS3ServiceUpload) SetCredential() (*credentials.Credentials, *sy
 
 	_, err1 := creds.Get()
 	if err1 != nil {
-		return nil, ErrorMesg.InternalServerError(err1.Error(), systems.ErrorAmazonService)
+		return nil, Error.InternalServerError(err1.Error(), systems.ErrorAmazonService)
 	}
 
 	return creds, nil

@@ -3,14 +3,14 @@ package facebook
 import (
 	"fmt"
 
-	fb "github.com/huandu/facebook"
 	"bitbucket.org/shoppermate-api/systems"
+	fb "github.com/huandu/facebook"
 )
 
 var (
-	Config    = &systems.Configs{}
-	ErrorMesg = &systems.Error{}
-	Helper    = &systems.Helpers{}
+	Config = &systems.Configs{}
+	Error  = &systems.Error{}
+	Helper = &systems.Helpers{}
 )
 
 // FacebookService type

@@ -1,10 +1,9 @@
 package v1
 
 import (
+	"bitbucket.org/shoppermate-api/systems"
 	"github.com/jinzhu/gorm"
 	uuid "github.com/satori/go.uuid"
-
-	"bitbucket.org/shoppermate-api/systems"
 )
 
 type ReferralCashbackFactory struct {
@@ -24,7 +23,7 @@ func (rcf *ReferralCashbackFactory) CreateReferralCashbackFactory(referrerGUID s
 
 	if result.Error != nil || result.RowsAffected == 0 {
 		rcf.DB.Rollback()
-		return nil, ErrorMesg.InternalServerError(result.Error, systems.DatabaseError)
+		return nil, Error.InternalServerError(result.Error, systems.DatabaseError)
 	}
 
 	return result.Value, nil

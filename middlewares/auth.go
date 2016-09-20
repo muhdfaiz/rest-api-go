@@ -8,7 +8,6 @@ import (
 
 	"bitbucket.org/shoppermate-api/application/v1"
 	"bitbucket.org/shoppermate-api/systems"
-
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
@@ -27,8 +26,8 @@ func Auth() gin.HandlerFunc {
 		authorizationHeader := c.Request.Header["Authorization"]
 
 		if authorizationHeader == nil {
-			ErrorMesg := &systems.Error{}
-			c.JSON(http.StatusBadRequest, ErrorMesg.GenericError(strconv.Itoa(http.StatusBadRequest), systems.TokenNotValid,
+			Error := &systems.Error{}
+			c.JSON(http.StatusBadRequest, Error.GenericError(strconv.Itoa(http.StatusBadRequest), systems.TokenNotValid,
 				systems.TitleErrorTokenNotValid, "", systems.ErrorTokenNotValid))
 			c.Abort()
 			return
@@ -37,8 +36,8 @@ func Auth() gin.HandlerFunc {
 		splitAuthorizationHeader := strings.SplitN(authorizationHeader[0], " ", 2)
 
 		if len(splitAuthorizationHeader) != 2 {
-			ErrorMesg := &systems.Error{}
-			c.JSON(http.StatusBadRequest, ErrorMesg.GenericError(strconv.Itoa(http.StatusBadRequest), systems.TokenNotValid,
+			Error := &systems.Error{}
+			c.JSON(http.StatusBadRequest, Error.GenericError(strconv.Itoa(http.StatusBadRequest), systems.TokenNotValid,
 				systems.TitleErrorTokenNotValid, "", systems.ErrorTokenNotValid))
 			c.Abort()
 			return
@@ -63,7 +62,7 @@ func Auth() gin.HandlerFunc {
 			result := db.Where("uuid = ? AND user_guid = ?", claims.Id, claims.Subject).Find(&v1.Device{})
 
 			if result.RowsAffected == 0 {
-				c.JSON(http.StatusBadRequest, ErrorMesg.GenericError(strconv.Itoa(http.StatusBadRequest), systems.TokenNotValid,
+				c.JSON(http.StatusBadRequest, Error.GenericError(strconv.Itoa(http.StatusBadRequest), systems.TokenNotValid,
 					systems.TitleErrorTokenNotValid, "", systems.ErrorTokenNotValid))
 				c.Abort()
 				return
@@ -72,16 +71,17 @@ func Auth() gin.HandlerFunc {
 			tokenData := make(map[string]string)
 			tokenData["device_uuid"] = claims.Id
 			tokenData["user_guid"] = claims.Subject
+			tokenData["user_phone_no"] = claims.PhoneNo
+
 			c.Set("Token", tokenData)
 			c.Next()
 			return
 		}
 
 		fmt.Println(err.Error())
-		c.JSON(http.StatusBadRequest, ErrorMesg.GenericError(strconv.Itoa(http.StatusBadRequest), systems.TokenNotValid,
+		c.JSON(http.StatusBadRequest, Error.GenericError(strconv.Itoa(http.StatusBadRequest), systems.TokenNotValid,
 			systems.TitleErrorTokenNotValid, "", systems.ErrorTokenNotValid))
 		c.Abort()
-
 		return
 
 	}

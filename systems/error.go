@@ -34,6 +34,7 @@ const (
 	CannotCreateResource         = "1023"
 	FailedToGenerateToken        = "1024"
 	TokenNotValid                = "1025"
+	TokenIdentityNotMatch        = "1026"
 
 	TitleValidationError         = "Validation failed."
 	TitleInternalServerError     = "Internal server error."
@@ -53,6 +54,7 @@ const (
 	TItleCannotUpdateResource    = "Failed to update %s with %s %s"
 	TitleFailedToGenerateToken   = "Failed to generate Token"
 	TitleErrorTokenNotValid      = "Access token error"
+	TitleTokenIdentityNotMatch   = "Your access token belong to other user"
 
 	ErrorValidationRequired = "The %s field is required."
 	ErrorValidationUUID     = "The %s field is not valid uuid."
@@ -77,6 +79,7 @@ const (
 	ErrorResourceNotFound        = "%s with %s %s not exists in system."
 	ErrorVerificationCodeInvalid = "The verification code you entered %s is invalid."
 	ErrorTokenNotValid           = "The access token you sent could not be found or is invalid."
+	ErrorTokenIdentityNotMatch   = "Cannot %s because your access token belong to other user. Please use your own access token."
 )
 
 type ErrorMessage struct{}
@@ -152,7 +155,29 @@ func (e Error) InvalidFileTypeError(allowFileType string) *ErrorData {
 	}
 }
 
-// DBError will return 500 Internal Server Error
+func (e Error) TokenIdentityNotMatchError(text string) *ErrorData {
+	return &ErrorData{
+		Error: &ErrorFormat{
+			Status: strconv.Itoa(http.StatusBadRequest),
+			Code:   TokenIdentityNotMatch,
+			Title:  TitleTokenIdentityNotMatch,
+			Detail: map[string]interface{}{"message": fmt.Sprintf(ErrorTokenIdentityNotMatch, text)},
+		},
+	}
+}
+
+func (e Error) ResourceNotFoundError(resource string, attribute string, value string) *ErrorData {
+	return &ErrorData{
+		Error: &ErrorFormat{
+			Status: strconv.Itoa(http.StatusBadRequest),
+			Code:   ResourceNotFound,
+			Title:  fmt.Sprintf(TitleResourceNotFoundError, resource),
+			Detail: map[string]interface{}{attribute: fmt.Sprintf(ErrorResourceNotFound, resource, attribute, value)},
+		},
+	}
+}
+
+// DBError will return 500 sInternal Server Error
 func (e Error) DBError(errors interface{}) *ErrorData {
 	config := Configs{}
 	errorFormat := &ErrorFormat{}
@@ -205,16 +230,6 @@ func (e Error) ValidationErrors(errors map[string]*validator.FieldError) *ErrorD
 	errorMessages := make(map[string]string)
 	for _, errMsg := range errors {
 		var message string
-		// fmt.Println(errMsg.ActualTag)
-		// fmt.Println(errMsg.Field)
-		// fmt.Println(errMsg.FieldNamespace)
-		// fmt.Println(errMsg.Kind)
-		// fmt.Println(errMsg.Name)
-		// fmt.Println(errMsg.NameNamespace)
-		// fmt.Println(errMsg.Param)
-		// fmt.Println(errMsg.Tag)
-		// fmt.Println(errMsg.Type)
-		// fmt.Println(errMsg.Value)
 
 		// Set error message based on validation rule
 		switch errMsg.ActualTag {

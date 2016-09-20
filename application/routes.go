@@ -1,20 +1,10 @@
 package application
 
 import (
-	"github.com/gin-gonic/gin"
 	"bitbucket.org/shoppermate-api/application/v1"
 	"bitbucket.org/shoppermate-api/middlewares"
-	"bitbucket.org/shoppermate-api/systems"
+	"github.com/gin-gonic/gin"
 )
-
-func Database() gin.HandlerFunc {
-	database := &systems.Database{}
-	db := database.Connect()
-	return func(c *gin.Context) {
-		c.Set("DB", db)
-		c.Next()
-	}
-}
 
 // SetRoutes will set all routes across the API
 func SetRoutes(router *gin.Engine) {
@@ -23,50 +13,40 @@ func SetRoutes(router *gin.Engine) {
 	deviceHandler := v1.DeviceHandler{}
 	authHandler := v1.AuthHandler{}
 
-	router.Use(Database())
+	router.Use(middlewares.Loader())
 
-	// Simple group: v1
 	version1 := router.Group("/v1")
 	{
-
-		// Public routes
+		// Public Routes
 		// Device Routes
 		version1.POST("/devices", deviceHandler.Create)
 		version1.PATCH("/devices/:uuid", deviceHandler.Update)
 
 		// User Routes
-		// Create User Route
 		version1.POST("/users", userHandler.Create)
 
 		// SMS Routes
-		// Send SMS Route
 		version1.POST("/sms", smsHandler.Send)
-		// Verify SMS Verification Code Route
 		version1.POST("/sms/verifications", smsHandler.Verify)
 
 		// Authentication Routes
-		// Login via phone no Route
 		version1.POST("/auth/login/phone", authHandler.LoginViaPhone)
 		version1.POST("/auth/login/facebook", authHandler.LoginViaFacebook)
 
-	}
+		// Protected Routes
+		version1.Use(middlewares.Auth())
+		{
+			// User Routes
+			version1.PATCH("/users/:guid", userHandler.Update)
+			version1.GET("/users/:guid", userHandler.View)
 
-	// Protected Routes
-	authentication := router.Group("/v1")
+			// Device Routes
+			version1.DELETE("/devices/:uuid", deviceHandler.Delete)
 
-	authentication.Use(middlewares.Auth())
-	{
-		// User Routes
-		// Update User Route
-		authentication.PATCH("/users/:guid", userHandler.Update)
-		authentication.GET("/users/:guid", userHandler.View)
+			// Authentication Routes
+			version1.GET("/auth/refresh", authHandler.Refresh)
+			version1.GET("/auth/logout", authHandler.Logout)
+		}
 
-		// Device Routes
-		// Delete Device
-		authentication.DELETE("/devices/:uuid", deviceHandler.Delete)
-
-		// Authentication Routes
-		// Logout Route
-		authentication.GET("/auth/logout", authHandler.Logout)
 	}
 }

@@ -2,7 +2,6 @@ package v1
 
 import (
 	"bitbucket.org/shoppermate-api/systems"
-
 	"github.com/fatih/structs"
 	"github.com/jinzhu/gorm"
 	uuid "github.com/satori/go.uuid"
@@ -39,7 +38,7 @@ func (uf *UserFactory) Create(data CreateUser) (*User, *systems.ErrorData) {
 
 	if result.Error != nil || result.RowsAffected == 0 {
 		uf.DB.Rollback()
-		return nil, ErrorMesg.InternalServerError(result.Error, systems.DatabaseError)
+		return nil, Error.InternalServerError(result.Error, systems.DatabaseError)
 	}
 
 	return result.Value.(*User), nil
@@ -58,7 +57,7 @@ func (uf *UserFactory) Update(guid string, data UpdateUser) *systems.ErrorData {
 
 	if result.Error != nil || result.RowsAffected == 0 {
 		uf.DB.Rollback()
-		return ErrorMesg.InternalServerError(result.Error, systems.DatabaseError)
+		return Error.InternalServerError(result.Error, systems.DatabaseError)
 	}
 
 	return nil
@@ -69,7 +68,7 @@ func (uf *UserFactory) Delete(attribute string, value string) *systems.ErrorData
 
 	if result.Error != nil || result.RowsAffected == 0 {
 		uf.DB.Rollback()
-		return ErrorMesg.InternalServerError(result.Error, systems.DatabaseError)
+		return Error.InternalServerError(result.Error, systems.DatabaseError)
 	}
 
 	return nil

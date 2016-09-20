@@ -3,9 +3,8 @@ package v1
 import (
 	"time"
 
-	"github.com/jinzhu/gorm"
-
 	"bitbucket.org/shoppermate-api/systems"
+	"github.com/jinzhu/gorm"
 )
 
 type SmsFactory struct {
@@ -32,7 +31,7 @@ func (sf *SmsFactory) CreateSmsHistory(data map[string]string) (interface{}, *sy
 
 	if result.Error != nil || result.RowsAffected == 0 {
 		sf.DB.Rollback()
-		return nil, ErrorMesg.InternalServerError(result.Error, systems.DatabaseError)
+		return nil, Error.InternalServerError(result.Error, systems.DatabaseError)
 	}
 
 	return result.Value, nil

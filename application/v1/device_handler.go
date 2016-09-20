@@ -1,11 +1,8 @@
 package v1
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
-
-	"bitbucket.org/shoppermate-api/systems"
 
 	validator "gopkg.in/go-playground/validator.v8"
 
@@ -18,36 +15,37 @@ type DeviceHandler struct{}
 
 // Create function used to create new device and store inside database
 func (dh DeviceHandler) Create(c *gin.Context) {
+	c.Writer.Header().Set("Content-Type", "application/json; charset=utf-8")
+
 	db := c.MustGet("DB").(*gorm.DB)
 	tx := db.Begin()
-
-	c.Writer.Header().Set("Content-Type", "application/json; charset=utf-8")
 
 	// Bind request data based on header content type
 	deviceData := CreateDevice{}
 	if err := c.Bind(&deviceData); err != nil {
-		c.JSON(http.StatusBadRequest, ErrorMesg.ValidationErrors(err.(validator.ValidationErrors)))
+		c.JSON(http.StatusBadRequest, Error.ValidationErrors(err.(validator.ValidationErrors)))
 		return
 	}
 
-	// Check Device already exist or not
+	// Retrieve device by UUID
 	deviceRepository := &DeviceRepository{DB: tx}
 	device := deviceRepository.GetByUUID(deviceData.UUID)
+
+	// If device UUID empty return error message
 	if device.UUID != "" {
-		c.JSON(http.StatusConflict, ErrorMesg.DuplicateValueErrors("Device", "uuid", device.UUID))
+		c.JSON(http.StatusConflict, Error.DuplicateValueErrors("Device", "uuid", device.UUID))
 		return
 	}
 
-	// Check User GUID valid or not.
-	// Return error if not valid
+	// If user GUID exist in the request
 	if deviceData.UserGUID != "" {
+		// Retrieve user by GUID
 		userRepository := &UserRepository{DB: tx}
 		user := userRepository.GetByGUID(deviceData.UserGUID)
 
+		// If user GUID empty return error message
 		if user.GUID == "" {
-			c.JSON(http.StatusBadRequest, ErrorMesg.GenericError(strconv.Itoa(http.StatusBadRequest), systems.ResourceNotFound,
-				fmt.Sprintf(systems.TitleResourceNotFoundError, "User"), "message",
-				fmt.Sprintf(systems.ErrorResourceNotFound, "User", "guid", deviceData.UserGUID)))
+			c.JSON(http.StatusBadRequest, Error.ResourceNotFoundError("User", "guid", deviceData.UserGUID))
 			return
 		}
 	}
@@ -70,49 +68,45 @@ func (dh DeviceHandler) Create(c *gin.Context) {
 
 // Update function used to update device with new data.
 func (dh DeviceHandler) Update(c *gin.Context) {
+	c.Writer.Header().Set("Content-Type", "application/json; charset=utf-8")
+
 	db := c.MustGet("DB").(*gorm.DB)
 	tx := db.Begin()
 
-	c.Writer.Header().Set("Content-Type", "application/json; charset=utf-8")
-
-	// Retrieve device uuid in url
+	// Retrieve device UUID in url
 	deviceUUID := c.Param("uuid")
 
-	// Check device uuid exist or not
-	// If not exist display error message
+	// Retrieve device by UUID
 	deviceRepository := &DeviceRepository{DB: tx}
 	device := deviceRepository.GetByUUID(deviceUUID)
 
-	// Return error message if device uuid not exist
+	// If device UUID empty return error message
 	if device.UUID == "" {
-		c.JSON(http.StatusBadRequest, ErrorMesg.GenericError(strconv.Itoa(http.StatusBadRequest), systems.ResourceNotFound,
-			fmt.Sprintf(systems.TitleResourceNotFoundError, "Device"), "message",
-			fmt.Sprintf(systems.ErrorResourceNotFound, "Device", "uuid", deviceUUID)))
+		c.JSON(http.StatusBadRequest, Error.ResourceNotFoundError("Device", "uuid", deviceUUID))
 		return
 	}
 
 	// Bind Device data
 	deviceData := UpdateDevice{}
 	if err := c.Bind(&deviceData); err != nil {
-		c.JSON(http.StatusBadRequest, ErrorMesg.ValidationErrors(err.(validator.ValidationErrors)))
+		c.JSON(http.StatusBadRequest, Error.ValidationErrors(err.(validator.ValidationErrors)))
 		return
 	}
 
-	// Check User GUID valid or not.
-	// Return error if not valid
+	// If user GUID exist in the request
 	if deviceData.UserGUID != "" {
+		// Retrieve user by GUID
 		userRepository := &UserRepository{DB: tx}
 		user := userRepository.GetByGUID(deviceData.UserGUID)
 
+		// If user GUID empty return error message
 		if user.GUID == "" {
-			c.JSON(http.StatusBadRequest, ErrorMesg.GenericError(strconv.Itoa(http.StatusBadRequest), systems.ResourceNotFound,
-				fmt.Sprintf(systems.TitleResourceNotFoundError, "User"), "message",
-				fmt.Sprintf(systems.ErrorResourceNotFound, "User", "guid", deviceData.UserGUID)))
+			c.JSON(http.StatusBadRequest, Error.ResourceNotFoundError("User", "guid", deviceData.UserGUID))
 			return
 		}
 	}
 
-	// Update Device
+	// Update Device data
 	deviceFactory := &DeviceFactory{DB: tx}
 	err := deviceFactory.Update(deviceUUID, deviceData)
 
@@ -122,35 +116,35 @@ func (dh DeviceHandler) Update(c *gin.Context) {
 		return
 	}
 
-	// Retrieve device latest update
+	// Retrieve device latest data
 	device = deviceRepository.GetByUUID(deviceUUID)
+
 	tx.Commit()
 	c.JSON(http.StatusOK, gin.H{"data": device})
 }
 
+// Delete function used to soft delete device by setting current timeo the deleted_at column
 func (dh DeviceHandler) Delete(c *gin.Context) {
+	c.Writer.Header().Set("Content-Type", "application/json; charset=utf-8")
+
 	db := c.MustGet("DB").(*gorm.DB)
 	tx := db.Begin()
-
-	c.Writer.Header().Set("Content-Type", "application/json; charset=utf-8")
 
 	// Retrieve device uuid in url
 	deviceUUID := c.Param("uuid")
 
-	// Check device uuid exist or not
-	// If not exist display error message
+	// Retrieve device by UUID
 	deviceRepository := &DeviceRepository{DB: tx}
 	device := deviceRepository.GetByUUID(deviceUUID)
 
-	// Return error message if device uuid not exist
+	// If device uuid empty return error message
 	if device.UUID == "" {
 		tx.Rollback()
-		c.JSON(http.StatusBadRequest, ErrorMesg.GenericError(strconv.Itoa(http.StatusBadRequest), systems.ResourceNotFound,
-			fmt.Sprintf(systems.TitleResourceNotFoundError, "Device"), "message",
-			fmt.Sprintf(systems.ErrorResourceNotFound, "Device", "uuid", deviceUUID)))
+		c.JSON(http.StatusBadRequest, Error.ResourceNotFoundError("Device", "uuid", deviceUUID))
 		return
 	}
 
+	// Soft delete device
 	deviceFactory := &DeviceFactory{DB: tx}
 	err := deviceFactory.Delete("uuid", deviceUUID)
 
@@ -159,6 +153,7 @@ func (dh DeviceHandler) Delete(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, err)
 		return
 	}
+
 	tx.Commit()
 	c.JSON(http.StatusNoContent, gin.H{})
 }

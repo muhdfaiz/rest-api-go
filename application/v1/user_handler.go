@@ -5,31 +5,32 @@ import (
 	"net/http"
 	"strconv"
 
+	"bitbucket.org/shoppermate-api/systems"
+
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
-
-	"bitbucket.org/shoppermate-api/systems"
 )
 
 // UserHandler will handle all request related to User
 type UserHandler struct{}
 
+// View function used to view user detail
 func (uh *UserHandler) View(c *gin.Context) {
 	c.Writer.Header().Set("Content-Type", "application/json; charset=utf-8")
+
 	db := c.MustGet("DB").(*gorm.DB)
 	tx := db.Begin()
 
 	// Retrieve user guid in url
 	userGUID := c.Param("guid")
 
-	// Check User GUID valid
+	// Retrieve user by GUID
 	userRepository := &UserRepository{DB: tx}
 	user := userRepository.GetByGUID(userGUID)
 
+	// If user GUID empty return error message
 	if user.GUID == "" {
-		c.JSON(http.StatusBadRequest, ErrorMesg.GenericError(strconv.Itoa(http.StatusBadRequest), systems.ResourceNotFound,
-			fmt.Sprintf(systems.TitleResourceNotFoundError, "User"), "",
-			fmt.Sprintf(systems.ErrorResourceNotFound, "User", "guid", userGUID)))
+		c.JSON(http.StatusBadRequest, Error.ResourceNotFoundError("User", "guid", userGUID))
 		return
 	}
 
@@ -41,6 +42,7 @@ func (uh *UserHandler) View(c *gin.Context) {
 // Create function will create new user
 func (uh *UserHandler) Create(c *gin.Context) {
 	c.Writer.Header().Set("Content-Type", "application/json; charset=utf-8")
+
 	db := c.MustGet("DB").(*gorm.DB)
 	tx := db.Begin()
 
@@ -48,61 +50,69 @@ func (uh *UserHandler) Create(c *gin.Context) {
 
 	// Bind request based on content type and validate request data
 	if err := Binding.Bind(&userData, c); err != nil {
-		statusCode, _ := strconv.Atoi(err.Error.Status)
-		c.JSON(statusCode, err)
+		c.JSON(http.StatusBadRequest, err)
 		return
 	}
 
-	// Check User Exist
+	// Retrieve user by phone_no
 	userRepository := &UserRepository{DB: tx}
 	user := userRepository.GetByPhoneNo(userData.PhoneNo)
 
+	// If user phone_no not empty return error message
 	if user.PhoneNo != "" {
-		c.JSON(http.StatusConflict, ErrorMesg.DuplicateValueErrors("User", "phone_no", userData.PhoneNo))
+		c.JSON(http.StatusConflict, Error.DuplicateValueErrors("User", "phone_no", userData.PhoneNo))
 		return
 	}
 
-	// Check if user register using facebook
-	// If true then validate facebook_id field
+	// If facebook_id exist in request data
 	if userData.FacebookID != "" {
+		// Validate facebook_id valid or not
 		fbIDValid := FacebookService.IDIsValid(userData.FacebookID)
 
+		// If facebook_id not valid return error message
 		if !fbIDValid {
 			mesg := fmt.Sprintf(systems.ErrorFacebookIDNotValid, userData.FacebookID)
-			c.JSON(http.StatusBadRequest, ErrorMesg.GenericError(strconv.Itoa(http.StatusBadRequest),
+			c.JSON(http.StatusBadRequest, Error.GenericError(strconv.Itoa(http.StatusBadRequest),
 				systems.FacebookIDNotValid, systems.TitleFacebookIDNotValidError, "facebook_id", mesg))
 			return
 		}
 	}
 
-	// If user registration data contain referral code, check if referral code exists.
-	// If exist, count how many referral for referent user.
-	// If more than 3 return error message
 	user = &User{}
+	// If referral_code exist in request data
 	if userData.ReferralCode != "" {
+		// Search referral code
 		user = userRepository.SearchReferralCode(userData.ReferralCode)
 
+		// If referral code not found return error message
 		if user.ReferralCode == "" {
-			c.JSON(http.StatusBadRequest, ErrorMesg.GenericError(strconv.Itoa(http.StatusBadRequest),
+			c.JSON(http.StatusBadRequest, Error.GenericError(strconv.Itoa(http.StatusBadRequest),
 				systems.ReferralCodeNotExist, systems.TitleReferralCodeNotExist, "referral_code", systems.ErrorReferralCodeNotExist))
 			return
 		}
 
+		// Count total referral user got
 		referralCashbackRepository := &ReferralCashbackRepository{DB: tx}
 		totalPreviousReferral := referralCashbackRepository.Count("referent_guid", user.GUID)
 
+		// If total referral more than 3 return error message
 		if totalPreviousReferral > 3 {
-			c.JSON(http.StatusBadRequest, ErrorMesg.GenericError(strconv.Itoa(http.StatusBadRequest),
+			c.JSON(http.StatusBadRequest, Error.GenericError(strconv.Itoa(http.StatusBadRequest),
 				systems.ReferralCodeExceedLimit, systems.TitleReferralCodeExceedLimit, "referral_code", systems.ErrorReferralCodeExceedLimit))
 			return
 		}
 	}
 
-	// Upload profile image if exists
+	// Retrieve profile_picture in the request
 	file, _, _ := c.Request.FormFile("profile_picture")
+
 	profileImage := map[string]string{}
+
+	// If profile_picture exist in the request
 	if file != nil {
 		err := &systems.ErrorData{}
+
+		// Upload profile picture
 		userService := &UserService{DB: tx}
 		profileImage, err = userService.UploadProfileImage(file)
 
@@ -113,6 +123,7 @@ func (uh *UserHandler) Create(c *gin.Context) {
 		}
 	}
 
+	// Set profile_picture to the user data
 	if profileImage != nil {
 		userData.ProfilePicture = profileImage["path"]
 	}
@@ -164,23 +175,31 @@ func (uh *UserHandler) Create(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": createdUser})
 }
 
-// Create function will create new user
+// Update function used to update user data
 func (uh *UserHandler) Update(c *gin.Context) {
 	c.Writer.Header().Set("Content-Type", "application/json; charset=utf-8")
+
 	db := c.MustGet("DB").(*gorm.DB)
 	tx := db.Begin()
 
 	// Retrieve user guid in url
 	userGUID := c.Param("guid")
 
-	// Check User GUID valid
+	// Retrieve User Token
+	userToken := c.MustGet("Token").(map[string]string)
+
+	if userToken["user_guid"] != userGUID {
+		c.JSON(http.StatusBadRequest, Error.TokenIdentityNotMatchError("Update User"))
+		return
+	}
+
+	// Retrieve user by guid
 	userRepository := &UserRepository{DB: tx}
 	user := userRepository.GetByGUID(userGUID)
 
+	// If user guid empty return error message
 	if user.GUID == "" {
-		c.JSON(http.StatusBadRequest, ErrorMesg.GenericError(strconv.Itoa(http.StatusBadRequest), systems.ResourceNotFound,
-			fmt.Sprintf(systems.TitleResourceNotFoundError, "User"), "message",
-			fmt.Sprintf(systems.ErrorResourceNotFound, "User", "guid", userGUID)))
+		c.JSON(http.StatusBadRequest, Error.ResourceNotFoundError("User", "guid", userGUID))
 		return
 	}
 
@@ -188,14 +207,14 @@ func (uh *UserHandler) Update(c *gin.Context) {
 
 	// Bind request based on content type and validate request data
 	if err := Binding.Bind(&userData, c); err != nil {
-		statusCode, _ := strconv.Atoi(err.Error.Status)
-		c.JSON(statusCode, err)
+		c.JSON(http.StatusBadRequest, err)
 		return
 	}
 
 	// Upload profile image if exists
 	file, _, _ := c.Request.FormFile("profile_picture")
 	profileImage := map[string]string{}
+
 	if file != nil {
 		err := &systems.ErrorData{}
 		userService := &UserService{DB: tx}
@@ -211,7 +230,7 @@ func (uh *UserHandler) Update(c *gin.Context) {
 	if profileImage != nil {
 		userData.ProfilePicture = profileImage["path"]
 	}
-	fmt.Println(userData)
+
 	// Update User
 	userFactory := &UserFactory{DB: tx}
 	err := userFactory.Update(userGUID, userData)
@@ -221,7 +240,7 @@ func (uh *UserHandler) Update(c *gin.Context) {
 		return
 	}
 
-	// Retrieve user latest update
+	// Retrieve latest user data
 	updatedUser := userRepository.GetByGUID(userGUID)
 
 	// Send SMS verification code and soft delete device if user change the phone no

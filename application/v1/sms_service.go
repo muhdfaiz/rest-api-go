@@ -6,10 +6,9 @@ import (
 	"net/http"
 	"net/url"
 
+	"bitbucket.org/shoppermate-api/systems"
 	"github.com/jinzhu/gorm"
 	uuid "github.com/satori/go.uuid"
-
-	"bitbucket.org/shoppermate-api/systems"
 )
 
 type SmsService struct {
@@ -32,7 +31,7 @@ func (sf *SmsService) SendVerificationCode(phoneNo string, userGUID string) (int
 	}
 
 	if smsResponse == nil || smsResponse["status"] == "failed" {
-		return nil, ErrorMesg.InternalServerError(smsResponse["message"], systems.FailedToSendSMS)
+		return nil, Error.InternalServerError(smsResponse["message"], systems.FailedToSendSMS)
 	}
 
 	// Store SMS History
@@ -69,7 +68,7 @@ func (sf *SmsService) Send(message string, recipientNumber string) (map[string]s
 	req, err := http.NewRequest("GET", apiURL, nil)
 
 	if err != nil {
-		return nil, ErrorMesg.InternalServerError(err.Error(), systems.FailedToSendSMS)
+		return nil, Error.InternalServerError(err.Error(), systems.FailedToSendSMS)
 	}
 
 	req.Header.Add("Connection", "close")
@@ -89,7 +88,7 @@ func (sf *SmsService) Send(message string, recipientNumber string) (map[string]s
 	resp, err2 := http.Get(req.URL.String())
 
 	if err2 != nil {
-		return nil, ErrorMesg.InternalServerError(err2.Error(), systems.FailedToSendSMS)
+		return nil, Error.InternalServerError(err2.Error(), systems.FailedToSendSMS)
 	}
 
 	defer resp.Body.Close()
@@ -98,7 +97,7 @@ func (sf *SmsService) Send(message string, recipientNumber string) (map[string]s
 	response, err2 := ioutil.ReadAll(resp.Body)
 
 	if err2 != nil {
-		return nil, ErrorMesg.InternalServerError(err2.Error(), systems.FailedToSendSMS)
+		return nil, Error.InternalServerError(err2.Error(), systems.FailedToSendSMS)
 	}
 
 	parsedResponse, _ := url.ParseQuery(string(response))

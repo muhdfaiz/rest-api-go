@@ -5,9 +5,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/jinzhu/gorm"
 	"bitbucket.org/shoppermate-api/services/filesystem"
 	"bitbucket.org/shoppermate-api/systems"
+	"github.com/jinzhu/gorm"
 )
 
 type UserService struct {

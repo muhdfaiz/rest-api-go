@@ -6,14 +6,10 @@ import (
 	"strings"
 	"time"
 
-	uuid "github.com/satori/go.uuid"
-
 	"bitbucket.org/shoppermate-api/systems"
-	filetype "gopkg.in/h2non/filetype.v0"
-)
 
-var (
-	ErrorMesg = &systems.Error{}
+	uuid "github.com/satori/go.uuid"
+	filetype "gopkg.in/h2non/filetype.v0"
 )
 
 // type FileSystemInterface interface {
@@ -52,12 +48,12 @@ func (fs *FileSystem) DetectFileType(file multipart.File) (string, *systems.Erro
 
 	_, err := file.ReadAt(bytes, 0)
 	if err != nil {
-		return "", ErrorMesg.InternalServerError(err.Error(), systems.CannotReadFile)
+		return "", Error.InternalServerError(err.Error(), systems.CannotReadFile)
 	}
 
 	filetype, err := filetype.Match(bytes)
 	if err != nil {
-		return "", ErrorMesg.InternalServerError(err.Error(), systems.CannotDetectFileType)
+		return "", Error.InternalServerError(err.Error(), systems.CannotDetectFileType)
 	}
 
 	return filetype.Extension, nil
@@ -83,14 +79,14 @@ func (fv *FileValidation) ValidateFileType(allowFileTypes []string, file multipa
 		}
 	}
 
-	return "", ErrorMesg.InvalidFileTypeError(strings.Join(allowFileTypes, ", "))
+	return "", Error.InvalidFileTypeError(strings.Join(allowFileTypes, ", "))
 }
 
 // ValidateFileSize function used to verify if file size want to upload is not bigger than system allowed
 func (fv *FileValidation) ValidateFileSize(file multipart.File, maxFileSizeAllow int64, fileAttribute string) (int64, *systems.ErrorData) {
 	fileSize, err := file.Seek(0, 2)
 	if err != nil {
-		return 0, ErrorMesg.InternalServerError(err.Error(), systems.CannotReadFile)
+		return 0, Error.InternalServerError(err.Error(), systems.CannotReadFile)
 	}
 
 	if maxFileSizeAllow == 0 {
@@ -98,7 +94,7 @@ func (fv *FileValidation) ValidateFileSize(file multipart.File, maxFileSizeAllow
 	}
 
 	if fileSize > maxFileSizeAllow {
-		return fileSize, ErrorMesg.FileSizeExceededLimit(fileAttribute, strconv.FormatInt(maxFileSizeAllow/1000, 10))
+		return fileSize, Error.FileSizeExceededLimit(fileAttribute, strconv.FormatInt(maxFileSizeAllow/1000, 10))
 	}
 	file.Seek(0, 0)
 	return fileSize, nil

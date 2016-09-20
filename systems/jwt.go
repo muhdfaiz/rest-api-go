@@ -51,8 +51,8 @@ func (j *Jwt) GenerateJWTToken(userGUID string, phoneNo string, deviceUUID strin
 	tokenString, err := token.SignedString([]byte(jwtSecret))
 
 	if err != nil {
-		ErrorMesg := &Error{}
-		return nil, ErrorMesg.InternalServerError(err.Error(), FailedToGenerateToken)
+		Error := &Error{}
+		return nil, Error.InternalServerError(err.Error(), FailedToGenerateToken)
 	}
 
 	tokenData := &JwtToken{}

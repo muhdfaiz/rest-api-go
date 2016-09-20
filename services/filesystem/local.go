@@ -29,14 +29,14 @@ func (lu *LocalUpload) Upload(localUploadConfig LocalUploadConfigInterface, file
 	localFile, err1 := os.Create(localUploadConfig.SetLocalUploadPath() + fileName)
 
 	if err1 != nil {
-		return nil, ErrorMesg.InternalServerError(err1.Error(), systems.CannotReadFile)
+		return nil, Error.InternalServerError(err1.Error(), systems.CannotReadFile)
 	}
 	defer localFile.Close()
 
 	// Copy file from request to created file in local storage
 	_, err1 = io.Copy(localFile, file)
 	if err1 != nil {
-		return nil, ErrorMesg.InternalServerError(err1.Error(), systems.CannotCopyFile)
+		return nil, Error.InternalServerError(err1.Error(), systems.CannotCopyFile)
 	}
 
 	result := make(map[string]string)

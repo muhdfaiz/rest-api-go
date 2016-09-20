@@ -5,7 +5,7 @@ import (
 )
 
 var (
-	Database  = &systems.Database{}
-	ErrorMesg = &systems.Error{}
-	Config    = &systems.Configs{}
+	Database = &systems.Database{}
+	Error    = &systems.Error{}
+	Config   = &systems.Configs{}
 )

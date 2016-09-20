@@ -8,7 +8,7 @@ import (
 
 var (
 	Database        = &systems.Database{}
-	ErrorMesg       = &systems.Error{}
+	Error           = &systems.Error{}
 	Helper          = &systems.Helpers{}
 	Config          = &systems.Configs{}
 	Binding         = &systems.Binding{}

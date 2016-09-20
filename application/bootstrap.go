@@ -7,7 +7,6 @@ import (
 	"os"
 
 	"bitbucket.org/shoppermate-api/systems"
-
 	"github.com/gin-gonic/gin"
 )
 

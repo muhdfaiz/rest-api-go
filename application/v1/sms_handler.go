@@ -18,35 +18,34 @@ type SmsHandler struct{}
 
 // Send function used to send sms to the user during login & registration
 func (sh *SmsHandler) Send(c *gin.Context) {
+	c.Writer.Header().Set("Content-Type", "application/json; charset=utf-8")
+
 	db := c.MustGet("DB").(*gorm.DB)
 	tx := db.Begin()
-
-	c.Writer.Header().Set("Content-Type", "application/json; charset=utf-8")
 
 	smsData := &SmsSend{}
 
 	// Bind request based on content type and validate request data
 	if err := Binding.Bind(smsData, c); err != nil {
-		statusCode, _ := strconv.Atoi(err.Error.Status)
-		c.JSON(statusCode, err)
+		c.JSON(http.StatusBadRequest, err)
 		return
 	}
 
-	// Check UserGUID valid or not.
-	// Return error if not valid
+	// Retrieve user by GUID
 	userRepository := &UserRepository{DB: tx}
 	user := userRepository.GetByGUID(smsData.UserGUID)
+
+	// If user GUID empty return error message
 	if user.GUID == "" {
-		c.JSON(http.StatusBadRequest, ErrorMesg.GenericError(strconv.Itoa(http.StatusBadRequest), systems.ResourceNotFound,
-			fmt.Sprintf(systems.TitleResourceNotFoundError, "User"), "message",
-			fmt.Sprintf(systems.ErrorResourceNotFound, "User", "guid", smsData.UserGUID)))
+		c.JSON(http.StatusBadRequest, Error.ResourceNotFoundError("User", "guid", smsData.UserGUID))
 		return
 	}
 
-	// Check LastSmsSent interval. If interval below 250 return error message
+	// Retrieve sms history by recipient_no
 	smsHistoryRepository := &SmsHistoryRepository{DB: tx}
 	smsHistory := smsHistoryRepository.GetByRecipientNo(smsData.RecipientNo)
 
+	// If recipient_no not empty
 	if smsHistory.RecipientNo != "" {
 		// Calculate time interval in second between current time and last sms sent time
 		interval := smsHistoryRepository.CalculateIntervalBetweenCurrentTimeAndLastSmsSentTime(smsHistory.CreatedAt)
@@ -54,7 +53,7 @@ func (sh *SmsHandler) Send(c *gin.Context) {
 		// If time interval in second below 250 return error message
 		if interval < 250 {
 			durationUserMustWait := 250 - interval
-			errorMesg := ErrorMesg.GenericError("500", systems.FailedToSendSMS, systems.TitleSentSmsError,
+			errorMesg := Error.GenericError("500", systems.FailedToSendSMS, systems.TitleSentSmsError,
 				"", fmt.Sprintf(systems.ErrorSentSms, strconv.Itoa(durationUserMustWait)))
 			c.JSON(http.StatusBadRequest, errorMesg)
 			return
@@ -72,6 +71,7 @@ func (sh *SmsHandler) Send(c *gin.Context) {
 	// fmt.Println(row.Scan(&Count{}))
 	// os.Exit(0)
 
+	// Send SMS verification code
 	smsService := &SmsService{DB: tx}
 	sentSmsData, err := smsService.SendVerificationCode(smsData.RecipientNo, smsData.UserGUID)
 
@@ -89,6 +89,7 @@ func (sh *SmsHandler) Send(c *gin.Context) {
 // Return JWT Token if sms verification code valid
 func (sh *SmsHandler) Verify(c *gin.Context) {
 	c.Writer.Header().Set("Content-Type", "application/json; charset=utf-8")
+
 	db := c.MustGet("DB").(*gorm.DB)
 	tx := db.Begin()
 
@@ -96,39 +97,37 @@ func (sh *SmsHandler) Verify(c *gin.Context) {
 
 	// Bind request based on content type and validate request data
 	if err := Binding.Bind(&smsData, c); err != nil {
-		statusCode, _ := strconv.Atoi(err.Error.Status)
-		c.JSON(statusCode, err)
+		c.JSON(http.StatusBadRequest, err)
 		return
 	}
 
-	// Check Phone No valid or not.
-	// Return error if not valid
-	user := tx.Where(&User{PhoneNo: smsData.PhoneNo}).First(&User{}).Value.(*User)
+	// Retrieve user by phone no
+	userRepository := &UserRepository{DB: tx}
+	user := userRepository.GetByPhoneNo(smsData.PhoneNo)
+
+	// If user phone_no empty return error message
 	if user.PhoneNo == "" {
-		c.JSON(http.StatusBadRequest, ErrorMesg.GenericError(strconv.Itoa(http.StatusBadRequest), systems.ResourceNotFound,
-			fmt.Sprintf(systems.TitleResourceNotFoundError, "User"), "message",
-			fmt.Sprintf(systems.ErrorResourceNotFound, "User", "phone_no", smsData.PhoneNo)))
+		c.JSON(http.StatusBadRequest, Error.ResourceNotFoundError("User", "phone_no", smsData.PhoneNo))
 		return
 	}
 
-	// Check device uuid exist or not
-	// If not exist display error message
+	// Retrieve device by uuid
 	deviceRepository := &DeviceRepository{DB: tx}
 	device := deviceRepository.GetByUUIDAndUserGUIDUnscoped(smsData.DeviceUUID, user.GUID)
 
 	// Return error message if device uuid not exist
 	if device.UUID == "" {
-		c.JSON(http.StatusBadRequest, ErrorMesg.GenericError(strconv.Itoa(http.StatusBadRequest), systems.ResourceNotFound,
-			fmt.Sprintf(systems.TitleResourceNotFoundError, "Device"), "message",
-			fmt.Sprintf(systems.ErrorResourceNotFound, "Device", "uuid", smsData.DeviceUUID)))
+		c.JSON(http.StatusBadRequest, Error.ResourceNotFoundError("Device", "phone_no", smsData.DeviceUUID))
 		return
 	}
 
 	// Verify Sms verification code
 	smsRepository := &SmsHistoryRepository{DB: tx}
 	smsHistory := smsRepository.VerifyVerificationCode(smsData.PhoneNo, strings.ToLower(smsData.VerificationCode))
+
+	// If sms history record not found return error message
 	if smsHistory == nil {
-		errorMesg := ErrorMesg.GenericError(strconv.Itoa(http.StatusBadRequest), systems.VerificationCodeInvalid,
+		errorMesg := Error.GenericError(strconv.Itoa(http.StatusBadRequest), systems.VerificationCodeInvalid,
 			systems.TitleVerificationCodeInvalid, "", fmt.Sprintf(systems.ErrorVerificationCodeInvalid, smsData.VerificationCode))
 		c.JSON(http.StatusBadRequest, errorMesg)
 		return
@@ -143,10 +142,12 @@ func (sh *SmsHandler) Verify(c *gin.Context) {
 		return
 	}
 
+	// Set deleted_at column in devices table to null
 	result := tx.Unscoped().Model(&Device{}).Update("deleted_at", nil)
+
 	if result.Error != nil || result.RowsAffected == 0 {
 		tx.Rollback()
-		c.JSON(http.StatusInternalServerError, ErrorMesg.InternalServerError(result.Error, systems.DatabaseError))
+		c.JSON(http.StatusInternalServerError, Error.InternalServerError(result.Error, systems.DatabaseError))
 		return
 	}
 

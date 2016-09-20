@@ -1,10 +1,10 @@
 package v1
 
 import (
+	"bitbucket.org/shoppermate-api/systems"
 	"github.com/fatih/structs"
 	"github.com/jinzhu/gorm"
 	uuid "github.com/satori/go.uuid"
-	"bitbucket.org/shoppermate-api/systems"
 )
 
 // DeviceFactory will handle all function to create, update and delete device
@@ -29,7 +29,7 @@ func (df *DeviceFactory) Create(data CreateDevice) (*Device, *systems.ErrorData)
 
 	if result.Error != nil || result.RowsAffected == 0 {
 		df.DB.Rollback()
-		return nil, ErrorMesg.InternalServerError(result.Error, systems.DatabaseError)
+		return nil, Error.InternalServerError(result.Error, systems.DatabaseError)
 	}
 
 	return result.Value.(*Device), nil
@@ -49,7 +49,7 @@ func (df *DeviceFactory) Update(uuid string, data UpdateDevice) *systems.ErrorDa
 
 	if result.Error != nil || result.RowsAffected == 0 {
 		df.DB.Rollback()
-		return ErrorMesg.InternalServerError(result.Error, systems.DatabaseError)
+		return Error.InternalServerError(result.Error, systems.DatabaseError)
 	}
 
 	return nil
@@ -60,7 +60,7 @@ func (df *DeviceFactory) Delete(attribute string, value string) *systems.ErrorDa
 
 	if result.Error != nil || result.RowsAffected == 0 {
 		df.DB.Rollback()
-		return ErrorMesg.InternalServerError(result.Error, systems.DatabaseError)
+		return Error.InternalServerError(result.Error, systems.DatabaseError)
 	}
 
 	return nil

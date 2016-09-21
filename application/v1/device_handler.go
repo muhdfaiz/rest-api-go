@@ -140,7 +140,7 @@ func (dh DeviceHandler) Delete(c *gin.Context) {
 	// If device uuid empty return error message
 	if device.UUID == "" {
 		tx.Rollback()
-		c.JSON(http.StatusBadRequest, Error.ResourceNotFoundError("Device", "uuid", deviceUUID))
+		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("Device", "uuid", deviceUUID))
 		return
 	}
 
@@ -155,5 +155,10 @@ func (dh DeviceHandler) Delete(c *gin.Context) {
 	}
 
 	tx.Commit()
-	c.JSON(http.StatusNoContent, gin.H{})
+	// Response data
+	result := make(map[string]string)
+	result["message"] = "Successfully deleted device with uuid " + device.UUID
+
+	tx.Commit()
+	c.JSON(http.StatusOK, gin.H{"data": result})
 }

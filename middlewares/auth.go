@@ -27,7 +27,7 @@ func Auth() gin.HandlerFunc {
 
 		if authorizationHeader == nil {
 			Error := &systems.Error{}
-			c.JSON(http.StatusBadRequest, Error.GenericError(strconv.Itoa(http.StatusBadRequest), systems.TokenNotValid,
+			c.JSON(http.StatusUnauthorized, Error.GenericError(strconv.Itoa(http.StatusUnauthorized), systems.TokenNotValid,
 				systems.TitleErrorTokenNotValid, "", systems.ErrorTokenNotValid))
 			c.Abort()
 			return
@@ -37,7 +37,7 @@ func Auth() gin.HandlerFunc {
 
 		if len(splitAuthorizationHeader) != 2 {
 			Error := &systems.Error{}
-			c.JSON(http.StatusBadRequest, Error.GenericError(strconv.Itoa(http.StatusBadRequest), systems.TokenNotValid,
+			c.JSON(http.StatusUnauthorized, Error.GenericError(strconv.Itoa(http.StatusUnauthorized), systems.TokenNotValid,
 				systems.TitleErrorTokenNotValid, "", systems.ErrorTokenNotValid))
 			c.Abort()
 			return
@@ -62,7 +62,7 @@ func Auth() gin.HandlerFunc {
 			result := db.Where("uuid = ? AND user_guid = ?", claims.Id, claims.Subject).Find(&v1.Device{})
 
 			if result.RowsAffected == 0 {
-				c.JSON(http.StatusBadRequest, Error.GenericError(strconv.Itoa(http.StatusBadRequest), systems.TokenNotValid,
+				c.JSON(http.StatusUnauthorized, Error.GenericError(strconv.Itoa(http.StatusUnauthorized), systems.TokenNotValid,
 					systems.TitleErrorTokenNotValid, "", systems.ErrorTokenNotValid))
 				c.Abort()
 				return
@@ -79,7 +79,7 @@ func Auth() gin.HandlerFunc {
 		}
 
 		fmt.Println(err.Error())
-		c.JSON(http.StatusBadRequest, Error.GenericError(strconv.Itoa(http.StatusBadRequest), systems.TokenNotValid,
+		c.JSON(http.StatusUnauthorized, Error.GenericError(strconv.Itoa(http.StatusUnauthorized), systems.TokenNotValid,
 			systems.TitleErrorTokenNotValid, "", systems.ErrorTokenNotValid))
 		c.Abort()
 		return

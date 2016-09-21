@@ -28,7 +28,6 @@ func Up_20160831042931(txn *sql.Tx) {
         deleted_at timestamp NULL DEFAULT NULL,
         PRIMARY KEY (id),
         UNIQUE (guid),
-        UNIQUE (facebook_id),
         UNIQUE (phone_no),
         UNIQUE (referral_code),
         KEY idx_users_deleted_at (deleted_at)

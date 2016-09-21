@@ -50,7 +50,7 @@ func (uh *UserHandler) Create(c *gin.Context) {
 
 	// Bind request based on content type and validate request data
 	if err := Binding.Bind(&userData, c); err != nil {
-		c.JSON(http.StatusBadRequest, err)
+		c.JSON(http.StatusUnprocessableEntity, err)
 		return
 	}
 

@@ -7,7 +7,7 @@ type CreateDevice struct {
 	Os         string `form:"os" json:"os" binding:"required,alpha"`
 	Model      string `form:"model" json:"model" binding:"required"`
 	PushToken  string `form:"push_token" json:"push_token" binding:"required"`
-	AppVersion string `form:"app_version" json:"app_version" binding:"required,numeric"`
+	AppVersion string `form:"app_version" json:"app_version" binding:"required"`
 }
 
 // UpdateDevice will bind request data to JSON during update device
@@ -16,5 +16,5 @@ type UpdateDevice struct {
 	Os         string `form:"os" json:"os" binding:"omitempty,alpha"`
 	Model      string `form:"model" json:"model" binding:"omitempty"`
 	PushToken  string `form:"push_token" json:"push_token" binding:"omitempty"`
-	AppVersion string `form:"app_version" json:"app_version" binding:"omitempty,numeric"`
+	AppVersion string `form:"app_version" json:"app_version" binding:"omitempty"`
 }

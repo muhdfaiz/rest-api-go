@@ -169,7 +169,7 @@ func (e Error) TokenIdentityNotMatchError(text string) *ErrorData {
 func (e Error) ResourceNotFoundError(resource string, attribute string, value string) *ErrorData {
 	return &ErrorData{
 		Error: &ErrorFormat{
-			Status: strconv.Itoa(http.StatusBadRequest),
+			Status: strconv.Itoa(http.StatusNotFound),
 			Code:   ResourceNotFound,
 			Title:  fmt.Sprintf(TitleResourceNotFoundError, resource),
 			Detail: map[string]interface{}{attribute: fmt.Sprintf(ErrorResourceNotFound, resource, attribute, value)},
@@ -199,7 +199,7 @@ func (e Error) DBError(errors interface{}) *ErrorData {
 func (e Error) BindingError(errors interface{}) *ErrorData {
 	config := Configs{}
 	errorFormat := &ErrorFormat{}
-	errorFormat.Status = strconv.Itoa(http.StatusBadRequest)
+	errorFormat.Status = strconv.Itoa(http.StatusUnprocessableEntity)
 	errorFormat.Code = BadRequest
 	errorFormat.Title = TitleBindingError
 	errorFormat.Detail = errors
@@ -255,7 +255,7 @@ func (e Error) ValidationErrors(errors map[string]*validator.FieldError) *ErrorD
 
 	return &ErrorData{
 		Error: &ErrorFormat{
-			Status: strconv.Itoa(http.StatusBadRequest),
+			Status: strconv.Itoa(http.StatusUnprocessableEntity),
 			Code:   ValidationFailed,
 			Title:  TitleValidationError,
 			Detail: errorMessages,

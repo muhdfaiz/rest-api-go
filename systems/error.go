@@ -64,6 +64,7 @@ const (
 	ErrorValidationMin      = "The %s field length must be at least %s."
 	ErrorValidationMax      = "The %s field length may not be greater than %s."
 	ErrorValidationEmail    = "The %s field must be a valid email address."
+	ErrorValidationLength   = "The length of %s field must be %s."
 	ErrorInternalServer     = "API cannot return results because an internal server error has occurred."
 
 	ErrorFileSizeExceededLimit   = "The %s attributes may not be greater than %s kilobytes."
@@ -249,6 +250,8 @@ func (e Error) ValidationErrors(errors map[string]*validator.FieldError) *ErrorD
 			message = fmt.Sprintf(ErrorValidationMax, errMsg.Name, errMsg.Param)
 		case "email":
 			message = fmt.Sprintf(ErrorValidationEmail, errMsg.Name)
+		case "len":
+			message = fmt.Sprintf(ErrorValidationLength, errMsg.Name, errMsg.Param)
 		}
 		errorMessages[errMsg.Name] = message
 	}

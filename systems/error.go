@@ -158,7 +158,7 @@ func (e Error) InvalidFileTypeError(allowFileType string) *ErrorData {
 func (e Error) TokenIdentityNotMatchError(text string) *ErrorData {
 	return &ErrorData{
 		Error: &ErrorFormat{
-			Status: strconv.Itoa(http.StatusBadRequest),
+			Status: strconv.Itoa(http.StatusUnauthorized),
 			Code:   TokenIdentityNotMatch,
 			Title:  TitleTokenIdentityNotMatch,
 			Detail: map[string]interface{}{"message": fmt.Sprintf(ErrorTokenIdentityNotMatch, text)},

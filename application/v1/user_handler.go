@@ -189,7 +189,7 @@ func (uh *UserHandler) Update(c *gin.Context) {
 	userToken := c.MustGet("Token").(map[string]string)
 
 	if userToken["user_guid"] != userGUID {
-		c.JSON(http.StatusBadRequest, Error.TokenIdentityNotMatchError("Update User"))
+		c.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("Update User"))
 		return
 	}
 
@@ -243,7 +243,7 @@ func (uh *UserHandler) Update(c *gin.Context) {
 	// Retrieve latest user data
 	updatedUser := userRepository.GetByGUID(userGUID)
 
-	// Send SMS verification code and soft delete device if user change the phone no
+	// Send SMS verification code
 	if user.PhoneNo != updatedUser.PhoneNo {
 		smsService := &SmsService{DB: tx}
 		_, err = smsService.SendVerificationCode(updatedUser.PhoneNo, updatedUser.GUID)
@@ -251,6 +251,15 @@ func (uh *UserHandler) Update(c *gin.Context) {
 		if err != nil {
 			errorCode, _ := strconv.Atoi(err.Error.Status)
 			c.JSON(errorCode, err)
+			return
+		}
+
+		// Soft delete device by set current time to deleted_at column
+		deviceFactory := &DeviceFactory{DB: tx}
+		err := deviceFactory.Delete("uuid", userToken["device_uuid"])
+
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, err)
 			return
 		}
 	}

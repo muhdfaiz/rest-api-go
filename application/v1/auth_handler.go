@@ -33,7 +33,7 @@ func (ah *AuthHandler) LoginViaPhone(c *gin.Context) {
 
 	// If user phone_no empty return error message.
 	if user.PhoneNo == "" {
-		c.JSON(http.StatusBadRequest, Error.ResourceNotFoundError("User", "phone_no", user.PhoneNo))
+		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("User", "phone_no", user.PhoneNo))
 		return
 	}
 
@@ -69,13 +69,13 @@ func (ah *AuthHandler) LoginViaFacebook(c *gin.Context) {
 		return
 	}
 
-	// Retrieve user bu facebook_id
+	// Retrieve user facebook_id
 	userRepository := &UserRepository{DB: tx}
 	user := userRepository.GetFacebookID(authData.FacebookID)
 
 	// If facebook_id empty return error message
 	if user.FacebookID == "" {
-		c.JSON(http.StatusBadRequest, Error.ResourceNotFoundError("User", "facebook_id", authData.FacebookID))
+		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("User", "facebook_id", authData.FacebookID))
 		return
 	}
 

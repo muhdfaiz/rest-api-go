@@ -18,7 +18,7 @@ type SmsService struct {
 // SendVerificationCode function handle sending sms contain verification code during registration & login
 func (sf *SmsService) SendVerificationCode(phoneNo string, userGUID string) (interface{}, *systems.ErrorData) {
 	// Generate randomverification code 6 character (lower & digit)
-	smsVerificationCode := Helper.RandomString("LowerDigit", 6, "", "")
+	smsVerificationCode := Helper.RandomString("Digit", 4, "", "")
 
 	// Set Sms Text
 	smsText := fmt.Sprintf("Your verification code is %s - Shoppermate", smsVerificationCode)

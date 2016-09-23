@@ -30,7 +30,7 @@ func Up_20160909161909(txn *sql.Tx) {
 
 // Down is executed when this migration is rolled back
 func Down_20160909161909(txn *sql.Tx) {
-	_, err := txn.Query(`DROP TABLE referrals;`)
+	_, err := txn.Query(`DROP TABLE referral_cashbacks;`)
 
 	if err != nil {
 		fmt.Print(err)

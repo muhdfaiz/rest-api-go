@@ -7,6 +7,7 @@ import (
 
 	"bitbucket.org/shoppermate-api/systems"
 
+	"github.com/fatih/structs"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 )
@@ -233,7 +234,7 @@ func (uh *UserHandler) Update(c *gin.Context) {
 
 	// Update User
 	userFactory := &UserFactory{DB: tx}
-	err := userFactory.Update(userGUID, userData)
+	err := userFactory.Update(userGUID, structs.Map(&userData))
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err)
@@ -244,7 +245,7 @@ func (uh *UserHandler) Update(c *gin.Context) {
 	updatedUser := userRepository.GetByGUID(userGUID)
 
 	// Send SMS verification code
-	if user.PhoneNo != updatedUser.PhoneNo {
+	if user.PhoneNo != updatedUser.PhoneNo && updatedUser.PhoneNo != "" {
 		smsService := &SmsService{DB: tx}
 		_, err = smsService.SendVerificationCode(updatedUser.PhoneNo, updatedUser.GUID)
 

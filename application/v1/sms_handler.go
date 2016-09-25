@@ -135,7 +135,7 @@ func (sh *SmsHandler) Verify(c *gin.Context) {
 
 	// Set user status to verified
 	userFactory := UserFactory{DB: tx}
-	err := userFactory.Update(smsHistory.UserGUID, UpdateUser{Verified: "1"})
+	err := userFactory.Update(smsHistory.UserGUID, map[string]interface{}{"verified": 1})
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err)

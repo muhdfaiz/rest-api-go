@@ -2,7 +2,6 @@ package v1
 
 import (
 	"bitbucket.org/shoppermate-api/systems"
-	"github.com/fatih/structs"
 	"github.com/jinzhu/gorm"
 	uuid "github.com/satori/go.uuid"
 )
@@ -45,11 +44,14 @@ func (uf *UserFactory) Create(data CreateUser) (*User, *systems.ErrorData) {
 }
 
 // Update function used to update user detail by certain field.
-func (uf *UserFactory) Update(guid string, data UpdateUser) *systems.ErrorData {
-	updateData := map[string]string{}
-	for key, value := range structs.Map(data) {
-		if value != "" {
-			updateData[key] = value.(string)
+func (uf *UserFactory) Update(guid string, data map[string]interface{}) *systems.ErrorData {
+	updateData := map[string]interface{}{}
+	for key, value := range data {
+		if data, ok := value.(string); ok && value.(string) != "" {
+			updateData[key] = data
+		}
+		if data, ok := value.(int); ok && value.(int) != 0 {
+			updateData[key] = data
 		}
 	}
 

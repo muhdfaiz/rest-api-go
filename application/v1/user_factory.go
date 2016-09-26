@@ -1,10 +1,15 @@
 package v1
 
 import (
-	"bitbucket.org/shoppermate-api/systems"
+	"bitbucket.org/cliqers/shoppermate-api/systems"
 	"github.com/jinzhu/gorm"
-	uuid "github.com/satori/go.uuid"
 )
+
+type UserFactoryInterface interface {
+	Create(data CreateUser) (*User, *systems.ErrorData)
+	Update(guid string, data map[string]interface{}) *systems.ErrorData
+	Delete(attribute string, value string) *systems.ErrorData
+}
 
 type UserFactory struct {
 	DB *gorm.DB
@@ -21,7 +26,7 @@ func (uf *UserFactory) Create(data CreateUser) (*User, *systems.ErrorData) {
 
 	userService := &UserService{DB: uf.DB}
 	user := &User{
-		GUID:           uuid.NewV4().String(),
+		GUID:           Helper.GenerateUUID(),
 		FacebookID:     data.FacebookID,
 		Name:           data.Name,
 		Email:          data.Email,

@@ -3,7 +3,7 @@ package facebook
 import (
 	"fmt"
 
-	"bitbucket.org/shoppermate-api/systems"
+	"bitbucket.org/cliqers/shoppermate-api/systems"
 	fb "github.com/huandu/facebook"
 )
 

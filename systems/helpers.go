@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"os"
-	"strconv"
-	"time"
 
 	"github.com/elgs/gostrgen"
 	uuid "github.com/satori/go.uuid"
@@ -29,9 +27,8 @@ func (h *Helpers) StrConcat(args ...string) string {
 
 // GenerateGUID function use to generate Universal Unique Identifier using uuid v5
 func (h *Helpers) GenerateUUID() string {
-	namespace := uuid.NamespaceDNS
-	timestamp := strconv.FormatInt(time.Now().UTC().UnixNano(), 10)
-	return uuid.NewV5(namespace, timestamp).String()
+	namespaceDNS := uuid.NewV1()
+	return uuid.NewV5(namespaceDNS, "api.shoppermate.com").String()
 }
 
 // RandomString will generate random stringwith dynamic length and type of string

@@ -2,6 +2,13 @@ package v1
 
 import "github.com/jinzhu/gorm"
 
+type UserRepositoryInterface interface {
+	GetByGUID(guid string) *User
+	GetByPhoneNo(phoneNo string) *User
+	GetFacebookID(facebookID string) *User
+	SearchReferralCode(referralCode string) *User
+}
+
 type UserRepository struct {
 	DB *gorm.DB
 }

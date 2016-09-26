@@ -4,20 +4,20 @@ import (
 	"net/http"
 	"strconv"
 
-	"bitbucket.org/shoppermate-api/systems"
+	"bitbucket.org/cliqers/shoppermate-api/systems"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 )
 
-type AuthHandler struct{}
+type AuthHandler struct {
+	DB             *gorm.DB
+	UserRepository UserRepositoryInterface
+}
 
 // LoginViaPhone used to login user via phone no.
 func (ah *AuthHandler) LoginViaPhone(c *gin.Context) {
-	c.Writer.Header().Set("Content-Type", "application/json; charset=utf-8")
-
-	db := c.MustGet("DB").(*gorm.DB)
-	tx := db.Begin()
+	db := ah.DB.Begin()
 
 	authData := &LoginViaPhone{}
 
@@ -28,8 +28,7 @@ func (ah *AuthHandler) LoginViaPhone(c *gin.Context) {
 	}
 
 	// Retrieve user by phone_no.
-	userRepository := &UserRepository{DB: tx}
-	user := userRepository.GetByPhoneNo(authData.PhoneNo)
+	user := ah.UserRepository.GetByPhoneNo(authData.PhoneNo)
 
 	// If user phone_no empty return error message.
 	if user.PhoneNo == "" {
@@ -38,7 +37,7 @@ func (ah *AuthHandler) LoginViaPhone(c *gin.Context) {
 	}
 
 	// Send SMS verification code and soft delete device if user change the phone no.
-	smsService := &SmsService{DB: tx}
+	smsService := &SmsService{DB: db}
 	_, err := smsService.SendVerificationCode(user.PhoneNo, user.GUID)
 
 	if err != nil {
@@ -50,16 +49,13 @@ func (ah *AuthHandler) LoginViaPhone(c *gin.Context) {
 	result := make(map[string]string)
 	result["message"] = "Successfully sent sms to " + user.PhoneNo
 
-	tx.Commit()
+	db.Commit()
 	c.JSON(http.StatusOK, gin.H{"data": result})
 }
 
 // LoginViaFacebook function used to login user via facebook
 func (ah *AuthHandler) LoginViaFacebook(c *gin.Context) {
-	c.Writer.Header().Set("Content-Type", "application/json; charset=utf-8")
-
-	db := c.MustGet("DB").(*gorm.DB)
-	tx := db.Begin()
+	db := ah.DB.Begin()
 
 	authData := &LoginViaFacebook{}
 
@@ -70,8 +66,7 @@ func (ah *AuthHandler) LoginViaFacebook(c *gin.Context) {
 	}
 
 	// Retrieve user facebook_id
-	userRepository := &UserRepository{DB: tx}
-	user := userRepository.GetFacebookID(authData.FacebookID)
+	user := ah.UserRepository.GetFacebookID(authData.FacebookID)
 
 	// If facebook_id empty return error message
 	if user.FacebookID == "" {
@@ -80,7 +75,7 @@ func (ah *AuthHandler) LoginViaFacebook(c *gin.Context) {
 	}
 
 	// Retrieve device by UUID and GUID and ignored deleted_at column
-	deviceRepository := DeviceRepository{DB: tx}
+	deviceRepository := DeviceRepository{DB: db}
 	device := deviceRepository.GetByUUIDAndUserGUIDUnscoped(authData.DeviceUUID, user.GUID)
 
 	// Return error message if device uuid not exist
@@ -90,9 +85,9 @@ func (ah *AuthHandler) LoginViaFacebook(c *gin.Context) {
 	}
 
 	// Reactivate device by set null to deleted_at column in devices table
-	result := tx.Unscoped().Model(&Device{}).Update("deleted_at", nil)
+	result := db.Unscoped().Model(&Device{}).Update("deleted_at", nil)
 	if result.Error != nil || result.RowsAffected == 0 {
-		tx.Rollback()
+		db.Rollback()
 		c.JSON(http.StatusInternalServerError, Error.InternalServerError(result.Error, systems.DatabaseError))
 		return
 	}
@@ -105,7 +100,7 @@ func (ah *AuthHandler) LoginViaFacebook(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, err)
 	}
 
-	tx.Commit()
+	db.Commit()
 	c.JSON(http.StatusOK, gin.H{"data": jwtToken})
 
 }
@@ -129,13 +124,12 @@ func (ah *AuthHandler) Refresh(c *gin.Context) {
 // Logout function used to logout user from application.
 // System will soft delete device by set the time value to column deleted_at
 func (ah *AuthHandler) Logout(c *gin.Context) {
-	db := c.MustGet("DB").(*gorm.DB)
-	tx := db.Begin()
+	db := ah.DB.Begin()
 
 	tokenData := c.MustGet("Token").(map[string]string)
 
 	// Retrieve device by UUID and User GUID
-	deviceRepository := DeviceRepository{DB: tx}
+	deviceRepository := DeviceRepository{DB: db}
 	device := deviceRepository.GetByUUIDAndUserGUID(tokenData["device_uuid"], tokenData["user_guid"])
 
 	// If device uuid empty return error message
@@ -145,11 +139,11 @@ func (ah *AuthHandler) Logout(c *gin.Context) {
 	}
 
 	// Soft delete device by set current time to deleted_at column
-	deviceFactory := &DeviceFactory{DB: tx}
+	deviceFactory := &DeviceFactory{DB: db}
 	err := deviceFactory.Delete("uuid", device.UUID)
 
 	if err != nil {
-		tx.Rollback()
+		db.Rollback()
 		c.JSON(http.StatusInternalServerError, err)
 		return
 	}
@@ -158,6 +152,6 @@ func (ah *AuthHandler) Logout(c *gin.Context) {
 	result := make(map[string]string)
 	result["message"] = "Successfully logout"
 
-	tx.Commit()
+	db.Commit()
 	c.JSON(http.StatusOK, gin.H{"data": result})
 }

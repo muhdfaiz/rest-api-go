@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"bitbucket.org/shoppermate-api/systems"
+	"bitbucket.org/cliqers/shoppermate-api/systems"
 
 	uuid "github.com/satori/go.uuid"
 	filetype "gopkg.in/h2non/filetype.v0"

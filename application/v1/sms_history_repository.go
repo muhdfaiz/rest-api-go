@@ -6,6 +6,13 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
+type SmsHistoryRepositoryInterface interface {
+	Count(conditionAttribute string, conditionValue string) int64
+	GetByRecipientNo(recipientNo string) *SmsHistory
+	CalculateIntervalBetweenCurrentTimeAndLastSmsSentTime(smsSentTime time.Time) int
+	VerifyVerificationCode(phoneNo string, verificationCode string) *SmsHistory
+}
+
 type SmsHistoryRepository struct {
 	DB *gorm.DB
 }

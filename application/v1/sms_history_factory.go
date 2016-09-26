@@ -3,7 +3,7 @@ package v1
 import (
 	"time"
 
-	"bitbucket.org/shoppermate-api/systems"
+	"bitbucket.org/cliqers/shoppermate-api/systems"
 	"github.com/jinzhu/gorm"
 )
 

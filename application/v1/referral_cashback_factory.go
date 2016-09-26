@@ -1,19 +1,22 @@
 package v1
 
 import (
-	"bitbucket.org/shoppermate-api/systems"
+	"bitbucket.org/cliqers/shoppermate-api/systems"
 	"github.com/jinzhu/gorm"
-	uuid "github.com/satori/go.uuid"
 )
+
+type ReferralCashbackFactorysInterface interface {
+	CreateReferralCashbackFactory(referrerGUID string, referentGUID string) (interface{}, *systems.ErrorData)
+}
 
 type ReferralCashbackFactory struct {
 	DB *gorm.DB
 }
 
-// CreateSmsHistory function used to store Sms History in database after registration & login
+// CreateReferralCashbackFactory function used to store referral cashback history in database after registration
 func (rcf *ReferralCashbackFactory) CreateReferralCashbackFactory(referrerGUID string, referentGUID string) (interface{}, *systems.ErrorData) {
 	referralCashback := &ReferralCashback{
-		GUID:           uuid.NewV4().String(),
+		GUID:           Helper.GenerateUUID(),
 		ReferrerGUID:   referrerGUID,
 		ReferentGUID:   referentGUID,
 		CashbackAmount: 5,

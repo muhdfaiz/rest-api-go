@@ -5,10 +5,16 @@ import (
 	"os"
 	"strings"
 
-	"bitbucket.org/shoppermate-api/services/filesystem"
-	"bitbucket.org/shoppermate-api/systems"
+	"bitbucket.org/cliqers/shoppermate-api/services/filesystem"
+	"bitbucket.org/cliqers/shoppermate-api/systems"
 	"github.com/jinzhu/gorm"
 )
+
+type UserServiceInterface interface {
+	UploadProfileImage(file multipart.File) (map[string]string, *systems.ErrorData)
+	GiveReferralCashback(referrerGUID string, referentGUID string) (interface{}, *systems.ErrorData)
+	GenerateReferralCode(name string) string
+}
 
 type UserService struct {
 	DB           *gorm.DB
@@ -22,7 +28,7 @@ func (auc *AmazonS3UploadConfig) SetAmazonS3UploadPath() string {
 }
 
 func (auc *AmazonS3UploadConfig) SetLocalUploadPath() string {
-	return os.Getenv("GOPATH") + "src/bitbucket.org/shoppermate-api/storages/"
+	return os.Getenv("GOPATH") + "src/bitbucket.org/cliqers/shoppermate-api/storages/"
 }
 
 func (auc *AmazonS3UploadConfig) SetBucketName() string {

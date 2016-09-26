@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"bitbucket.org/shoppermate-api/systems"
+	"bitbucket.org/cliqers/shoppermate-api/systems"
 
 	"strings"
 
@@ -14,14 +14,18 @@ import (
 )
 
 // SmsHandler Struct
-type SmsHandler struct{}
+type SmsHandler struct {
+	DB                   *gorm.DB
+	UserRepository       UserRepositoryInterface
+	UserFactory          UserFactoryInterface
+	SmsService           SmsServiceInterface
+	SmsHistoryRepository SmsHistoryRepositoryInterface
+	DeviceRepository     DeviceRepositoryInterface
+}
 
 // Send function used to send sms to the user during login & registration
 func (sh *SmsHandler) Send(c *gin.Context) {
-	c.Writer.Header().Set("Content-Type", "application/json; charset=utf-8")
-
-	db := c.MustGet("DB").(*gorm.DB)
-	tx := db.Begin()
+	db := sh.DB.Begin()
 
 	smsData := &SmsSend{}
 
@@ -32,8 +36,7 @@ func (sh *SmsHandler) Send(c *gin.Context) {
 	}
 
 	// Retrieve user by GUID
-	userRepository := &UserRepository{DB: tx}
-	user := userRepository.GetByGUID(smsData.UserGUID)
+	user := sh.UserRepository.GetByGUID(smsData.UserGUID)
 
 	// If user GUID empty return error message
 	if user.GUID == "" {
@@ -41,14 +44,13 @@ func (sh *SmsHandler) Send(c *gin.Context) {
 		return
 	}
 
-	// Retrieve sms history by recipient_no
-	smsHistoryRepository := &SmsHistoryRepository{DB: tx}
-	smsHistory := smsHistoryRepository.GetByRecipientNo(smsData.RecipientNo)
+	// Retrieve sms history by recipient_nos
+	smsHistory := sh.SmsHistoryRepository.GetByRecipientNo(smsData.RecipientNo)
 
 	// If recipient_no not empty
 	if smsHistory.RecipientNo != "" {
 		// Calculate time interval in second between current time and last sms sent time
-		interval := smsHistoryRepository.CalculateIntervalBetweenCurrentTimeAndLastSmsSentTime(smsHistory.CreatedAt)
+		interval := sh.SmsHistoryRepository.CalculateIntervalBetweenCurrentTimeAndLastSmsSentTime(smsHistory.CreatedAt)
 
 		// If time interval in second below 250 return error message
 		if interval < 250 {
@@ -72,8 +74,7 @@ func (sh *SmsHandler) Send(c *gin.Context) {
 	// os.Exit(0)
 
 	// Send SMS verification code
-	smsService := &SmsService{DB: tx}
-	sentSmsData, err := smsService.SendVerificationCode(smsData.RecipientNo, smsData.UserGUID)
+	sentSmsData, err := sh.SmsService.SendVerificationCode(smsData.RecipientNo, smsData.UserGUID)
 
 	if err != nil {
 		statusCode, _ := strconv.Atoi(err.Error.Status)
@@ -81,17 +82,14 @@ func (sh *SmsHandler) Send(c *gin.Context) {
 		return
 	}
 
-	tx.Commit()
+	db.Commit()
 	c.JSON(http.StatusOK, gin.H{"data": sentSmsData.(*SmsHistory)})
 }
 
 // Verify function used to verify sms verification code during login & registration
 // Return JWT Token if sms verification code valid
 func (sh *SmsHandler) Verify(c *gin.Context) {
-	c.Writer.Header().Set("Content-Type", "application/json; charset=utf-8")
-
-	db := c.MustGet("DB").(*gorm.DB)
-	tx := db.Begin()
+	db := sh.DB.Begin()
 
 	smsData := SmsVerification{}
 
@@ -102,8 +100,7 @@ func (sh *SmsHandler) Verify(c *gin.Context) {
 	}
 
 	// Retrieve user by phone no
-	userRepository := &UserRepository{DB: tx}
-	user := userRepository.GetByPhoneNo(smsData.PhoneNo)
+	user := sh.UserRepository.GetByPhoneNo(smsData.PhoneNo)
 
 	// If user phone_no empty return error message
 	if user.PhoneNo == "" {
@@ -112,8 +109,7 @@ func (sh *SmsHandler) Verify(c *gin.Context) {
 	}
 
 	// Retrieve device by uuid
-	deviceRepository := &DeviceRepository{DB: tx}
-	device := deviceRepository.GetByUUIDAndUserGUIDUnscoped(smsData.DeviceUUID, user.GUID)
+	device := sh.DeviceRepository.GetByUUIDAndUserGUIDUnscoped(smsData.DeviceUUID, user.GUID)
 
 	// Return error message if device uuid not exist
 	if device.UUID == "" {
@@ -122,8 +118,7 @@ func (sh *SmsHandler) Verify(c *gin.Context) {
 	}
 
 	// Verify Sms verification code
-	smsRepository := &SmsHistoryRepository{DB: tx}
-	smsHistory := smsRepository.VerifyVerificationCode(smsData.PhoneNo, strings.ToLower(smsData.VerificationCode))
+	smsHistory := sh.SmsHistoryRepository.VerifyVerificationCode(smsData.PhoneNo, strings.ToLower(smsData.VerificationCode))
 
 	// If sms history record not found return error message
 	if smsHistory == nil {
@@ -134,8 +129,7 @@ func (sh *SmsHandler) Verify(c *gin.Context) {
 	}
 
 	// Set user status to verified
-	userFactory := UserFactory{DB: tx}
-	err := userFactory.Update(smsHistory.UserGUID, map[string]interface{}{"verified": 1})
+	err := sh.UserFactory.Update(smsHistory.UserGUID, map[string]interface{}{"verified": 1})
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err)
@@ -143,10 +137,10 @@ func (sh *SmsHandler) Verify(c *gin.Context) {
 	}
 
 	// Set deleted_at column in devices table to null
-	result := tx.Unscoped().Model(&Device{}).Update("deleted_at", nil)
+	result := db.Unscoped().Model(&Device{}).Update("deleted_at", nil)
 
 	if result.Error != nil || result.RowsAffected == 0 {
-		tx.Rollback()
+		db.Rollback()
 		c.JSON(http.StatusInternalServerError, Error.InternalServerError(result.Error, systems.DatabaseError))
 		return
 	}
@@ -158,6 +152,6 @@ func (sh *SmsHandler) Verify(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, err)
 	}
 
-	tx.Commit()
+	db.Commit()
 	c.JSON(http.StatusOK, gin.H{"data": jwtToken})
 }

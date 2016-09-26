@@ -1,7 +1,7 @@
 package middlewares
 
 import (
-	"bitbucket.org/shoppermate-api/systems"
+	"bitbucket.org/cliqers/shoppermate-api/systems"
 )
 
 var (

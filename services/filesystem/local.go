@@ -5,7 +5,7 @@ import (
 	"mime/multipart"
 	"os"
 
-	"bitbucket.org/shoppermate-api/systems"
+	"bitbucket.org/cliqers/shoppermate-api/systems"
 )
 
 type LocalUpload struct{}

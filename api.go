@@ -1,7 +1,18 @@
 package main
 
-import "bitbucket.org/shoppermate-api/application"
+import (
+	"bitbucket.org/cliqers/shoppermate-api/application"
+	"bitbucket.org/cliqers/shoppermate-api/systems"
+	"github.com/gin-gonic/gin"
+)
 
 func main() {
-	application.Bootstrap().Run(":8080")
+	// Initialize Router
+	router := gin.New()
+	router.Use(gin.Recovery())
+
+	Database := &systems.Database{}
+	db := Database.Connect()
+
+	application.Bootstrap(application.InitializeObjectAndSetRoutes(router, db)).Run(":8080")
 }

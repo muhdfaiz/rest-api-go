@@ -6,10 +6,14 @@ import (
 	"net/http"
 	"net/url"
 
-	"bitbucket.org/shoppermate-api/systems"
+	"bitbucket.org/cliqers/shoppermate-api/systems"
 	"github.com/jinzhu/gorm"
-	uuid "github.com/satori/go.uuid"
 )
+
+type SmsServiceInterface interface {
+	SendVerificationCode(phoneNo string, userGUID string) (interface{}, *systems.ErrorData)
+	Send(message string, recipientNumber string) (map[string]string, *systems.ErrorData)
+}
 
 type SmsService struct {
 	DB *gorm.DB
@@ -36,7 +40,7 @@ func (sf *SmsService) SendVerificationCode(phoneNo string, userGUID string) (int
 
 	// Store SMS History
 	m := make(map[string]string)
-	m["guid"] = uuid.NewV4().String()
+	m["guid"] = Helper.GenerateUUID()
 	m["user_guid"] = userGUID
 	m["provider"] = "moceansms"
 	m["sms_id"] = smsResponse["sms_id"]

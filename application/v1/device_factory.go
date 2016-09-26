@@ -1,11 +1,16 @@
 package v1
 
 import (
-	"bitbucket.org/shoppermate-api/systems"
+	"bitbucket.org/cliqers/shoppermate-api/systems"
 	"github.com/fatih/structs"
 	"github.com/jinzhu/gorm"
-	uuid "github.com/satori/go.uuid"
 )
+
+type DeviceFactoryInterface interface {
+	Create(data CreateDevice) (*Device, *systems.ErrorData)
+	Update(uuid string, data UpdateDevice) *systems.ErrorData
+	Delete(attribute string, value string) *systems.ErrorData
+}
 
 // DeviceFactory will handle all function to create, update and delete device
 type DeviceFactory struct {
@@ -16,7 +21,7 @@ type DeviceFactory struct {
 // Optional UserGUID because app must register device first when app is loaded
 func (df *DeviceFactory) Create(data CreateDevice) (*Device, *systems.ErrorData) {
 	device := &Device{
-		GUID:       uuid.NewV4().String(),
+		GUID:       Helper.GenerateUUID(),
 		UserGUID:   data.UserGUID,
 		UUID:       data.UUID,
 		Os:         data.Os,

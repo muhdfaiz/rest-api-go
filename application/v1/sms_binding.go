@@ -2,7 +2,7 @@ package v1
 
 type SmsSend struct {
 	RecipientNo string `form:"recipient_no" json:"recipient_no" binding:"required,numeric,min=11,max=13"`
-	UserGUID    string `form:"user_guid" json:"user_guid" binding:"required,uuid4"`
+	UserGUID    string `form:"user_guid" json:"user_guid" binding:"required,uuid5"`
 }
 
 type SmsVerification struct {

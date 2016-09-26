@@ -11,14 +11,16 @@ import (
 )
 
 // DeviceHandler will handle all request related to device endpoint
-type DeviceHandler struct{}
+type DeviceHandler struct {
+	DB               *gorm.DB
+	UserRepository   UserRepositoryInterface
+	DeviceRepository DeviceRepositoryInterface
+	DeviceFactory    DeviceFactoryInterface
+}
 
 // Create function used to create new device and store inside database
 func (dh DeviceHandler) Create(c *gin.Context) {
-	c.Writer.Header().Set("Content-Type", "application/json; charset=utf-8")
-
-	db := c.MustGet("DB").(*gorm.DB)
-	tx := db.Begin()
+	db := dh.DB.Begin()
 
 	// Bind request data based on header content type
 	deviceData := CreateDevice{}
@@ -28,8 +30,7 @@ func (dh DeviceHandler) Create(c *gin.Context) {
 	}
 
 	// Retrieve device by UUID
-	deviceRepository := &DeviceRepository{DB: tx}
-	device := deviceRepository.GetByUUID(deviceData.UUID)
+	device := dh.DeviceRepository.GetByUUID(deviceData.UUID)
 
 	// If device UUID empty return error message
 	if device.UUID != "" {
@@ -40,8 +41,7 @@ func (dh DeviceHandler) Create(c *gin.Context) {
 	// If user GUID exist in the request
 	if deviceData.UserGUID != "" {
 		// Retrieve user by GUID
-		userRepository := &UserRepository{DB: tx}
-		user := userRepository.GetByGUID(deviceData.UserGUID)
+		user := dh.UserRepository.GetByGUID(deviceData.UserGUID)
 
 		// If user GUID empty return error message
 		if user.GUID == "" {
@@ -51,34 +51,29 @@ func (dh DeviceHandler) Create(c *gin.Context) {
 	}
 
 	// Create new device
-	deviceFactory := DeviceFactory{DB: tx}
-	result, err := deviceFactory.Create(deviceData)
+	result, err := dh.DeviceFactory.Create(deviceData)
 
 	// Output error if failed to create new device
 	if err != nil {
-		tx.Rollback()
+		db.Rollback()
 		errorCode, _ := strconv.Atoi(err.Error.Status)
 		c.JSON(errorCode, err)
 		return
 	}
 
-	tx.Commit()
+	db.Commit()
 	c.JSON(http.StatusOK, gin.H{"data": result})
 }
 
 // Update function used to update device with new data.
 func (dh DeviceHandler) Update(c *gin.Context) {
-	c.Writer.Header().Set("Content-Type", "application/json; charset=utf-8")
-
-	db := c.MustGet("DB").(*gorm.DB)
-	tx := db.Begin()
+	db := dh.DB.Begin()
 
 	// Retrieve device UUID in url
 	deviceUUID := c.Param("uuid")
 
 	// Retrieve device by UUID
-	deviceRepository := &DeviceRepository{DB: tx}
-	device := deviceRepository.GetByUUID(deviceUUID)
+	device := dh.DeviceRepository.GetByUUID(deviceUUID)
 
 	// If device UUID empty return error message
 	if device.UUID == "" {
@@ -96,8 +91,7 @@ func (dh DeviceHandler) Update(c *gin.Context) {
 	// If user GUID exist in the request
 	if deviceData.UserGUID != "" {
 		// Retrieve user by GUID
-		userRepository := &UserRepository{DB: tx}
-		user := userRepository.GetByGUID(deviceData.UserGUID)
+		user := dh.UserRepository.GetByGUID(deviceData.UserGUID)
 
 		// If user GUID empty return error message
 		if user.GUID == "" {
@@ -107,58 +101,50 @@ func (dh DeviceHandler) Update(c *gin.Context) {
 	}
 
 	// Update Device data
-	deviceFactory := &DeviceFactory{DB: tx}
-	err := deviceFactory.Update(deviceUUID, deviceData)
+	err := dh.DeviceFactory.Update(deviceUUID, deviceData)
 
 	if err != nil {
-		tx.Rollback()
+		db.Rollback()
 		c.JSON(http.StatusInternalServerError, err)
 		return
 	}
 
 	// Retrieve device latest data
-	device = deviceRepository.GetByUUID(deviceUUID)
+	device = dh.DeviceRepository.GetByUUID(deviceUUID)
 
-	tx.Commit()
+	db.Commit()
 	c.JSON(http.StatusOK, gin.H{"data": device})
 }
 
 // Delete function used to soft delete device by setting current timeo the deleted_at column
 func (dh DeviceHandler) Delete(c *gin.Context) {
-	c.Writer.Header().Set("Content-Type", "application/json; charset=utf-8")
-
-	db := c.MustGet("DB").(*gorm.DB)
-	tx := db.Begin()
-
+	db := dh.DB.Begin()
 	// Retrieve device uuid in url
 	deviceUUID := c.Param("uuid")
 
 	// Retrieve device by UUID
-	deviceRepository := &DeviceRepository{DB: tx}
-	device := deviceRepository.GetByUUID(deviceUUID)
+	device := dh.DeviceRepository.GetByUUID(deviceUUID)
 
 	// If device uuid empty return error message
 	if device.UUID == "" {
-		tx.Rollback()
+		db.Rollback()
 		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("Device", "uuid", deviceUUID))
 		return
 	}
 
 	// Soft delete device
-	deviceFactory := &DeviceFactory{DB: tx}
-	err := deviceFactory.Delete("uuid", deviceUUID)
+	err := dh.DeviceFactory.Delete("uuid", deviceUUID)
 
 	if err != nil {
-		tx.Rollback()
+		db.Rollback()
 		c.JSON(http.StatusInternalServerError, err)
 		return
 	}
 
-	tx.Commit()
 	// Response data
 	result := make(map[string]string)
 	result["message"] = "Successfully deleted device with uuid " + device.UUID
 
-	tx.Commit()
+	db.Commit()
 	c.JSON(http.StatusOK, gin.H{"data": result})
 }

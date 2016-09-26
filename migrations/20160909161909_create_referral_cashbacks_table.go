@@ -10,8 +10,8 @@ func Up_20160909161909(txn *sql.Tx) {
 	_, err := txn.Query(`CREATE TABLE referral_cashbacks (
         id int(10) unsigned NOT NULL AUTO_INCREMENT,
         guid varchar(255) NOT NULL,
-        referrer_guid varchar(255) NOT NULL,
-        referent_guid varchar(255) NOT NULL,
+        referrer_guid varchar(40) NOT NULL,
+        referent_guid varchar(40) NOT NULL,
         cashback_amount decimal(4,2) NOT NULL,
         created_at timestamp NULL DEFAULT NULL,
         updated_at timestamp NULL DEFAULT NULL,

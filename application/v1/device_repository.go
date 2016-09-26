@@ -2,6 +2,12 @@ package v1
 
 import "github.com/jinzhu/gorm"
 
+type DeviceRepositoryInterface interface {
+	GetByUUID(uuid string) *Device
+	GetByUUIDAndUserGUID(uuid string, userGUID string) *Device
+	GetByUUIDAndUserGUIDUnscoped(uuid string, userGUID string) *Device
+}
+
 type DeviceRepository struct {
 	DB *gorm.DB
 }

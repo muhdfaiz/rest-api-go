@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"bitbucket.org/shoppermate-api/systems"
+	"bitbucket.org/cliqers/shoppermate-api/systems"
 
 	"github.com/fatih/structs"
 	"github.com/gin-gonic/gin"
@@ -13,21 +13,24 @@ import (
 )
 
 // UserHandler will handle all request related to User
-type UserHandler struct{}
+type UserHandler struct {
+	DB                         *gorm.DB
+	UserRepository             UserRepositoryInterface
+	UserService                UserServiceInterface
+	UserFactory                UserFactoryInterface
+	ReferralCashbackRepository ReferralCashbackRepositoryInterface
+	SmsService                 SmsServiceInterface
+}
 
 // View function used to view user detail
 func (uh *UserHandler) View(c *gin.Context) {
-	c.Writer.Header().Set("Content-Type", "application/json; charset=utf-8")
-
-	db := c.MustGet("DB").(*gorm.DB)
-	tx := db.Begin()
+	db := uh.DB
 
 	// Retrieve user guid in url
 	userGUID := c.Param("guid")
 
 	// Retrieve user by GUID
-	userRepository := &UserRepository{DB: tx}
-	user := userRepository.GetByGUID(userGUID)
+	user := uh.UserRepository.GetByGUID(userGUID)
 
 	// If user GUID empty return error message
 	if user.GUID == "" {
@@ -35,17 +38,14 @@ func (uh *UserHandler) View(c *gin.Context) {
 		return
 	}
 
-	tx.Commit()
+	db.Close()
 	c.JSON(http.StatusOK, gin.H{"data": user})
 
 }
 
 // Create function will create new user
 func (uh *UserHandler) Create(c *gin.Context) {
-	c.Writer.Header().Set("Content-Type", "application/json; charset=utf-8")
-
-	db := c.MustGet("DB").(*gorm.DB)
-	tx := db.Begin()
+	db := uh.DB.Begin()
 
 	userData := CreateUser{}
 
@@ -56,8 +56,7 @@ func (uh *UserHandler) Create(c *gin.Context) {
 	}
 
 	// Retrieve user by phone_no
-	userRepository := &UserRepository{DB: tx}
-	user := userRepository.GetByPhoneNo(userData.PhoneNo)
+	user := uh.UserRepository.GetByPhoneNo(userData.PhoneNo)
 
 	// If user phone_no not empty return error message
 	if user.PhoneNo != "" {
@@ -83,7 +82,7 @@ func (uh *UserHandler) Create(c *gin.Context) {
 	// If referral_code exist in request data
 	if userData.ReferralCode != "" {
 		// Search referral code
-		user = userRepository.SearchReferralCode(userData.ReferralCode)
+		user = uh.UserRepository.SearchReferralCode(userData.ReferralCode)
 
 		// If referral code not found return error message
 		if user.ReferralCode == "" {
@@ -93,8 +92,7 @@ func (uh *UserHandler) Create(c *gin.Context) {
 		}
 
 		// Count total referral user got
-		referralCashbackRepository := &ReferralCashbackRepository{DB: tx}
-		totalPreviousReferral := referralCashbackRepository.Count("referent_guid", user.GUID)
+		totalPreviousReferral := uh.ReferralCashbackRepository.Count("referent_guid", user.GUID)
 
 		// If total referral more than 3 return error message
 		if totalPreviousReferral > 3 {
@@ -114,8 +112,7 @@ func (uh *UserHandler) Create(c *gin.Context) {
 		err := &systems.ErrorData{}
 
 		// Upload profile picture
-		userService := &UserService{DB: tx}
-		profileImage, err = userService.UploadProfileImage(file)
+		profileImage, err = uh.UserService.UploadProfileImage(file)
 
 		if err != nil {
 			errorCode, _ := strconv.Atoi(err.Error.Status)
@@ -130,8 +127,7 @@ func (uh *UserHandler) Create(c *gin.Context) {
 	}
 
 	// Store new user in database
-	userFactory := &UserFactory{DB: tx}
-	result, err := userFactory.Create(userData)
+	result, err := uh.UserFactory.Create(userData)
 
 	if err != nil {
 		errorCode, _ := strconv.Atoi(err.Error.Status)
@@ -147,8 +143,7 @@ func (uh *UserHandler) Create(c *gin.Context) {
 	}
 
 	// Send SMS verification code
-	smsService := &SmsService{DB: tx}
-	_, err = smsService.SendVerificationCode(createdUser.PhoneNo, createdUser.GUID)
+	_, err = uh.SmsService.SendVerificationCode(createdUser.PhoneNo, createdUser.GUID)
 
 	if err != nil {
 		errorCode, _ := strconv.Atoi(err.Error.Status)
@@ -159,8 +154,7 @@ func (uh *UserHandler) Create(c *gin.Context) {
 	// Give cashback to user if referral code validate
 	if user.ReferralCode != "" {
 		referentUserGUID := user.GUID
-		userService := UserService{DB: tx}
-		_, err := userService.GiveReferralCashback(createdUser.GUID, referentUserGUID)
+		_, err := uh.UserService.GiveReferralCashback(createdUser.GUID, referentUserGUID)
 
 		if err != nil {
 			errorCode, _ := strconv.Atoi(err.Error.Status)
@@ -172,16 +166,13 @@ func (uh *UserHandler) Create(c *gin.Context) {
 	// userTransformer := UserTransformer{}
 	// userTransformer.TransformCreateData(createdUser)
 
-	tx.Commit()
+	db.Commit()
 	c.JSON(http.StatusOK, gin.H{"data": createdUser})
 }
 
 // Update function used to update user data
 func (uh *UserHandler) Update(c *gin.Context) {
-	c.Writer.Header().Set("Content-Type", "application/json; charset=utf-8")
-
-	db := c.MustGet("DB").(*gorm.DB)
-	tx := db.Begin()
+	db := uh.DB.Begin()
 
 	// Retrieve user guid in url
 	userGUID := c.Param("guid")
@@ -195,8 +186,7 @@ func (uh *UserHandler) Update(c *gin.Context) {
 	}
 
 	// Retrieve user by guid
-	userRepository := &UserRepository{DB: tx}
-	user := userRepository.GetByGUID(userGUID)
+	user := uh.UserRepository.GetByGUID(userGUID)
 
 	// If user guid empty return error message
 	if user.GUID == "" {
@@ -218,7 +208,7 @@ func (uh *UserHandler) Update(c *gin.Context) {
 
 	if file != nil {
 		err := &systems.ErrorData{}
-		userService := &UserService{DB: tx}
+		userService := &UserService{DB: db}
 		profileImage, err = userService.UploadProfileImage(file)
 
 		if err != nil {
@@ -233,7 +223,7 @@ func (uh *UserHandler) Update(c *gin.Context) {
 	}
 
 	// Update User
-	userFactory := &UserFactory{DB: tx}
+	userFactory := &UserFactory{DB: db}
 	err := userFactory.Update(userGUID, structs.Map(&userData))
 
 	if err != nil {
@@ -242,11 +232,11 @@ func (uh *UserHandler) Update(c *gin.Context) {
 	}
 
 	// Retrieve latest user data
-	updatedUser := userRepository.GetByGUID(userGUID)
+	updatedUser := uh.UserRepository.GetByGUID(userGUID)
 
 	// Send SMS verification code
 	if user.PhoneNo != updatedUser.PhoneNo && updatedUser.PhoneNo != "" {
-		smsService := &SmsService{DB: tx}
+		smsService := &SmsService{DB: db}
 		_, err = smsService.SendVerificationCode(updatedUser.PhoneNo, updatedUser.GUID)
 
 		if err != nil {
@@ -256,7 +246,7 @@ func (uh *UserHandler) Update(c *gin.Context) {
 		}
 
 		// Soft delete device by set current time to deleted_at column
-		deviceFactory := &DeviceFactory{DB: tx}
+		deviceFactory := &DeviceFactory{DB: db}
 		err := deviceFactory.Delete("uuid", userToken["device_uuid"])
 
 		if err != nil {
@@ -265,7 +255,7 @@ func (uh *UserHandler) Update(c *gin.Context) {
 		}
 	}
 
-	tx.Commit()
+	db.Commit()
 	c.JSON(http.StatusOK, gin.H{"data": updatedUser})
 
 }

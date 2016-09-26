@@ -6,6 +6,10 @@ var (
 	ReferralCashbackModel = &ReferralCashback{}
 )
 
+type ReferralCashbackRepositoryInterface interface {
+	Count(conditionAttribute string, conditionValue string) int64
+}
+
 type ReferralCashbackRepository struct {
 	DB *gorm.DB
 }

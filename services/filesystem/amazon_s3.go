@@ -7,7 +7,7 @@ import (
 	"mime/multipart"
 	"os"
 
-	"bitbucket.org/shoppermate-api/systems"
+	"bitbucket.org/cliqers/shoppermate-api/systems"
 
 	filetype "gopkg.in/h2non/filetype.v0"
 

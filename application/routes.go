@@ -28,10 +28,8 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, db *gorm.DB) *gin.Engine {
 	smsHandler := v1.SmsHandler{DB: db, UserRepository: userRepository, UserFactory: userFactory, SmsService: smsService, SmsHistoryRepository: smsHistoryRepository, DeviceRepository: deviceRepository}
 	userHandler := v1.UserHandler{DB: db, UserRepository: userRepository, UserService: userService, UserFactory: userFactory, ReferralCashbackRepository: referralCashbackRepository, SmsService: smsService}
 	deviceHandler := v1.DeviceHandler{DB: db, UserRepository: userRepository, DeviceRepository: deviceRepository, DeviceFactory: deviceFactory}
-	shoppingListHandler := v1.ShoppingListHandler{DB: db, UserRepository: userRepository}
+	//shoppingListHandler := v1.ShoppingListHandler{DB: db, UserRepository: userRepository}
 	authHandler := v1.AuthHandler{DB: db, UserRepository: userRepository}
-
-	// router.Use(middlewares.Loader())
 
 	version1 := router.Group("/v1")
 	{
@@ -59,7 +57,7 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, db *gorm.DB) *gin.Engine {
 			version1.GET("/users/:guid", userHandler.View)
 
 			// Shopping List Routes
-			version1.POST("users/:guid/shopping_list", shoppingListHandler.Create)
+			//version1.POST("users/:guid/shopping_list", shoppingListHandler.Create)
 
 			// Device Routes
 			version1.DELETE("/devices/:uuid", deviceHandler.Delete)

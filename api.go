@@ -12,7 +12,7 @@ func main() {
 	router.Use(gin.Recovery())
 
 	Database := &systems.Database{}
-	db := Database.Connect()
+	db := Database.Connect("production")
 
 	application.Bootstrap(application.InitializeObjectAndSetRoutes(router, db)).Run(":8080")
 }

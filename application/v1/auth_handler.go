@@ -47,6 +47,7 @@ func (ah *AuthHandler) LoginViaPhone(c *gin.Context) {
 	}
 
 	result := make(map[string]string)
+	result["user_guid"] = user.GUID
 	result["message"] = "Successfully sent sms to " + user.PhoneNo
 
 	db.Commit()

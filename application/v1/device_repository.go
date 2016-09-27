@@ -5,7 +5,7 @@ import "github.com/jinzhu/gorm"
 type DeviceRepositoryInterface interface {
 	GetByUUID(uuid string) *Device
 	GetByUUIDAndUserGUID(uuid string, userGUID string) *Device
-	GetByUUIDAndUserGUIDUnscoped(uuid string, userGUID string) *Device
+	GetByUUIDUnscoped(uuid string) *Device
 }
 
 type DeviceRepository struct {
@@ -34,9 +34,9 @@ func (dr *DeviceRepository) GetByUUIDAndUserGUID(uuid string, userGUID string) *
 	return result.Value.(*Device)
 }
 
-// GetByUUIDAndUserGUIDUnscoped function used to retrieve device by device uuid and user guid
-func (dr *DeviceRepository) GetByUUIDAndUserGUIDUnscoped(uuid string, userGUID string) *Device {
-	result := dr.DB.Unscoped().Where(&Device{UUID: uuid, UserGUID: userGUID}).First(&Device{})
+// GetByUUIDUnscoped function used to retrieve device by device uuid and user guid
+func (dr *DeviceRepository) GetByUUIDUnscoped(uuid string) *Device {
+	result := dr.DB.Unscoped().Where(&Device{UUID: uuid}).First(&Device{})
 
 	if result.RowsAffected == 0 {
 		return &Device{}

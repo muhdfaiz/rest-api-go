@@ -21,6 +21,7 @@ type SmsHandler struct {
 	SmsService           SmsServiceInterface
 	SmsHistoryRepository SmsHistoryRepositoryInterface
 	DeviceRepository     DeviceRepositoryInterface
+	DeviceFactory        DeviceFactoryInterface
 }
 
 // Send function used to send sms to the user during login & registration
@@ -109,12 +110,17 @@ func (sh *SmsHandler) Verify(c *gin.Context) {
 	}
 
 	// Retrieve device by uuid
-	device := sh.DeviceRepository.GetByUUIDAndUserGUIDUnscoped(smsData.DeviceUUID, user.GUID)
+	device := sh.DeviceRepository.GetByUUIDUnscoped(smsData.DeviceUUID)
 
-	// Return error message if device uuid not exist
-	if device.UUID == "" {
-		c.JSON(http.StatusBadRequest, Error.ResourceNotFoundError("Device", "uuid", smsData.DeviceUUID))
-		return
+	// If Device User GUID empty, update device with User GUID
+	if device.UserGUID == "" {
+		err := sh.DeviceFactory.Update(smsData.DeviceUUID, UpdateDevice{UserGUID: user.GUID})
+
+		if err != nil {
+			db.Rollback()
+			c.JSON(http.StatusInternalServerError, err)
+			return
+		}
 	}
 
 	// Verify Sms verification code

@@ -11,8 +11,10 @@ import (
 )
 
 type AuthHandler struct {
-	DB             *gorm.DB
-	UserRepository UserRepositoryInterface
+	DB               *gorm.DB
+	UserRepository   UserRepositoryInterface
+	DeviceRepository DeviceRepositoryInterface
+	DeviceFactory    DeviceFactoryInterface
 }
 
 // LoginViaPhone used to login user via phone no.
@@ -75,14 +77,18 @@ func (ah *AuthHandler) LoginViaFacebook(c *gin.Context) {
 		return
 	}
 
-	// Retrieve device by UUID and GUID and ignored deleted_at column
-	deviceRepository := DeviceRepository{DB: db}
-	device := deviceRepository.GetByUUIDAndUserGUIDUnscoped(authData.DeviceUUID, user.GUID)
+	// Retrieve device by UUID and ignored deleted_at column
+	device := ah.DeviceRepository.GetByUUIDUnscoped(authData.DeviceUUID)
 
-	// Return error message if device uuid not exist
-	if device.UUID == "" {
-		c.JSON(http.StatusBadRequest, Error.ResourceNotFoundError("Device", "uuid", device.UUID))
-		return
+	// If Device User GUID empty, update device with User GUID
+	if device.UserGUID == "" {
+		err := ah.DeviceFactory.Update(authData.DeviceUUID, UpdateDevice{UserGUID: user.GUID})
+
+		if err != nil {
+			db.Rollback()
+			c.JSON(http.StatusInternalServerError, err)
+			return
+		}
 	}
 
 	// Reactivate device by set null to deleted_at column in devices table

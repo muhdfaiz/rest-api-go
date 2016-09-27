@@ -25,11 +25,11 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, db *gorm.DB) *gin.Engine {
 	// Referral Cashback Objects
 	referralCashbackRepository := &v1.ReferralCashbackRepository{DB: db}
 
-	smsHandler := v1.SmsHandler{DB: db, UserRepository: userRepository, UserFactory: userFactory, SmsService: smsService, SmsHistoryRepository: smsHistoryRepository, DeviceRepository: deviceRepository}
+	smsHandler := v1.SmsHandler{DB: db, UserRepository: userRepository, UserFactory: userFactory, SmsService: smsService, SmsHistoryRepository: smsHistoryRepository, DeviceRepository: deviceRepository, DeviceFactory: deviceFactory}
 	userHandler := v1.UserHandler{DB: db, UserRepository: userRepository, UserService: userService, UserFactory: userFactory, ReferralCashbackRepository: referralCashbackRepository, SmsService: smsService}
 	deviceHandler := v1.DeviceHandler{DB: db, UserRepository: userRepository, DeviceRepository: deviceRepository, DeviceFactory: deviceFactory}
 	//shoppingListHandler := v1.ShoppingListHandler{DB: db, UserRepository: userRepository}
-	authHandler := v1.AuthHandler{DB: db, UserRepository: userRepository}
+	authHandler := v1.AuthHandler{DB: db, UserRepository: userRepository, DeviceRepository: deviceRepository, DeviceFactory: deviceFactory}
 
 	version1 := router.Group("/v1")
 	{

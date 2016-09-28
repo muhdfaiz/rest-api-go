@@ -83,8 +83,10 @@ func (dh DeviceHandler) Update(c *gin.Context) {
 
 	// Bind Device data
 	deviceData := UpdateDevice{}
-	if err := c.Bind(&deviceData); err != nil {
-		c.JSON(http.StatusBadRequest, Error.ValidationErrors(err.(validator.ValidationErrors)))
+
+	// Bind request based on content type and validate request data
+	if err := Binding.Bind(&deviceData, c); err != nil {
+		c.JSON(http.StatusUnprocessableEntity, err)
 		return
 	}
 

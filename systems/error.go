@@ -57,7 +57,7 @@ const (
 	TitleTokenIdentityNotMatch   = "Your access token belong to other user"
 
 	ErrorValidationRequired = "The %s field is required."
-	ErrorValidationUUID     = "The %s field is not valid uuid."
+	ErrorValidationUUID     = "The %s field is not valid uuid v5."
 	ErrorValidationAlpha    = "The %s field may only contain letters."
 	ErrorValidationAlphaNum = "The %s field may only contain letters and numbers."
 	ErrorValidationNumeric  = "The %s field must be a number."
@@ -236,7 +236,7 @@ func (e Error) ValidationErrors(errors map[string]*validator.FieldError) *ErrorD
 		switch errMsg.ActualTag {
 		case "required":
 			message = fmt.Sprintf(ErrorValidationRequired, errMsg.Name)
-		case "uuid4":
+		case "uuid5":
 			message = fmt.Sprintf(ErrorValidationUUID, errMsg.Name)
 		case "alpha":
 			message = fmt.Sprintf(ErrorValidationAlpha, errMsg.Name)

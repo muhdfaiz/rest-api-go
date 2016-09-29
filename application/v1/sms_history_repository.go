@@ -7,27 +7,25 @@ import (
 )
 
 type SmsHistoryRepositoryInterface interface {
-	Count(conditionAttribute string, conditionValue string) int64
-	GetByRecipientNo(recipientNo string) *SmsHistory
+	Count(DB *gorm.DB, conditionAttribute string, conditionValue string) int64
+	GetByRecipientNo(DB *gorm.DB, recipientNo string) *SmsHistory
 	CalculateIntervalBetweenCurrentTimeAndLastSmsSentTime(smsSentTime time.Time) int
-	VerifyVerificationCode(phoneNo string, verificationCode string) *SmsHistory
+	VerifyVerificationCode(DB *gorm.DB, phoneNo string, verificationCode string) *SmsHistory
 }
 
-type SmsHistoryRepository struct {
-	DB *gorm.DB
-}
+type SmsHistoryRepository struct{}
 
-func (shr *SmsHistoryRepository) Count(conditionAttribute string, conditionValue string) int64 {
+func (shr *SmsHistoryRepository) Count(DB *gorm.DB, conditionAttribute string, conditionValue string) int64 {
 	var count int64
-	shr.DB.Model(&SmsHistory{}).Where(conditionAttribute+" = ?", conditionValue).Count(&count)
+	DB.Model(&SmsHistory{}).Where(conditionAttribute+" = ?", conditionValue).Count(&count)
 	return count
 }
 
 // GetByRecipientNo function used to retrieve sms history by recipientNo
 // Return sms history row data if found
 // Return nil if not found
-func (shr *SmsHistoryRepository) GetByRecipientNo(recipientNo string) *SmsHistory {
-	smsHistory := shr.DB.Where(&SmsHistory{RecipientNo: recipientNo}).Last(&SmsHistory{})
+func (shr *SmsHistoryRepository) GetByRecipientNo(DB *gorm.DB, recipientNo string) *SmsHistory {
+	smsHistory := DB.Where(&SmsHistory{RecipientNo: recipientNo}).Last(&SmsHistory{})
 	if smsHistory.RowsAffected != 0 {
 		return smsHistory.Value.(*SmsHistory)
 	}
@@ -47,9 +45,9 @@ func (shr *SmsHistoryRepository) CalculateIntervalBetweenCurrentTimeAndLastSmsSe
 }
 
 // VerifyVerificationCode function used to verify verification code user enter during login & registration
-func (shr *SmsHistoryRepository) VerifyVerificationCode(phoneNo string, verificationCode string) *SmsHistory {
+func (shr *SmsHistoryRepository) VerifyVerificationCode(DB *gorm.DB, phoneNo string, verificationCode string) *SmsHistory {
 
-	result := shr.DB.Where(&SmsHistory{RecipientNo: phoneNo, VerificationCode: verificationCode}).
+	result := DB.Where(&SmsHistory{RecipientNo: phoneNo, VerificationCode: verificationCode}).
 		Find(&SmsHistory{})
 
 	if result.RowsAffected == 1 {

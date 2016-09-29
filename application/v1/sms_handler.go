@@ -15,7 +15,6 @@ import (
 
 // SmsHandler Struct
 type SmsHandler struct {
-	DB                   *gorm.DB
 	UserRepository       UserRepositoryInterface
 	UserFactory          UserFactoryInterface
 	SmsService           SmsServiceInterface
@@ -26,7 +25,7 @@ type SmsHandler struct {
 
 // Send function used to send sms to the user during login & registration
 func (sh *SmsHandler) Send(c *gin.Context) {
-	db := sh.DB.Begin()
+	db := c.MustGet("DB").(*gorm.DB).Begin()
 
 	smsData := &SmsSend{}
 
@@ -37,7 +36,7 @@ func (sh *SmsHandler) Send(c *gin.Context) {
 	}
 
 	// Retrieve user by GUID
-	user := sh.UserRepository.GetByGUID(smsData.UserGUID)
+	user := sh.UserRepository.GetByGUID(db, smsData.UserGUID)
 
 	// If user GUID empty return error message
 	if user.GUID == "" {
@@ -46,7 +45,7 @@ func (sh *SmsHandler) Send(c *gin.Context) {
 	}
 
 	// Retrieve sms history by recipient_nos
-	smsHistory := sh.SmsHistoryRepository.GetByRecipientNo(smsData.RecipientNo)
+	smsHistory := sh.SmsHistoryRepository.GetByRecipientNo(db, smsData.RecipientNo)
 
 	// If recipient_no not empty
 	if smsHistory.RecipientNo != "" {
@@ -75,7 +74,7 @@ func (sh *SmsHandler) Send(c *gin.Context) {
 	// os.Exit(0)
 
 	// Send SMS verification code
-	sentSmsData, err := sh.SmsService.SendVerificationCode(smsData.RecipientNo, smsData.UserGUID)
+	sentSmsData, err := sh.SmsService.SendVerificationCode(db, smsData.RecipientNo, smsData.UserGUID)
 
 	if err != nil {
 		statusCode, _ := strconv.Atoi(err.Error.Status)
@@ -83,14 +82,14 @@ func (sh *SmsHandler) Send(c *gin.Context) {
 		return
 	}
 
-	db.Commit()
+	db.Commit().Close()
 	c.JSON(http.StatusOK, gin.H{"data": sentSmsData.(*SmsHistory)})
 }
 
 // Verify function used to verify sms verification code during login & registration
 // Return JWT Token if sms verification code valid
 func (sh *SmsHandler) Verify(c *gin.Context) {
-	db := sh.DB.Begin()
+	db := c.MustGet("DB").(*gorm.DB).Begin()
 
 	smsData := SmsVerification{}
 
@@ -101,7 +100,7 @@ func (sh *SmsHandler) Verify(c *gin.Context) {
 	}
 
 	// Retrieve user by phone no
-	user := sh.UserRepository.GetByPhoneNo(smsData.PhoneNo)
+	user := sh.UserRepository.GetByPhoneNo(db, smsData.PhoneNo)
 
 	// If user phone_no empty return error message
 	if user.PhoneNo == "" {
@@ -110,21 +109,21 @@ func (sh *SmsHandler) Verify(c *gin.Context) {
 	}
 
 	// Retrieve device by uuid
-	device := sh.DeviceRepository.GetByUUIDUnscoped(smsData.DeviceUUID)
+	device := sh.DeviceRepository.GetByUUIDUnscoped(db, smsData.DeviceUUID)
 
 	// If Device User GUID empty, update device with User GUID
 	if device.UserGUID == "" {
-		err := sh.DeviceFactory.Update(smsData.DeviceUUID, UpdateDevice{UserGUID: user.GUID})
+		err := sh.DeviceFactory.Update(db, smsData.DeviceUUID, UpdateDevice{UserGUID: user.GUID})
 
 		if err != nil {
-			db.Rollback()
+			db.Rollback().Close()
 			c.JSON(http.StatusInternalServerError, err)
 			return
 		}
 	}
 
 	// Verify Sms verification code
-	smsHistory := sh.SmsHistoryRepository.VerifyVerificationCode(smsData.PhoneNo, strings.ToLower(smsData.VerificationCode))
+	smsHistory := sh.SmsHistoryRepository.VerifyVerificationCode(db, smsData.PhoneNo, strings.ToLower(smsData.VerificationCode))
 
 	// If sms history record not found return error message
 	if smsHistory == nil {
@@ -135,7 +134,7 @@ func (sh *SmsHandler) Verify(c *gin.Context) {
 	}
 
 	// Set user status to verified
-	err := sh.UserFactory.Update(smsHistory.UserGUID, map[string]interface{}{"verified": 1})
+	err := sh.UserFactory.Update(db, smsHistory.UserGUID, map[string]interface{}{"verified": 1})
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err)
@@ -146,7 +145,7 @@ func (sh *SmsHandler) Verify(c *gin.Context) {
 	result := db.Unscoped().Model(&Device{}).Update("deleted_at", nil)
 
 	if result.Error != nil || result.RowsAffected == 0 {
-		db.Rollback()
+		db.Rollback().Close()
 		c.JSON(http.StatusInternalServerError, Error.InternalServerError(result.Error, systems.DatabaseError))
 		return
 	}
@@ -158,7 +157,7 @@ func (sh *SmsHandler) Verify(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, err)
 	}
 
-	db.Commit()
+	db.Commit().Close()
 
 	response := make(map[string]interface{})
 	response["user"] = user

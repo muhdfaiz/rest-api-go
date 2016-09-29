@@ -6,15 +6,13 @@ import (
 )
 
 type ReferralCashbackFactorysInterface interface {
-	CreateReferralCashbackFactory(referrerGUID string, referentGUID string) (interface{}, *systems.ErrorData)
+	CreateReferralCashbackFactory(DB *gorm.DB, referrerGUID string, referentGUID string) (interface{}, *systems.ErrorData)
 }
 
-type ReferralCashbackFactory struct {
-	DB *gorm.DB
-}
+type ReferralCashbackFactory struct{}
 
 // CreateReferralCashbackFactory function used to store referral cashback history in database after registration
-func (rcf *ReferralCashbackFactory) CreateReferralCashbackFactory(referrerGUID string, referentGUID string) (interface{}, *systems.ErrorData) {
+func (rcf *ReferralCashbackFactory) CreateReferralCashbackFactory(DB *gorm.DB, referrerGUID string, referentGUID string) (interface{}, *systems.ErrorData) {
 	referralCashback := &ReferralCashback{
 		GUID:           Helper.GenerateUUID(),
 		ReferrerGUID:   referrerGUID,
@@ -22,10 +20,10 @@ func (rcf *ReferralCashbackFactory) CreateReferralCashbackFactory(referrerGUID s
 		CashbackAmount: 5,
 	}
 
-	result := rcf.DB.Create(referralCashback)
+	result := DB.Create(referralCashback)
 
 	if result.Error != nil || result.RowsAffected == 0 {
-		rcf.DB.Rollback()
+		DB.Rollback()
 		return nil, Error.InternalServerError(result.Error, systems.DatabaseError)
 	}
 

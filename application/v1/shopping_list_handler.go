@@ -9,17 +9,16 @@ import (
 
 // ShoppingListHandler will handle all request related to user shopping list
 type ShoppingListHandler struct {
-	DB             *gorm.DB
 	UserRepository UserRepositoryInterface
 }
 
 func (slh *ShoppingListHandler) Create(c *gin.Context) {
-	db := slh.DB.Begin()
+	db := c.MustGet("DB").(*gorm.DB).Begin()
 
 	// Retrieve user guid in url
 	userGUID := c.Param("guid")
 
-	user := slh.UserRepository.GetByGUID(userGUID)
+	user := slh.UserRepository.GetByGUID(db, userGUID)
 
 	// If user GUID empty return error message
 	if user.GUID == "" {
@@ -35,6 +34,6 @@ func (slh *ShoppingListHandler) Create(c *gin.Context) {
 		return
 	}
 
-	db.Commit()
+	db.Commit().Close()
 
 }

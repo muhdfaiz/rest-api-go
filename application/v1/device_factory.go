@@ -7,19 +7,17 @@ import (
 )
 
 type DeviceFactoryInterface interface {
-	Create(data CreateDevice) (*Device, *systems.ErrorData)
-	Update(uuid string, data UpdateDevice) *systems.ErrorData
-	Delete(attribute string, value string) *systems.ErrorData
+	Create(DB *gorm.DB, data CreateDevice) (*Device, *systems.ErrorData)
+	Update(DB *gorm.DB, uuid string, data UpdateDevice) *systems.ErrorData
+	Delete(DB *gorm.DB, attribute string, value string) *systems.ErrorData
 }
 
 // DeviceFactory will handle all function to create, update and delete device
-type DeviceFactory struct {
-	DB *gorm.DB
-}
+type DeviceFactory struct{}
 
 // Create function used to create new device
 // Optional UserGUID because app must register device first when app is loaded
-func (df *DeviceFactory) Create(data CreateDevice) (*Device, *systems.ErrorData) {
+func (df *DeviceFactory) Create(DB *gorm.DB, data CreateDevice) (*Device, *systems.ErrorData) {
 	device := &Device{
 		GUID:       Helper.GenerateUUID(),
 		UserGUID:   data.UserGUID,
@@ -30,10 +28,10 @@ func (df *DeviceFactory) Create(data CreateDevice) (*Device, *systems.ErrorData)
 		AppVersion: data.AppVersion,
 	}
 
-	result := df.DB.Create(device)
+	result := DB.Create(device)
 
 	if result.Error != nil || result.RowsAffected == 0 {
-		df.DB.Rollback()
+		DB.Rollback()
 		return nil, Error.InternalServerError(result.Error, systems.DatabaseError)
 	}
 
@@ -42,7 +40,7 @@ func (df *DeviceFactory) Create(data CreateDevice) (*Device, *systems.ErrorData)
 
 // Update function used to update device data
 // Require device uuid. Must provide in url
-func (df *DeviceFactory) Update(uuid string, data UpdateDevice) *systems.ErrorData {
+func (df *DeviceFactory) Update(DB *gorm.DB, uuid string, data UpdateDevice) *systems.ErrorData {
 	updateData := map[string]string{}
 	for key, value := range structs.Map(data) {
 		if value != "" {
@@ -50,21 +48,21 @@ func (df *DeviceFactory) Update(uuid string, data UpdateDevice) *systems.ErrorDa
 		}
 	}
 
-	result := df.DB.Model(&Device{}).Where(&Device{UUID: uuid}).Updates(updateData)
+	result := DB.Model(&Device{}).Where(&Device{UUID: uuid}).Updates(updateData)
 
 	if result.Error != nil || result.RowsAffected == 0 {
-		df.DB.Rollback()
+		DB.Rollback()
 		return Error.InternalServerError(result.Error, systems.DatabaseError)
 	}
 
 	return nil
 }
 
-func (df *DeviceFactory) Delete(attribute string, value string) *systems.ErrorData {
-	result := df.DB.Where(attribute+" = ?", value).Delete(&Device{})
+func (df *DeviceFactory) Delete(DB *gorm.DB, attribute string, value string) *systems.ErrorData {
+	result := DB.Where(attribute+" = ?", value).Delete(&Device{})
 
 	if result.Error != nil || result.RowsAffected == 0 {
-		df.DB.Rollback()
+		DB.Rollback()
 		return Error.InternalServerError(result.Error, systems.DatabaseError)
 	}
 

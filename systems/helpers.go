@@ -76,3 +76,25 @@ func (h *Helpers) StoragePath() string {
 	config := Configs{}
 	return os.Getenv("GOPATH") + config.Get("app.yaml", "storage_path", "")
 }
+
+func convertLogicalOperatorToSQLOperator(logicalOperator string) string {
+	switch logicalOperator {
+	case "eq":
+		return "="
+	case "ne":
+		return "!="
+	case "gt":
+		return ">"
+	case "ge":
+		return ">="
+	case "lt":
+		return "<"
+	case "le":
+		return "<="
+	case "and":
+		return "AND"
+	case "or":
+		return "OR"
+	}
+	return "="
+}

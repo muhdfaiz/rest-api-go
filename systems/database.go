@@ -48,7 +48,7 @@ func (database *Database) Connect(environment string) *gorm.DB {
 		database.setConfigs("production")
 	}
 
-	db, err := gorm.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local",
+	db, err := gorm.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True",
 		database.username, database.password, database.host, database.port, database.name))
 
 	if err != nil {

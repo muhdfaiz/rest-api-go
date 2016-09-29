@@ -3,16 +3,15 @@ package v1
 import (
 	"time"
 
-	"bitbucket.org/cliqers/shoppermate-api/systems"
 	"github.com/jinzhu/gorm"
+
+	"bitbucket.org/cliqers/shoppermate-api/systems"
 )
 
-type SmsFactory struct {
-	DB *gorm.DB
-}
+type SmsFactory struct{}
 
 // CreateSmsHistory function used to store Sms History in database after registration & login
-func (sf *SmsFactory) CreateSmsHistory(data map[string]string) (interface{}, *systems.ErrorData) {
+func (sf *SmsFactory) CreateSmsHistory(DB *gorm.DB, data map[string]string) (interface{}, *systems.ErrorData) {
 	currentTime := time.Now().UTC()
 	smsHistory := &SmsHistory{
 		GUID:             data["guid"],
@@ -27,10 +26,10 @@ func (sf *SmsFactory) CreateSmsHistory(data map[string]string) (interface{}, *sy
 		UpdatedAt:        currentTime,
 	}
 
-	result := sf.DB.Create(smsHistory)
+	result := DB.Create(smsHistory)
 
 	if result.Error != nil || result.RowsAffected == 0 {
-		sf.DB.Rollback()
+		DB.Rollback()
 		return nil, Error.InternalServerError(result.Error, systems.DatabaseError)
 	}
 

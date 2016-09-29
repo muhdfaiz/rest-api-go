@@ -6,21 +6,20 @@ import (
 	"net/http"
 	"net/url"
 
-	"bitbucket.org/cliqers/shoppermate-api/systems"
 	"github.com/jinzhu/gorm"
+
+	"bitbucket.org/cliqers/shoppermate-api/systems"
 )
 
 type SmsServiceInterface interface {
-	SendVerificationCode(phoneNo string, userGUID string) (interface{}, *systems.ErrorData)
+	SendVerificationCode(DB *gorm.DB, phoneNo string, userGUID string) (interface{}, *systems.ErrorData)
 	Send(message string, recipientNumber string) (map[string]string, *systems.ErrorData)
 }
 
-type SmsService struct {
-	DB *gorm.DB
-}
+type SmsService struct{}
 
 // SendVerificationCode function handle sending sms contain verification code during registration & login
-func (sf *SmsService) SendVerificationCode(phoneNo string, userGUID string) (interface{}, *systems.ErrorData) {
+func (sf *SmsService) SendVerificationCode(DB *gorm.DB, phoneNo string, userGUID string) (interface{}, *systems.ErrorData) {
 	// Generate randomverification code 6 character (lower & digit)
 	smsVerificationCode := Helper.RandomString("Digit", 4, "", "")
 
@@ -49,11 +48,11 @@ func (sf *SmsService) SendVerificationCode(phoneNo string, userGUID string) (int
 	m["verification_code"] = smsVerificationCode
 	m["status"] = "0"
 
-	smsFactory := SmsFactory{DB: sf.DB}
-	sentSmsData, err := smsFactory.CreateSmsHistory(m)
+	smsFactory := SmsFactory{}
+	sentSmsData, err := smsFactory.CreateSmsHistory(DB, m)
 
 	if err != nil {
-		sf.DB.Rollback()
+		DB.Rollback()
 		return nil, err
 	}
 

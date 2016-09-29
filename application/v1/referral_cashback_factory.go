@@ -23,7 +23,6 @@ func (rcf *ReferralCashbackFactory) CreateReferralCashbackFactory(DB *gorm.DB, r
 	result := DB.Create(referralCashback)
 
 	if result.Error != nil || result.RowsAffected == 0 {
-		DB.Rollback()
 		return nil, Error.InternalServerError(result.Error, systems.DatabaseError)
 	}
 

@@ -39,7 +39,6 @@ func (uf *UserFactory) Create(DB *gorm.DB, data CreateUser) (*User, *systems.Err
 	result := DB.Create(user)
 
 	if result.Error != nil || result.RowsAffected == 0 {
-		DB.Rollback()
 		return nil, Error.InternalServerError(result.Error, systems.DatabaseError)
 	}
 
@@ -60,8 +59,7 @@ func (uf *UserFactory) Update(DB *gorm.DB, guid string, data map[string]interfac
 
 	result := DB.Model(&User{}).Where(&User{GUID: guid}).Updates(updateData)
 
-	if result.Error != nil || result.RowsAffected == 0 {
-		DB.Rollback()
+	if result.Error != nil {
 		return Error.InternalServerError(result.Error, systems.DatabaseError)
 	}
 
@@ -71,8 +69,7 @@ func (uf *UserFactory) Update(DB *gorm.DB, guid string, data map[string]interfac
 func (uf *UserFactory) Delete(DB *gorm.DB, attribute string, value string) *systems.ErrorData {
 	result := DB.Where(attribute+" = ?", value).Delete(&User{})
 
-	if result.Error != nil || result.RowsAffected == 0 {
-		DB.Rollback()
+	if result.Error != nil {
 		return Error.InternalServerError(result.Error, systems.DatabaseError)
 	}
 

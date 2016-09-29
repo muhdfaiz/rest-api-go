@@ -29,7 +29,6 @@ func (sf *SmsFactory) CreateSmsHistory(DB *gorm.DB, data map[string]string) (int
 	result := DB.Create(smsHistory)
 
 	if result.Error != nil || result.RowsAffected == 0 {
-		DB.Rollback()
 		return nil, Error.InternalServerError(result.Error, systems.DatabaseError)
 	}
 

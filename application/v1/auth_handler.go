@@ -98,7 +98,7 @@ func (ah *AuthHandler) LoginViaFacebook(c *gin.Context) {
 
 	// Reactivate device by set null to deleted_at column in devices table
 	result := db.Unscoped().Model(&Device{}).Update("deleted_at", nil)
-	if result.Error != nil || result.RowsAffected == 0 {
+	if result.Error != nil {
 		db.Rollback().Close()
 		c.JSON(http.StatusInternalServerError, Error.InternalServerError(result.Error, systems.DatabaseError))
 		return

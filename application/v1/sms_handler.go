@@ -31,6 +31,7 @@ func (sh *SmsHandler) Send(c *gin.Context) {
 
 	// Bind request based on content type and validate request data
 	if err := Binding.Bind(smsData, c); err != nil {
+		db.Rollback().Close()
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
@@ -40,6 +41,7 @@ func (sh *SmsHandler) Send(c *gin.Context) {
 
 	// If user GUID empty return error message
 	if user.GUID == "" {
+		db.Rollback().Close()
 		c.JSON(http.StatusBadRequest, Error.ResourceNotFoundError("User", "guid", smsData.UserGUID))
 		return
 	}
@@ -54,6 +56,7 @@ func (sh *SmsHandler) Send(c *gin.Context) {
 
 		// If time interval in second below 250 return error message
 		if interval < 250 {
+			db.Rollback().Close()
 			durationUserMustWait := 250 - interval
 			errorMesg := Error.GenericError("500", systems.FailedToSendSMS, systems.TitleSentSmsError,
 				"", fmt.Sprintf(systems.ErrorSentSms, strconv.Itoa(durationUserMustWait)))
@@ -77,6 +80,7 @@ func (sh *SmsHandler) Send(c *gin.Context) {
 	sentSmsData, err := sh.SmsService.SendVerificationCode(db, smsData.RecipientNo, smsData.UserGUID)
 
 	if err != nil {
+		db.Rollback().Close()
 		statusCode, _ := strconv.Atoi(err.Error.Status)
 		c.JSON(statusCode, err)
 		return
@@ -95,6 +99,7 @@ func (sh *SmsHandler) Verify(c *gin.Context) {
 
 	// Bind request based on content type and validate request data
 	if err := Binding.Bind(&smsData, c); err != nil {
+		db.Rollback().Close()
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
@@ -104,6 +109,7 @@ func (sh *SmsHandler) Verify(c *gin.Context) {
 
 	// If user phone_no empty return error message
 	if user.PhoneNo == "" {
+		db.Rollback().Close()
 		c.JSON(http.StatusBadRequest, Error.ResourceNotFoundError("User", "phone_no", smsData.PhoneNo))
 		return
 	}
@@ -127,6 +133,7 @@ func (sh *SmsHandler) Verify(c *gin.Context) {
 
 	// If sms history record not found return error message
 	if smsHistory == nil {
+		db.Rollback().Close()
 		errorMesg := Error.GenericError(strconv.Itoa(http.StatusBadRequest), systems.VerificationCodeInvalid,
 			systems.TitleVerificationCodeInvalid, "", fmt.Sprintf(systems.ErrorVerificationCodeInvalid, smsData.VerificationCode))
 		c.JSON(http.StatusBadRequest, errorMesg)
@@ -137,6 +144,7 @@ func (sh *SmsHandler) Verify(c *gin.Context) {
 	err := sh.UserFactory.Update(db, smsHistory.UserGUID, map[string]interface{}{"verified": 1})
 
 	if err != nil {
+		db.Rollback().Close()
 		c.JSON(http.StatusInternalServerError, err)
 		return
 	}
@@ -144,7 +152,7 @@ func (sh *SmsHandler) Verify(c *gin.Context) {
 	// Set deleted_at column in devices table to null
 	result := db.Unscoped().Model(&Device{}).Update("deleted_at", nil)
 
-	if result.Error != nil || result.RowsAffected == 0 {
+	if result.Error != nil {
 		db.Rollback().Close()
 		c.JSON(http.StatusInternalServerError, Error.InternalServerError(result.Error, systems.DatabaseError))
 		return

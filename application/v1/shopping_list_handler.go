@@ -22,6 +22,7 @@ func (slh *ShoppingListHandler) Create(c *gin.Context) {
 
 	// If user GUID empty return error message
 	if user.GUID == "" {
+		db.Rollback().Close()
 		c.JSON(http.StatusBadRequest, Error.ResourceNotFoundError("User", "guid", userGUID))
 		return
 	}
@@ -30,6 +31,7 @@ func (slh *ShoppingListHandler) Create(c *gin.Context) {
 
 	// Bind request based on content type and validate request data
 	if err := Binding.Bind(&shoppingListData, c); err != nil {
+		db.Rollback().Close()
 		c.JSON(http.StatusUnprocessableEntity, err)
 		return
 	}

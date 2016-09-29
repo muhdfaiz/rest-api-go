@@ -37,6 +37,7 @@ func (uh *UserHandler) View(c *gin.Context) {
 
 	// If user GUID empty return error message
 	if user.GUID == "" {
+		db.Rollback().Close()
 		c.JSON(http.StatusBadRequest, Error.ResourceNotFoundError("User", "guid", userGUID))
 		return
 	}
@@ -54,6 +55,7 @@ func (uh *UserHandler) Create(c *gin.Context) {
 
 	// Bind request based on content type and validate request data
 	if err := Binding.Bind(&userData, c); err != nil {
+		db.Rollback().Close()
 		c.JSON(http.StatusUnprocessableEntity, err)
 		return
 	}
@@ -63,6 +65,7 @@ func (uh *UserHandler) Create(c *gin.Context) {
 
 	// If user phone_no not empty return error message
 	if user.PhoneNo != "" {
+		db.Rollback().Close()
 		c.JSON(http.StatusConflict, Error.DuplicateValueErrors("User", "phone_no", userData.PhoneNo))
 		return
 	}
@@ -74,6 +77,7 @@ func (uh *UserHandler) Create(c *gin.Context) {
 
 		// If facebook_id not valid return error message
 		if !fbIDValid {
+			db.Rollback().Close()
 			mesg := fmt.Sprintf(systems.ErrorFacebookIDNotValid, userData.FacebookID)
 			c.JSON(http.StatusBadRequest, Error.GenericError(strconv.Itoa(http.StatusBadRequest),
 				systems.FacebookIDNotValid, systems.TitleFacebookIDNotValidError, "facebook_id", mesg))
@@ -89,6 +93,7 @@ func (uh *UserHandler) Create(c *gin.Context) {
 
 		// If referral code not found return error message
 		if user.ReferralCode == "" {
+			db.Rollback().Close()
 			c.JSON(http.StatusBadRequest, Error.GenericError(strconv.Itoa(http.StatusBadRequest),
 				systems.ReferralCodeNotExist, systems.TitleReferralCodeNotExist, "referral_code", systems.ErrorReferralCodeNotExist))
 			return
@@ -99,6 +104,7 @@ func (uh *UserHandler) Create(c *gin.Context) {
 
 		// If total referral more than 3 return error message
 		if totalPreviousReferral > 3 {
+			db.Rollback().Close()
 			c.JSON(http.StatusBadRequest, Error.GenericError(strconv.Itoa(http.StatusBadRequest),
 				systems.ReferralCodeExceedLimit, systems.TitleReferralCodeExceedLimit, "referral_code", systems.ErrorReferralCodeExceedLimit))
 			return
@@ -118,6 +124,7 @@ func (uh *UserHandler) Create(c *gin.Context) {
 		profileImage, err = uh.UserService.UploadProfileImage(file)
 
 		if err != nil {
+			db.Rollback().Close()
 			errorCode, _ := strconv.Atoi(err.Error.Status)
 			c.JSON(errorCode, err)
 			return
@@ -133,6 +140,7 @@ func (uh *UserHandler) Create(c *gin.Context) {
 	result, err := uh.UserFactory.Create(db, userData)
 
 	if err != nil {
+		db.Rollback().Close()
 		errorCode, _ := strconv.Atoi(err.Error.Status)
 		c.JSON(errorCode, err)
 		return
@@ -149,6 +157,7 @@ func (uh *UserHandler) Create(c *gin.Context) {
 	_, err = uh.SmsService.SendVerificationCode(db, createdUser.PhoneNo, createdUser.GUID)
 
 	if err != nil {
+		db.Rollback().Close()
 		errorCode, _ := strconv.Atoi(err.Error.Status)
 		c.JSON(errorCode, err)
 		return
@@ -160,6 +169,7 @@ func (uh *UserHandler) Create(c *gin.Context) {
 		_, err := uh.UserService.GiveReferralCashback(db, createdUser.GUID, referentUserGUID)
 
 		if err != nil {
+			db.Rollback().Close()
 			errorCode, _ := strconv.Atoi(err.Error.Status)
 			c.JSON(errorCode, err)
 			return
@@ -184,6 +194,7 @@ func (uh *UserHandler) Update(c *gin.Context) {
 	userToken := c.MustGet("Token").(map[string]string)
 
 	if userToken["user_guid"] != userGUID {
+		db.Rollback().Close()
 		c.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("Update User"))
 		return
 	}
@@ -193,6 +204,7 @@ func (uh *UserHandler) Update(c *gin.Context) {
 
 	// If user guid empty return error message
 	if user.GUID == "" {
+		db.Rollback().Close()
 		c.JSON(http.StatusBadRequest, Error.ResourceNotFoundError("User", "guid", userGUID))
 		return
 	}
@@ -201,6 +213,7 @@ func (uh *UserHandler) Update(c *gin.Context) {
 
 	// Bind request based on content type and validate request data
 	if err := Binding.Bind(&userData, c); err != nil {
+		db.Rollback().Close()
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
@@ -215,6 +228,7 @@ func (uh *UserHandler) Update(c *gin.Context) {
 		profileImage, err = userService.UploadProfileImage(file)
 
 		if err != nil {
+			db.Rollback().Close()
 			errorCode, _ := strconv.Atoi(err.Error.Status)
 			c.JSON(errorCode, err)
 			return
@@ -230,6 +244,7 @@ func (uh *UserHandler) Update(c *gin.Context) {
 	err := userFactory.Update(db, userGUID, structs.Map(&userData))
 
 	if err != nil {
+		db.Rollback().Close()
 		c.JSON(http.StatusInternalServerError, err)
 		return
 	}
@@ -242,6 +257,7 @@ func (uh *UserHandler) Update(c *gin.Context) {
 		_, err = uh.SmsService.SendVerificationCode(db, updatedUser.PhoneNo, updatedUser.GUID)
 
 		if err != nil {
+			db.Rollback().Close()
 			errorCode, _ := strconv.Atoi(err.Error.Status)
 			c.JSON(errorCode, err)
 			return
@@ -251,6 +267,7 @@ func (uh *UserHandler) Update(c *gin.Context) {
 		err := uh.DeviceFactory.Delete(db, "uuid", userToken["device_uuid"])
 
 		if err != nil {
+			db.Rollback().Close()
 			c.JSON(http.StatusInternalServerError, err)
 			return
 		}

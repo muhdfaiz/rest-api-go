@@ -24,6 +24,7 @@ func (dh DeviceHandler) Create(c *gin.Context) {
 	// Bind request data based on header content type
 	deviceData := CreateDevice{}
 	if err := c.Bind(&deviceData); err != nil {
+		db.Rollback().Close()
 		c.JSON(http.StatusBadRequest, Error.ValidationErrors(err.(validator.ValidationErrors)))
 		return
 	}
@@ -33,6 +34,7 @@ func (dh DeviceHandler) Create(c *gin.Context) {
 
 	// If device UUID not empty return error message
 	if device.UUID != "" {
+		db.Rollback().Close()
 		c.JSON(http.StatusConflict, Error.DuplicateValueErrors("Device", "uuid", device.UUID))
 		return
 	}
@@ -44,6 +46,7 @@ func (dh DeviceHandler) Create(c *gin.Context) {
 
 		// If user GUID empty return error message
 		if user.GUID == "" {
+			db.Rollback().Close()
 			c.JSON(http.StatusBadRequest, Error.ResourceNotFoundError("User", "guid", deviceData.UserGUID))
 			return
 		}
@@ -76,6 +79,7 @@ func (dh DeviceHandler) Update(c *gin.Context) {
 
 	// If device UUID empty return error message
 	if device.UUID == "" {
+		db.Rollback().Close()
 		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("Device", "uuid", deviceUUID))
 		return
 	}
@@ -85,6 +89,7 @@ func (dh DeviceHandler) Update(c *gin.Context) {
 
 	// Bind request based on content type and validate request data
 	if err := Binding.Bind(&deviceData, c); err != nil {
+		db.Rollback().Close()
 		c.JSON(http.StatusUnprocessableEntity, err)
 		return
 	}
@@ -96,6 +101,7 @@ func (dh DeviceHandler) Update(c *gin.Context) {
 
 		// If user GUID empty return error message
 		if user.GUID == "" {
+			db.Rollback().Close()
 			c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("User", "guid", deviceData.UserGUID))
 			return
 		}

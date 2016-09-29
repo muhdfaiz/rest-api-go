@@ -31,7 +31,6 @@ func (df *DeviceFactory) Create(DB *gorm.DB, data CreateDevice) (*Device, *syste
 	result := DB.Create(device)
 
 	if result.Error != nil || result.RowsAffected == 0 {
-		DB.Rollback()
 		return nil, Error.InternalServerError(result.Error, systems.DatabaseError)
 	}
 
@@ -51,7 +50,6 @@ func (df *DeviceFactory) Update(DB *gorm.DB, uuid string, data UpdateDevice) *sy
 	result := DB.Model(&Device{}).Where(&Device{UUID: uuid}).Updates(updateData)
 
 	if result.Error != nil || result.RowsAffected == 0 {
-		DB.Rollback()
 		return Error.InternalServerError(result.Error, systems.DatabaseError)
 	}
 
@@ -62,7 +60,6 @@ func (df *DeviceFactory) Delete(DB *gorm.DB, attribute string, value string) *sy
 	result := DB.Where(attribute+" = ?", value).Delete(&Device{})
 
 	if result.Error != nil || result.RowsAffected == 0 {
-		DB.Rollback()
 		return Error.InternalServerError(result.Error, systems.DatabaseError)
 	}
 

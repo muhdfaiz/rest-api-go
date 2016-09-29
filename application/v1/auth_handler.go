@@ -1,7 +1,6 @@
 package v1
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -28,6 +27,7 @@ func (ah *AuthHandler) LoginViaPhone(c *gin.Context) {
 	// Bind request based on content type and validate request data.
 	if err := Binding.Bind(authData, c); err != nil {
 		c.JSON(http.StatusBadRequest, err)
+		db.Rollback().Close()
 		return
 	}
 
@@ -36,6 +36,7 @@ func (ah *AuthHandler) LoginViaPhone(c *gin.Context) {
 
 	// If user phone_no empty return error message.
 	if user.PhoneNo == "" {
+		db.Rollback().Close()
 		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("User", "phone_no", user.PhoneNo))
 		return
 	}
@@ -44,6 +45,7 @@ func (ah *AuthHandler) LoginViaPhone(c *gin.Context) {
 	_, err := ah.SmsService.SendVerificationCode(db, user.PhoneNo, user.GUID)
 
 	if err != nil {
+		db.Rollback().Close()
 		errorCode, _ := strconv.Atoi(err.Error.Status)
 		c.JSON(errorCode, err)
 		return
@@ -60,11 +62,12 @@ func (ah *AuthHandler) LoginViaPhone(c *gin.Context) {
 // LoginViaFacebook function used to login user via facebook
 func (ah *AuthHandler) LoginViaFacebook(c *gin.Context) {
 	db := c.MustGet("DB").(*gorm.DB).Begin()
-
+	defer db.Close()
 	authData := &LoginViaFacebook{}
 
 	// Bind request based on content type and validate request data
 	if err := Binding.Bind(authData, c); err != nil {
+		db.Rollback().Close()
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
@@ -74,6 +77,7 @@ func (ah *AuthHandler) LoginViaFacebook(c *gin.Context) {
 
 	// If facebook_id empty return error message
 	if user.FacebookID == "" {
+		db.Rollback().Close()
 		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("User", "facebook_id", authData.FacebookID))
 		return
 	}
@@ -95,7 +99,6 @@ func (ah *AuthHandler) LoginViaFacebook(c *gin.Context) {
 	// Reactivate device by set null to deleted_at column in devices table
 	result := db.Unscoped().Model(&Device{}).Update("deleted_at", nil)
 	if result.Error != nil || result.RowsAffected == 0 {
-		fmt.Println(result.Error)
 		db.Rollback().Close()
 		c.JSON(http.StatusInternalServerError, Error.InternalServerError(result.Error, systems.DatabaseError))
 		return
@@ -146,6 +149,7 @@ func (ah *AuthHandler) Logout(c *gin.Context) {
 
 	// If device uuid empty return error message
 	if device.UUID == "" {
+		db.Rollback().Close()
 		c.JSON(http.StatusBadRequest, Error.ResourceNotFoundError("Device", "uuid", device.UUID))
 		return
 	}

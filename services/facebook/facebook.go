@@ -13,6 +13,11 @@ var (
 	Helper = &systems.Helpers{}
 )
 
+type FacebookServiceInterface interface {
+	IDIsValid(facebookID string) bool
+	GetAccessToken() string
+}
+
 // FacebookService type
 type FacebookService struct {
 	AppID     string

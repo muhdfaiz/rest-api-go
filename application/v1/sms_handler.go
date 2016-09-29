@@ -152,12 +152,16 @@ func (sh *SmsHandler) Verify(c *gin.Context) {
 	}
 
 	jwt := &systems.Jwt{}
-	jwtToken, err := jwt.GenerateJWTToken(smsHistory.UserGUID, smsHistory.RecipientNo, smsData.DeviceUUID)
+	jwtToken, err := jwt.GenerateToken(smsHistory.UserGUID, smsHistory.RecipientNo, smsData.DeviceUUID)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err)
 	}
 
 	db.Commit()
-	c.JSON(http.StatusOK, gin.H{"data": jwtToken})
+
+	response := make(map[string]interface{})
+	response["user"] = user
+	response["access_token"] = jwtToken
+	c.JSON(http.StatusOK, gin.H{"data": response})
 }

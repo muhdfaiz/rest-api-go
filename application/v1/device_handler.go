@@ -32,7 +32,7 @@ func (dh DeviceHandler) Create(c *gin.Context) {
 	// Retrieve device by UUID
 	device := dh.DeviceRepository.GetByUUID(deviceData.UUID)
 
-	// If device UUID empty return error message
+	// If device UUID not empty return error message
 	if device.UUID != "" {
 		c.JSON(http.StatusConflict, Error.DuplicateValueErrors("Device", "uuid", device.UUID))
 		return
@@ -77,7 +77,7 @@ func (dh DeviceHandler) Update(c *gin.Context) {
 
 	// If device UUID empty return error message
 	if device.UUID == "" {
-		c.JSON(http.StatusBadRequest, Error.ResourceNotFoundError("Device", "uuid", deviceUUID))
+		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("Device", "uuid", deviceUUID))
 		return
 	}
 
@@ -97,7 +97,7 @@ func (dh DeviceHandler) Update(c *gin.Context) {
 
 		// If user GUID empty return error message
 		if user.GUID == "" {
-			c.JSON(http.StatusBadRequest, Error.ResourceNotFoundError("User", "guid", deviceData.UserGUID))
+			c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("User", "guid", deviceData.UserGUID))
 			return
 		}
 	}

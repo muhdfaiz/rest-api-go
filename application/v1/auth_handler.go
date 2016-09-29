@@ -101,14 +101,18 @@ func (ah *AuthHandler) LoginViaFacebook(c *gin.Context) {
 
 	// Generate new JWT Token
 	jwt := &systems.Jwt{}
-	jwtToken, err := jwt.GenerateJWTToken(user.GUID, user.PhoneNo, device.UUID)
+	jwtToken, err := jwt.GenerateToken(user.GUID, user.PhoneNo, device.UUID)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err)
 	}
 
 	db.Commit()
-	c.JSON(http.StatusOK, gin.H{"data": jwtToken})
+
+	response := make(map[string]interface{})
+	response["user"] = user
+	response["access_token"] = jwtToken
+	c.JSON(http.StatusOK, gin.H{"data": response})
 
 }
 
@@ -119,7 +123,7 @@ func (ah *AuthHandler) Refresh(c *gin.Context) {
 
 	// Generate new JWT Token
 	jwt := &systems.Jwt{}
-	jwtToken, err := jwt.GenerateJWTToken(tokenData["user_guid"], tokenData["user_phone_no"], tokenData["device_uuid"])
+	jwtToken, err := jwt.GenerateToken(tokenData["user_guid"], tokenData["user_phone_no"], tokenData["device_uuid"])
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err)

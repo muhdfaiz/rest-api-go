@@ -20,7 +20,7 @@ type CustomClaims struct {
 }
 
 // GenerateJWTToken will create new JWt Token
-func (j *Jwt) GenerateJWTToken(userGUID string, phoneNo string, deviceUUID string) (*JwtToken, *ErrorData) {
+func (j *Jwt) GenerateToken(userGUID string, phoneNo string, deviceUUID string) (*JwtToken, *ErrorData) {
 	currentTimestamp := time.Now().Unix()
 
 	// jti := md5.New()

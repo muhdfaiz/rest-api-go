@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"bitbucket.org/cliqers/shoppermate-api/services/facebook"
 	"bitbucket.org/cliqers/shoppermate-api/systems"
 
 	"github.com/fatih/structs"
@@ -20,6 +21,7 @@ type UserHandler struct {
 	UserFactory                UserFactoryInterface
 	ReferralCashbackRepository ReferralCashbackRepositoryInterface
 	SmsService                 SmsServiceInterface
+	FacebookService            facebook.FacebookServiceInterface
 }
 
 // View function used to view user detail
@@ -67,7 +69,7 @@ func (uh *UserHandler) Create(c *gin.Context) {
 	// If facebook_id exist in request data
 	if userData.FacebookID != "" {
 		// Validate facebook_id valid or not
-		fbIDValid := FacebookService.IDIsValid(userData.FacebookID)
+		fbIDValid := uh.FacebookService.IDIsValid(userData.FacebookID)
 
 		// If facebook_id not valid return error message
 		if !fbIDValid {

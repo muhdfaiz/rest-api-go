@@ -3,6 +3,8 @@ package application
 import (
 	"bitbucket.org/cliqers/shoppermate-api/application/v1"
 	"bitbucket.org/cliqers/shoppermate-api/middlewares"
+	"bitbucket.org/cliqers/shoppermate-api/services/facebook"
+	"bitbucket.org/cliqers/shoppermate-api/systems"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 )
@@ -25,8 +27,16 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, db *gorm.DB) *gin.Engine {
 	// Referral Cashback Objects
 	referralCashbackRepository := &v1.ReferralCashbackRepository{DB: db}
 
+	// Facebook Service
+	Config := &systems.Configs{}
+	facebookService := &facebook.FacebookService{
+		AppID:     Config.Get("app.yaml", "facebook_app_id", ""),
+		AppSecret: Config.Get("app.yaml", "facebook_app_secret", ""),
+	}
+
 	smsHandler := v1.SmsHandler{DB: db, UserRepository: userRepository, UserFactory: userFactory, SmsService: smsService, SmsHistoryRepository: smsHistoryRepository, DeviceRepository: deviceRepository, DeviceFactory: deviceFactory}
-	userHandler := v1.UserHandler{DB: db, UserRepository: userRepository, UserService: userService, UserFactory: userFactory, ReferralCashbackRepository: referralCashbackRepository, SmsService: smsService}
+	userHandler := v1.UserHandler{DB: db, UserRepository: userRepository, UserService: userService, UserFactory: userFactory,
+		ReferralCashbackRepository: referralCashbackRepository, SmsService: smsService, FacebookService: facebookService}
 	deviceHandler := v1.DeviceHandler{DB: db, UserRepository: userRepository, DeviceRepository: deviceRepository, DeviceFactory: deviceFactory}
 	//shoppingListHandler := v1.ShoppingListHandler{DB: db, UserRepository: userRepository}
 	authHandler := v1.AuthHandler{DB: db, UserRepository: userRepository, DeviceRepository: deviceRepository, DeviceFactory: deviceFactory}

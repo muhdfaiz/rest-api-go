@@ -15,7 +15,6 @@ import (
 
 // UserHandler will handle all request related to User
 type UserHandler struct {
-	DB                         *gorm.DB
 	UserRepository             UserRepositoryInterface
 	UserService                UserServiceInterface
 	UserFactory                UserFactoryInterface
@@ -27,45 +26,45 @@ type UserHandler struct {
 
 // View function used to view user detail
 func (uh *UserHandler) View(c *gin.Context) {
-	db := c.MustGet("DB").(*gorm.DB).Begin()
+	DB := c.MustGet("DB").(*gorm.DB).Begin()
 
 	// Retrieve user guid in url
 	userGUID := c.Param("guid")
 
 	// Retrieve user by GUID
-	user := uh.UserRepository.GetByGUID(db, userGUID)
+	user := uh.UserRepository.GetByGUID(userGUID)
 
 	// If user GUID empty return error message
 	if user.GUID == "" {
-		db.Rollback().Close()
+		DB.Rollback().Close()
 		c.JSON(http.StatusBadRequest, Error.ResourceNotFoundError("User", "guid", userGUID))
 		return
 	}
 
-	db.Close()
+	DB.Close()
 	c.JSON(http.StatusOK, gin.H{"data": user})
 
 }
 
 // Create function will create new user
 func (uh *UserHandler) Create(c *gin.Context) {
-	db := c.MustGet("DB").(*gorm.DB).Begin()
+	DB := c.MustGet("DB").(*gorm.DB).Begin()
 
 	userData := CreateUser{}
 
 	// Bind request based on content type and validate request data
 	if err := Binding.Bind(&userData, c); err != nil {
-		db.Rollback().Close()
+		DB.Rollback().Close()
 		c.JSON(http.StatusUnprocessableEntity, err)
 		return
 	}
 
 	// Retrieve user by phone_no
-	user := uh.UserRepository.GetByPhoneNo(db, userData.PhoneNo)
+	user := uh.UserRepository.GetByPhoneNo(userData.PhoneNo)
 
 	// If user phone_no not empty return error message
 	if user.PhoneNo != "" {
-		db.Rollback().Close()
+		DB.Rollback().Close()
 		c.JSON(http.StatusConflict, Error.DuplicateValueErrors("User", "phone_no", userData.PhoneNo))
 		return
 	}
@@ -77,7 +76,7 @@ func (uh *UserHandler) Create(c *gin.Context) {
 
 		// If facebook_id not valid return error message
 		if !fbIDValid {
-			db.Rollback().Close()
+			DB.Rollback().Close()
 			mesg := fmt.Sprintf(systems.ErrorFacebookIDNotValid, userData.FacebookID)
 			c.JSON(http.StatusBadRequest, Error.GenericError(strconv.Itoa(http.StatusBadRequest),
 				systems.FacebookIDNotValid, systems.TitleFacebookIDNotValidError, "facebook_id", mesg))
@@ -89,22 +88,22 @@ func (uh *UserHandler) Create(c *gin.Context) {
 	// If referral_code exist in request data
 	if userData.ReferralCode != "" {
 		// Search referral code
-		user = uh.UserRepository.SearchReferralCode(db, userData.ReferralCode)
+		user = uh.UserRepository.SearchReferralCode(userData.ReferralCode)
 
 		// If referral code not found return error message
 		if user.ReferralCode == "" {
-			db.Rollback().Close()
+			DB.Rollback().Close()
 			c.JSON(http.StatusBadRequest, Error.GenericError(strconv.Itoa(http.StatusBadRequest),
 				systems.ReferralCodeNotExist, systems.TitleReferralCodeNotExist, "referral_code", systems.ErrorReferralCodeNotExist))
 			return
 		}
 
 		// Count total referral user got
-		totalPreviousReferral := uh.ReferralCashbackRepository.Count(db, "referent_guid", user.GUID)
+		totalPreviousReferral := uh.ReferralCashbackRepository.Count("referent_guid", user.GUID)
 
 		// If total referral more than 3 return error message
 		if totalPreviousReferral > 3 {
-			db.Rollback().Close()
+			DB.Rollback().Close()
 			c.JSON(http.StatusBadRequest, Error.GenericError(strconv.Itoa(http.StatusBadRequest),
 				systems.ReferralCodeExceedLimit, systems.TitleReferralCodeExceedLimit, "referral_code", systems.ErrorReferralCodeExceedLimit))
 			return
@@ -124,7 +123,7 @@ func (uh *UserHandler) Create(c *gin.Context) {
 		profileImage, err = uh.UserService.UploadProfileImage(file)
 
 		if err != nil {
-			db.Rollback().Close()
+			DB.Rollback().Close()
 			errorCode, _ := strconv.Atoi(err.Error.Status)
 			c.JSON(errorCode, err)
 			return
@@ -137,10 +136,10 @@ func (uh *UserHandler) Create(c *gin.Context) {
 	}
 
 	// Store new user in database
-	result, err := uh.UserFactory.Create(db, userData)
+	result, err := uh.UserFactory.Create(userData)
 
 	if err != nil {
-		db.Rollback().Close()
+		DB.Rollback().Close()
 		errorCode, _ := strconv.Atoi(err.Error.Status)
 		c.JSON(errorCode, err)
 		return
@@ -154,10 +153,10 @@ func (uh *UserHandler) Create(c *gin.Context) {
 	}
 
 	// Send SMS verification code
-	_, err = uh.SmsService.SendVerificationCode(db, createdUser.PhoneNo, createdUser.GUID)
+	_, err = uh.SmsService.SendVerificationCode(createdUser.PhoneNo, createdUser.GUID)
 
 	if err != nil {
-		db.Rollback().Close()
+		DB.Rollback().Close()
 		errorCode, _ := strconv.Atoi(err.Error.Status)
 		c.JSON(errorCode, err)
 		return
@@ -166,10 +165,10 @@ func (uh *UserHandler) Create(c *gin.Context) {
 	// Give cashback to user if referral code validate
 	if user.ReferralCode != "" {
 		referentUserGUID := user.GUID
-		_, err := uh.UserService.GiveReferralCashback(db, createdUser.GUID, referentUserGUID)
+		_, err := uh.UserService.GiveReferralCashback(createdUser.GUID, referentUserGUID)
 
 		if err != nil {
-			db.Rollback().Close()
+			DB.Rollback().Close()
 			errorCode, _ := strconv.Atoi(err.Error.Status)
 			c.JSON(errorCode, err)
 			return
@@ -179,13 +178,13 @@ func (uh *UserHandler) Create(c *gin.Context) {
 	// userTransformer := UserTransformer{}
 	// userTransformer.TransformCreateData(createdUser)
 
-	db.Commit().Close()
+	DB.Commit().Close()
 	c.JSON(http.StatusOK, gin.H{"data": createdUser})
 }
 
 // Update function used to update user data
 func (uh *UserHandler) Update(c *gin.Context) {
-	db := c.MustGet("DB").(*gorm.DB).Begin()
+	DB := c.MustGet("DB").(*gorm.DB).Begin()
 
 	// Retrieve user guid in url
 	userGUID := c.Param("guid")
@@ -194,17 +193,17 @@ func (uh *UserHandler) Update(c *gin.Context) {
 	userToken := c.MustGet("Token").(map[string]string)
 
 	if userToken["user_guid"] != userGUID {
-		db.Rollback().Close()
+		DB.Rollback().Close()
 		c.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("Update User"))
 		return
 	}
 
 	// Retrieve user by guid
-	user := uh.UserRepository.GetByGUID(db, userGUID)
+	user := uh.UserRepository.GetByGUID(userGUID)
 
 	// If user guid empty return error message
 	if user.GUID == "" {
-		db.Rollback().Close()
+		DB.Rollback().Close()
 		c.JSON(http.StatusBadRequest, Error.ResourceNotFoundError("User", "guid", userGUID))
 		return
 	}
@@ -213,7 +212,7 @@ func (uh *UserHandler) Update(c *gin.Context) {
 
 	// Bind request based on content type and validate request data
 	if err := Binding.Bind(&userData, c); err != nil {
-		db.Rollback().Close()
+		DB.Rollback().Close()
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
@@ -228,7 +227,7 @@ func (uh *UserHandler) Update(c *gin.Context) {
 		profileImage, err = userService.UploadProfileImage(file)
 
 		if err != nil {
-			db.Rollback().Close()
+			DB.Rollback().Close()
 			errorCode, _ := strconv.Atoi(err.Error.Status)
 			c.JSON(errorCode, err)
 			return
@@ -240,40 +239,40 @@ func (uh *UserHandler) Update(c *gin.Context) {
 	}
 
 	// Update User
-	userFactory := &UserFactory{}
-	err := userFactory.Update(db, userGUID, structs.Map(&userData))
+	userFactory := &UserFactory{DB: DB}
+	err := userFactory.Update(userGUID, structs.Map(&userData))
 
 	if err != nil {
-		db.Rollback().Close()
+		DB.Rollback().Close()
 		c.JSON(http.StatusInternalServerError, err)
 		return
 	}
 
 	// Retrieve latest user data
-	updatedUser := uh.UserRepository.GetByGUID(db, userGUID)
+	updatedUser := uh.UserRepository.GetByGUID(userGUID)
 
 	// Send SMS verification code
 	if user.PhoneNo != updatedUser.PhoneNo && updatedUser.PhoneNo != "" {
-		_, err = uh.SmsService.SendVerificationCode(db, updatedUser.PhoneNo, updatedUser.GUID)
+		_, err = uh.SmsService.SendVerificationCode(updatedUser.PhoneNo, updatedUser.GUID)
 
 		if err != nil {
-			db.Rollback().Close()
+			DB.Rollback().Close()
 			errorCode, _ := strconv.Atoi(err.Error.Status)
 			c.JSON(errorCode, err)
 			return
 		}
 
 		// Soft delete device by set current time to deleted_at column
-		err := uh.DeviceFactory.Delete(db, "uuid", userToken["device_uuid"])
+		err := uh.DeviceFactory.Delete("uuid", userToken["device_uuid"])
 
 		if err != nil {
-			db.Rollback().Close()
+			DB.Rollback().Close()
 			c.JSON(http.StatusInternalServerError, err)
 			return
 		}
 	}
 
-	db.Commit().Close()
+	DB.Commit().Close()
 	c.JSON(http.StatusOK, gin.H{"data": updatedUser})
 
 }

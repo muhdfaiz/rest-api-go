@@ -7,13 +7,15 @@ var (
 )
 
 type ReferralCashbackRepositoryInterface interface {
-	Count(DB *gorm.DB, conditionAttribute string, conditionValue string) int64
+	Count(conditionAttribute string, conditionValue string) int64
 }
 
-type ReferralCashbackRepository struct{}
+type ReferralCashbackRepository struct {
+	DB *gorm.DB
+}
 
-func (rcr *ReferralCashbackRepository) Count(DB *gorm.DB, conditionAttribute string, conditionValue string) int64 {
+func (rcr *ReferralCashbackRepository) Count(conditionAttribute string, conditionValue string) int64 {
 	var count int64
-	DB.Model(ReferralCashbackModel).Where(conditionAttribute+" = ?", conditionValue).Count(&count)
+	rcr.DB.Model(ReferralCashbackModel).Where(conditionAttribute+" = ?", conditionValue).Count(&count)
 	return count
 }

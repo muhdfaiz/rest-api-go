@@ -12,14 +12,16 @@ import (
 )
 
 type SmsServiceInterface interface {
-	SendVerificationCode(DB *gorm.DB, phoneNo string, userGUID string) (interface{}, *systems.ErrorData)
+	SendVerificationCode(phoneNo string, userGUID string) (interface{}, *systems.ErrorData)
 	Send(message string, recipientNumber string) (map[string]string, *systems.ErrorData)
 }
 
-type SmsService struct{}
+type SmsService struct {
+	DB *gorm.DB
+}
 
 // SendVerificationCode function handle sending sms contain verification code during registration & login
-func (sf *SmsService) SendVerificationCode(DB *gorm.DB, phoneNo string, userGUID string) (interface{}, *systems.ErrorData) {
+func (sf *SmsService) SendVerificationCode(phoneNo string, userGUID string) (interface{}, *systems.ErrorData) {
 	// Generate randomverification code 6 character (lower & digit)
 	smsVerificationCode := Helper.RandomString("Digit", 4, "", "")
 
@@ -48,11 +50,10 @@ func (sf *SmsService) SendVerificationCode(DB *gorm.DB, phoneNo string, userGUID
 	m["verification_code"] = smsVerificationCode
 	m["status"] = "0"
 
-	smsFactory := SmsFactory{}
-	sentSmsData, err := smsFactory.CreateSmsHistory(DB, m)
+	smsHistoryFactory := SmsHistoryFactory{DB: sf.DB}
+	sentSmsData, err := smsHistoryFactory.CreateSmsHistory(m)
 
 	if err != nil {
-		DB.Rollback()
 		return nil, err
 	}
 

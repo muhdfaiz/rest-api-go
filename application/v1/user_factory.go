@@ -6,15 +6,17 @@ import (
 )
 
 type UserFactoryInterface interface {
-	Create(DB *gorm.DB, data CreateUser) (*User, *systems.ErrorData)
-	Update(DB *gorm.DB, guid string, data map[string]interface{}) *systems.ErrorData
-	Delete(DB *gorm.DB, attribute string, value string) *systems.ErrorData
+	Create(data CreateUser) (*User, *systems.ErrorData)
+	Update(guid string, data map[string]interface{}) *systems.ErrorData
+	Delete(attribute string, value string) *systems.ErrorData
 }
 
-type UserFactory struct{}
+type UserFactory struct {
+	DB *gorm.DB
+}
 
 // Create function will create new user and store in database
-func (uf *UserFactory) Create(DB *gorm.DB, data CreateUser) (*User, *systems.ErrorData) {
+func (uf *UserFactory) Create(data CreateUser) (*User, *systems.ErrorData) {
 	registerBy := "phone_no"
 
 	// Set registerBy equal to facebook if register using Facebook
@@ -22,7 +24,7 @@ func (uf *UserFactory) Create(DB *gorm.DB, data CreateUser) (*User, *systems.Err
 		registerBy = "facebook"
 	}
 
-	userService := &UserService{}
+	userService := &UserService{DB: uf.DB}
 	user := &User{
 		GUID:           Helper.GenerateUUID(),
 		FacebookID:     data.FacebookID,
@@ -31,12 +33,12 @@ func (uf *UserFactory) Create(DB *gorm.DB, data CreateUser) (*User, *systems.Err
 		PhoneNo:        data.PhoneNo,
 		ProfilePicture: data.ProfilePicture,
 		RegisterBy:     registerBy,
-		ReferralCode:   userService.GenerateReferralCode(DB, data.Name),
+		ReferralCode:   userService.GenerateReferralCode(data.Name),
 		Verified:       0,
 	}
 
 	// Store new user in database
-	result := DB.Create(user)
+	result := uf.DB.Create(user)
 
 	if result.Error != nil || result.RowsAffected == 0 {
 		return nil, Error.InternalServerError(result.Error, systems.DatabaseError)
@@ -46,7 +48,7 @@ func (uf *UserFactory) Create(DB *gorm.DB, data CreateUser) (*User, *systems.Err
 }
 
 // Update function used to update user detail by certain field.
-func (uf *UserFactory) Update(DB *gorm.DB, guid string, data map[string]interface{}) *systems.ErrorData {
+func (uf *UserFactory) Update(guid string, data map[string]interface{}) *systems.ErrorData {
 	updateData := map[string]interface{}{}
 	for key, value := range data {
 		if data, ok := value.(string); ok && value.(string) != "" {
@@ -57,7 +59,7 @@ func (uf *UserFactory) Update(DB *gorm.DB, guid string, data map[string]interfac
 		}
 	}
 
-	result := DB.Model(&User{}).Where(&User{GUID: guid}).Updates(updateData)
+	result := uf.DB.Model(&User{}).Where(&User{GUID: guid}).Updates(updateData)
 
 	if result.Error != nil {
 		return Error.InternalServerError(result.Error, systems.DatabaseError)
@@ -66,8 +68,8 @@ func (uf *UserFactory) Update(DB *gorm.DB, guid string, data map[string]interfac
 	return nil
 }
 
-func (uf *UserFactory) Delete(DB *gorm.DB, attribute string, value string) *systems.ErrorData {
-	result := DB.Where(attribute+" = ?", value).Delete(&User{})
+func (uf *UserFactory) Delete(attribute string, value string) *systems.ErrorData {
+	result := uf.DB.Where(attribute+" = ?", value).Delete(&User{})
 
 	if result.Error != nil {
 		return Error.InternalServerError(result.Error, systems.DatabaseError)

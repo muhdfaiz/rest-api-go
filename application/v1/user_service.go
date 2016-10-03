@@ -13,12 +13,13 @@ import (
 
 type UserServiceInterface interface {
 	UploadProfileImage(file multipart.File) (map[string]string, *systems.ErrorData)
-	GiveReferralCashback(DB *gorm.DB, referrerGUID string, referentGUID string) (interface{}, *systems.ErrorData)
-	GenerateReferralCode(DB *gorm.DB, name string) string
+	GiveReferralCashback(referrerGUID string, referentGUID string) (interface{}, *systems.ErrorData)
+	GenerateReferralCode(name string) string
 }
 
 type UserService struct {
 	ReferralCode string
+	DB           *gorm.DB
 }
 
 type AmazonS3UploadConfig struct{}
@@ -64,12 +65,11 @@ func (us *UserService) UploadProfileImage(file multipart.File) (map[string]strin
 }
 
 // GiveReferralCashback function used to give cashback to user that refer by another user during registration
-func (us *UserService) GiveReferralCashback(DB *gorm.DB, referrerGUID string, referentGUID string) (interface{}, *systems.ErrorData) {
+func (us *UserService) GiveReferralCashback(referrerGUID string, referentGUID string) (interface{}, *systems.ErrorData) {
 	ReferralCashbackFactory := &ReferralCashbackFactory{}
-	referralCashbackCreated, err := ReferralCashbackFactory.CreateReferralCashbackFactory(DB, referrerGUID, referentGUID)
+	referralCashbackCreated, err := ReferralCashbackFactory.CreateReferralCashbackFactory(referrerGUID, referentGUID)
 
 	if err != nil {
-		DB.Rollback()
 		return nil, err
 	}
 
@@ -77,7 +77,7 @@ func (us *UserService) GiveReferralCashback(DB *gorm.DB, referrerGUID string, re
 }
 
 // GenerateReferralCode function used to generate referral code (first 3 letter(UPPERCASE) combine with 5 numeric)
-func (us *UserService) GenerateReferralCode(DB *gorm.DB, name string) string {
+func (us *UserService) GenerateReferralCode(name string) string {
 
 	// Retrieve email name only from full email string
 	SplittedName := strings.Split(name, " ")
@@ -103,7 +103,7 @@ func (us *UserService) GenerateReferralCode(DB *gorm.DB, name string) string {
 		// }
 
 		// Check referralCode exist in database
-		referralCodeExist := DB.Where(&User{ReferralCode: referralCode}).First(&User{})
+		referralCodeExist := us.DB.Where(&User{ReferralCode: referralCode}).First(&User{})
 		//fmt.Println(referralCodeExist.RowsAffected)
 		//counter++
 

@@ -11,4 +11,6 @@ type ShoppingList struct {
 	CreatedAt    time.Time  `json:"created_at"`
 	UpdatedAt    time.Time  `json:"updated_at"`
 	DeletedAt    *time.Time `json:"deleted_at"`
+
+	Occasion Occasion `json:"occasion" gorm:"ForeignKey:OccasionGUID;AssociationForeignKey:GUID"`
 }

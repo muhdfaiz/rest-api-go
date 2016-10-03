@@ -61,7 +61,7 @@ func Auth() gin.HandlerFunc {
 
 		if claims, ok := token.Claims.(*CustomClaims); ok && token.Valid {
 			result := db.Where("uuid = ? AND user_guid = ?", claims.Id, claims.Subject).Find(&v1.Device{})
-
+			fmt.Println(result)
 			if result.RowsAffected == 0 {
 				c.JSON(http.StatusUnauthorized, Error.GenericError(strconv.Itoa(http.StatusUnauthorized), systems.TokenNotValid,
 					systems.TitleErrorTokenNotValid, "", systems.ErrorTokenNotValid))

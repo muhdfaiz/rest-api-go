@@ -1,42 +1,37 @@
 package v1
 
-import "github.com/jinzhu/gorm"
+import (
+	"net/http"
 
-type OccasionHandlerInterface interface {
-	index()
-}
+	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
+)
 
 type OccasionHandler struct {
-	DB *gorm.DB
+	OccasionRepository OccasionRepositoryInterface
 }
 
-// func (oh *OccasionHandler) Index(c *gin.Context) {
-// 	// Retrieve filter query string in request
-// 	filterQueries := c.DefaultQuery("filter", "")
-// 	fmt.Println(filterQueries)
+func (oh *OccasionHandler) Index(c *gin.Context) {
+	DB := c.MustGet("DB").(*gorm.DB).Begin()
 
-// 	if filterQueries != "" {
-// 		// Find if filterQueries contain word "or" OR "and"
-// 		if strings.Contains(filterQueries, " and ") || strings.Contains(filterQueries, " or ") {
-// 			// Split filterQuery by comma
-// 			filterQueries := strings.Split(filterQueries, ",")
-// 			fmt.Println(filterQueries)
+	// Retrieve filter query string in request
+	lastSyncDate := c.DefaultQuery("last_sync_date", "")
 
-// 			for _, filterQuery := range filterQueries {
-// 				// Split filterQueries by space
-// 				filters := strings.Split(filterQuery, " ")
+	if lastSyncDate != "" {
+		occasions := oh.OccasionRepository.GetLatestUpdate(lastSyncDate)
+		DB.Commit().Close()
+		c.JSON(http.StatusOK, gin.H{"last_sync_date": occasions[len(occasions)-1].UpdatedAt, "data": occasions})
+		return
+	}
 
-// 				fmt.Println(len(filters))
-// 				// If filters length below 3 return error message
-// 				if len(filters) < 3 {
+	occasions := oh.OccasionRepository.GetAll()
 
-// 				}
+	if len(occasions) == 0 {
+		DB.Commit().Close()
+		c.JSON(http.StatusOK, gin.H{"data": occasions})
+		return
+	}
 
-// 				result := oh.DB.Where("name = ?", "jinzhu").First(&Occasion{})
-
-// 			}
-// 		}
-
-// 	}
-
-// }
+	DB.Commit().Close()
+	c.JSON(http.StatusOK, gin.H{"data": occasions})
+}

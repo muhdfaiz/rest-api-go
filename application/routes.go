@@ -84,7 +84,7 @@ func InitializeObjectAndSetRoutes(router *gin.Engine) *gin.Engine {
 		version1.POST("/auth/login/facebook", authHandler.LoginViaFacebook)
 
 		// Occasion Routes
-		version1.GET("/occasions", occasionHandler.Index)
+		version1.GET("/shopping_lists/occasions", occasionHandler.Index)
 
 		// Protected Routes
 		version1.Use(middlewares.Auth())
@@ -101,10 +101,10 @@ func InitializeObjectAndSetRoutes(router *gin.Engine) *gin.Engine {
 			version1.GET("/auth/logout", authHandler.Logout)
 
 			// Shopping List Routes
-			version1.GET("users/:guid/shopping_list", shoppingListHandler.View)
-			version1.POST("users/:guid/shopping_list", shoppingListHandler.Create)
-			version1.PATCH("users/:guid/shopping_list/:shopping_list_guid", shoppingListHandler.Update)
-			version1.DELETE("users/:guid/shopping_list/:shopping_list_guid", shoppingListHandler.Delete)
+			version1.GET("users/:guid/shopping_lists", shoppingListHandler.View)
+			version1.POST("users/:guid/shopping_lists", shoppingListHandler.Create)
+			version1.PATCH("users/:guid/shopping_lists/:shopping_list_guid", shoppingListHandler.Update)
+			version1.DELETE("users/:guid/shopping_lists/:shopping_list_guid", shoppingListHandler.Delete)
 
 		}
 

@@ -3,9 +3,9 @@ package systems
 import (
 	"reflect"
 
-	validator "gopkg.in/go-playground/validator.v8"
-
 	"github.com/gin-gonic/gin"
+	bind "github.com/gin-gonic/gin/binding"
+	validator "gopkg.in/go-playground/validator.v8"
 )
 
 var (
@@ -17,14 +17,18 @@ type Binding struct {
 }
 
 func (b *Binding) Bind(obj interface{}, c *gin.Context) *ErrorData {
-	err := c.Bind(obj)
+	binding := bind.Default(c.Request.Method, c.ContentType())
 
-	if reflect.TypeOf(err) == reflect.TypeOf(validator.ValidationErrors{}) {
-		return errorMesg.ValidationErrors(err.(validator.ValidationErrors))
-	}
+	if err := binding.Bind(c.Request, obj); err != nil {
+		c.Writer.Header().Set("Content-Type", "application/json; charset=utf-8")
 
-	if err != nil {
-		return errorMesg.BindingError(err)
+		if reflect.TypeOf(err) == reflect.TypeOf(validator.ValidationErrors{}) {
+			return errorMesg.ValidationErrors(err.(validator.ValidationErrors))
+		}
+
+		if err != nil {
+			return errorMesg.BindingError(err)
+		}
 	}
 
 	return nil

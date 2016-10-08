@@ -1,8 +1,6 @@
 package v1
 
 import (
-	"time"
-
 	"github.com/jinzhu/gorm"
 
 	"bitbucket.org/cliqers/shoppermate-api/systems"
@@ -18,7 +16,6 @@ type SmsHistoryFactory struct {
 
 // CreateSmsHistory function used to store Sms History in database after registration & login
 func (shf *SmsHistoryFactory) CreateSmsHistory(data map[string]string) (interface{}, *systems.ErrorData) {
-	currentTime := time.Now().UTC()
 	smsHistory := &SmsHistory{
 		GUID:             data["guid"],
 		UserGUID:         data["user_guid"],
@@ -28,8 +25,6 @@ func (shf *SmsHistoryFactory) CreateSmsHistory(data map[string]string) (interfac
 		RecipientNo:      data["recipient_no"],
 		VerificationCode: data["verification_code"],
 		Status:           data["status"],
-		CreatedAt:        currentTime,
-		UpdatedAt:        currentTime,
 	}
 
 	result := shf.DB.Create(smsHistory)

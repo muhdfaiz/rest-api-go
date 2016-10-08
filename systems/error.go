@@ -35,6 +35,7 @@ const (
 	FailedToGenerateToken        = "1024"
 	TokenNotValid                = "1025"
 	TokenIdentityNotMatch        = "1026"
+	FailedToDeleteAmazonS3File   = "1027"
 
 	TitleValidationError         = "Validation failed."
 	TitleInternalServerError     = "Internal server error."
@@ -222,6 +223,18 @@ func (e Error) DuplicateValueErrors(resourceType string, field string, value str
 			Code:   ValueAlreadyExist,
 			Title:  fmt.Sprintf(TitleDuplicateValueError, resourceType),
 			Detail: map[string]string{"message": fmt.Sprintf(ErrorDuplicateValue, field, value)},
+		},
+	}
+}
+
+// FileRequireErrors will handle 309 conflict error
+func (e Error) FileRequireErrors(field string) *ErrorData {
+	return &ErrorData{
+		Error: &ErrorFormat{
+			Status: strconv.Itoa(http.StatusUnprocessableEntity),
+			Code:   ValidationFailed,
+			Title:  TitleValidationError,
+			Detail: fmt.Sprintf(ErrorValidationRequired, field),
 		},
 	}
 }

@@ -2,6 +2,7 @@ package v1
 
 import (
 	"mime/multipart"
+	"net/url"
 	"os"
 	"strings"
 
@@ -15,48 +16,33 @@ type UserServiceInterface interface {
 	UploadProfileImage(file multipart.File) (map[string]string, *systems.ErrorData)
 	GiveReferralCashback(referrerGUID string, referentGUID string) (interface{}, *systems.ErrorData)
 	GenerateReferralCode(name string) string
+	DeleteImage(ImageURL string) *systems.ErrorData
 }
 
 type UserService struct {
-	ReferralCode string
-	DB           *gorm.DB
-}
-
-type AmazonS3UploadConfig struct{}
-
-func (auc *AmazonS3UploadConfig) SetAmazonS3UploadPath() string {
-	return "/profile_image/"
-}
-
-func (auc *AmazonS3UploadConfig) SetLocalUploadPath() string {
-	return os.Getenv("GOPATH") + "src/bitbucket.org/cliqers/shoppermate-api/storages/"
-}
-
-func (auc *AmazonS3UploadConfig) SetBucketName() string {
-	return Config.Get("app.yaml", "aws_bucket_name", "shoppermate-api")
+	DB                 *gorm.DB
+	AmazonS3FileSystem *filesystem.AmazonS3Upload
 }
 
 // UploadProfileImage function used to upload profile image to Amazon S3 if profile_image exist in the request
 func (us *UserService) UploadProfileImage(file multipart.File) (map[string]string, *systems.ErrorData) {
-	// Validate file type is image
-	_, err := FileValidation.ValidateFileType([]string{"jpg", "jpeg", "png", "gif"}, file)
+
+	// If profile image file type other than jpg, jpeg, png, gif return error message
+	err := FileValidation.ValidateFileType([]string{"jpg", "jpeg", "png", "gif"}, file)
 	if err != nil {
 		return nil, err
 	}
 
-	// Validate file size
+	// If profile image size equal or more than 1MB return error message
 	_, err = FileValidation.ValidateFileSize(file, 1000000, "profile_picture")
 	if err != nil {
 		return nil, err
 	}
 
-	fileSystem := FileSystem.Driver("amazonS3").(*filesystem.AmazonS3ServiceUpload)
-	fileSystem.AccessKey = Config.Get("app.yaml", "aws_access_key_id", "")
-	fileSystem.SecretKey = Config.Get("app.yaml", "aws_secret_access_key", "")
-	fileSystem.Region = Config.Get("app.yaml", "aws_region_name", "")
+	localUploadPath := os.Getenv("GOPATH") + Config.Get("app.yaml", "storage_path", "src/bitbucket.org/cliqers/shoppermate-api/storages/")
+	amazonS3UploadPath := "/profile_images/"
+	uploadedFile, err := us.AmazonS3FileSystem.Upload(file, localUploadPath, amazonS3UploadPath)
 
-	amazonS3UploadConfig := &AmazonS3UploadConfig{}
-	uploadedFile, err := fileSystem.Upload(amazonS3UploadConfig, file)
 	if err != nil {
 		return nil, err
 	}
@@ -113,4 +99,23 @@ func (us *UserService) GenerateReferralCode(name string) string {
 	}
 
 	return referralCode
+}
+
+// DeleteImage function used to delete profile picture from Amazon S3
+func (us *UserService) DeleteImage(ImageURL string) *systems.ErrorData {
+	imageURLs := make([]string, 1)
+
+	url, _ := url.Parse(ImageURL)
+
+	uriSegments := strings.SplitN(url.Path, "/", 3)
+
+	imageURLs[0] = uriSegments[2]
+
+	err := us.AmazonS3FileSystem.Delete(imageURLs)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

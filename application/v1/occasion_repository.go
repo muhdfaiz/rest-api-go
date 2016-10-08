@@ -1,15 +1,14 @@
 package v1
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/jinzhu/gorm"
 )
 
 type OccasionRepositoryInterface interface {
-	GetAll() []Occasion
-	GetLatestUpdate(lastSyncDate string) []Occasion
+	GetAll() []*Occasion
+	GetLatestUpdate(lastSyncDate string) []*Occasion
 	GetByGUID(guid string) *Occasion
 }
 
@@ -17,50 +16,29 @@ type OccasionRepository struct {
 	DB *gorm.DB
 }
 
-func (or *OccasionRepository) GetAll() []Occasion {
-	rows, _ := or.DB.Model(&Occasion{}).Rows()
+func (or *OccasionRepository) GetAll() []*Occasion {
+	occasions := []*Occasion{}
 
-	var occasions []Occasion
+	or.DB.Model(&Occasion{}).Find(&occasions)
 
-	for rows.Next() {
-		var occasion Occasion
-
-		if err := rows.Scan(&occasion.ID, &occasion.GUID, &occasion.Slug, &occasion.Name, &occasion.Image, &occasion.Active, &occasion.CreatedAt, &occasion.UpdatedAt, &occasion.DeletedAt); err != nil {
-			fmt.Println(err)
-		}
-
-		occasions = append(occasions, occasion)
-	}
 	return occasions
 }
 
-func (or *OccasionRepository) GetLatestUpdate(lastSyncDate string) []Occasion {
+func (or *OccasionRepository) GetLatestUpdate(lastSyncDate string) []*Occasion {
 	lastSync, _ := time.Parse(time.RFC3339, lastSyncDate)
 
-	rows, _ := or.DB.Table("occasions").Where("updated_at > ?", lastSync).Order("updated_at desc").Rows()
+	occasions := []*Occasion{}
 
-	var occasions []Occasion
+	or.DB.Table("occasions").Where("updated_at > ?", lastSync).Order("updated_at desc").Find(&occasions)
 
-	for rows.Next() {
-		var occasion Occasion
-
-		if err := rows.Scan(&occasion.ID, &occasion.GUID, &occasion.Slug, &occasion.Name, &occasion.Image, &occasion.Active, &occasion.CreatedAt, &occasion.UpdatedAt, &occasion.DeletedAt); err != nil {
-			fmt.Println(err)
-		}
-
-		occasions = append(occasions, occasion)
-	}
 	return occasions
 }
 
 // GetByGUID function used to retrieve occasion by guid.
 // Return occasion data if found and return empty occasion if not found
 func (or *OccasionRepository) GetByGUID(guid string) *Occasion {
-	result := or.DB.Where(&Occasion{GUID: guid}).First(&Occasion{})
+	occasions := &Occasion{}
+	or.DB.Where(&Occasion{GUID: guid}).First(&occasions)
 
-	if result.RowsAffected == 0 {
-		return &Occasion{}
-	}
-
-	return result.Value.(*Occasion)
+	return occasions
 }

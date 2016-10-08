@@ -22,7 +22,9 @@ type User struct {
 	UpdatedAt         time.Time  `json:"updated_at"`
 	DeletedAt         *time.Time `json:"deleted_at"`
 
-	// Model Relationship
-	// User have many Device
-	// Devices []device.Device `gorm:"ForeignKey:UserGUID"`
+	// User have many Devices
+	Devices []*Device `json:"devices,omitempty" gorm:"ForeignKey:UserGUID"`
+
+	// User have many Shopping Lists
+	ShoppingLists []*ShoppingList `json:"shopping_lists,omitempty" gorm:"ForeignKey:UserGUID;AssociationForeignKey:GUID"`
 }

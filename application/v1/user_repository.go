@@ -3,10 +3,10 @@ package v1
 import "github.com/jinzhu/gorm"
 
 type UserRepositoryInterface interface {
-	GetByGUID(guid string) *User
-	GetByPhoneNo(phoneNo string) *User
-	GetFacebookID(facebookID string) *User
-	SearchReferralCode(referralCode string) *User
+	GetByGUID(guid string, relations string) *User
+	GetByPhoneNo(phoneNo string, relations string) *User
+	GetFacebookID(facebookID string, relations string) *User
+	SearchReferralCode(referralCode string, relations string) *User
 }
 
 type UserRepository struct {
@@ -15,48 +15,64 @@ type UserRepository struct {
 
 // GetByGUID function used to retrieve user by guid.
 // Return user data if found and return empty user if not found
-func (ur *UserRepository) GetByGUID(guid string) *User {
-	result := ur.DB.Where(&User{GUID: guid}).First(&User{})
+func (ur *UserRepository) GetByGUID(guid string, relations string) *User {
+	user := &User{}
 
-	if result.RowsAffected == 0 {
-		return &User{}
+	DB := ur.DB.Model(&User{})
+
+	if relations != "" {
+		DB = LoadRelations(DB, relations)
 	}
 
-	return result.Value.(*User)
+	DB.Where(&User{GUID: guid}).First(&user)
+
+	return user
 }
 
 // GetByPhoneNo function used to retrieve user by phone no.
 // Return user data if found and return empty user if not found
-func (ur *UserRepository) GetByPhoneNo(phoneNo string) *User {
-	result := ur.DB.Where(&User{PhoneNo: phoneNo}).First(&User{})
+func (ur *UserRepository) GetByPhoneNo(phoneNo string, relations string) *User {
+	user := &User{}
 
-	if result.RowsAffected == 0 {
-		return &User{}
+	DB := ur.DB.Model(&User{})
+
+	if relations != "" {
+		DB = LoadRelations(DB, relations)
 	}
 
-	return result.Value.(*User)
+	DB.Where(&User{PhoneNo: phoneNo}).First(&user)
+
+	return user
 }
 
 // GetFacebookID function used to retrieve user by facebook id.
 // Return user data if found and return empty user if not found
-func (ur *UserRepository) GetFacebookID(facebookID string) *User {
-	result := ur.DB.Where(&User{FacebookID: facebookID}).First(&User{})
+func (ur *UserRepository) GetFacebookID(facebookID string, relations string) *User {
+	user := &User{}
 
-	if result.RowsAffected == 0 {
-		return &User{}
+	DB := ur.DB.Model(&User{})
+
+	if relations != "" {
+		DB = LoadRelations(DB, relations)
 	}
 
-	return result.Value.(*User)
+	DB.Where(&User{FacebookID: facebookID}).First(&user)
+
+	return user
 }
 
 // SearchReferralCode function used to search user by referral code
 // Return user data if foun and return empty user if not found
-func (ur *UserRepository) SearchReferralCode(referralCode string) *User {
-	result := ur.DB.Where("referral_code LIKE ?", "%"+referralCode+"%").First(&User{})
+func (ur *UserRepository) SearchReferralCode(referralCode string, relations string) *User {
+	user := &User{}
 
-	if result.RowsAffected == 0 {
-		return &User{}
+	DB := ur.DB.Model(&User{})
+
+	if relations != "" {
+		DB = LoadRelations(DB, relations)
 	}
 
-	return result.Value.(*User)
+	DB.Where("referral_code LIKE ?", "%"+referralCode+"%").First(&User{})
+
+	return user
 }

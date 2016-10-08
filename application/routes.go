@@ -4,6 +4,7 @@ import (
 	"bitbucket.org/cliqers/shoppermate-api/application/v1"
 	"bitbucket.org/cliqers/shoppermate-api/middlewares"
 	"bitbucket.org/cliqers/shoppermate-api/services/facebook"
+	"bitbucket.org/cliqers/shoppermate-api/services/filesystem"
 	"bitbucket.org/cliqers/shoppermate-api/systems"
 	"github.com/gin-gonic/gin"
 )
@@ -19,10 +20,25 @@ func InitializeObjectAndSetRoutes(router *gin.Engine) *gin.Engine {
 		c.Next()
 	})
 
+	// Amazon S3 Config
+	Config := &systems.Configs{}
+	accessKey := Config.Get("app.yaml", "aws_access_key_id", "")
+	secretKey := Config.Get("app.yaml", "aws_secret_access_key", "")
+	region := Config.Get("app.yaml", "aws_region_name", "")
+	bucketName := Config.Get("app.yaml", "aws_bucket_name", "")
+
+	// Amazon S3 filesystem
+	fileSystem := &filesystem.FileSystem{}
+	amazonS3FileSystem := fileSystem.Driver("amazonS3").(*filesystem.AmazonS3Upload)
+	amazonS3FileSystem.AccessKey = accessKey
+	amazonS3FileSystem.SecretKey = secretKey
+	amazonS3FileSystem.Region = region
+	amazonS3FileSystem.BucketName = bucketName
+
 	// User Objects
 	userRepository := &v1.UserRepository{DB: DB}
 	userFactory := &v1.UserFactory{DB: DB}
-	userService := &v1.UserService{DB: DB}
+	userService := &v1.UserService{DB: DB, AmazonS3FileSystem: amazonS3FileSystem}
 
 	// Device Objects
 	deviceRepository := &v1.DeviceRepository{DB: DB}
@@ -36,7 +52,6 @@ func InitializeObjectAndSetRoutes(router *gin.Engine) *gin.Engine {
 	referralCashbackRepository := &v1.ReferralCashbackRepository{DB: DB}
 
 	// Facebook Service
-	Config := &systems.Configs{}
 	facebookService := &facebook.FacebookService{
 		AppID:     Config.Get("app.yaml", "facebook_app_id", ""),
 		AppSecret: Config.Get("app.yaml", "facebook_app_secret", ""),
@@ -49,22 +64,48 @@ func InitializeObjectAndSetRoutes(router *gin.Engine) *gin.Engine {
 	shoppingListFactory := &v1.ShoppingListFactory{DB: DB}
 	shoppingListRepository := &v1.ShoppingListRepository{DB: DB}
 
+	// Shopping List Item Objects
+	shoppingListItemRepository := &v1.ShoppingListItemRepository{DB: DB}
+	shoppingListItemFactory := &v1.ShoppingListItemFactory{DB: DB}
+
+	// Shopping List Item Image Objects
+	shoppingListItemImageFactory := &v1.ShoppingListItemImageFactory{DB: DB}
+	shoppingListItemImageService := &v1.ShoppingListItemImageService{DB: DB, AmazonS3FileSystem: amazonS3FileSystem}
+	shoppingListItemImageRepository := &v1.ShoppingListItemImageRepository{DB: DB}
+
+	// Sms Handler
 	smsHandler := v1.SmsHandler{UserRepository: userRepository, UserFactory: userFactory, SmsService: smsService,
 		SmsHistoryRepository: smsHistoryRepository, DeviceRepository: deviceRepository, DeviceFactory: deviceFactory}
 
+	// User Handler
 	userHandler := v1.UserHandler{UserRepository: userRepository, UserService: userService, UserFactory: userFactory, DeviceFactory: deviceFactory,
 		ReferralCashbackRepository: referralCashbackRepository, SmsService: smsService, FacebookService: facebookService}
 
+	// Device Handler
 	deviceHandler := v1.DeviceHandler{UserRepository: userRepository, DeviceRepository: deviceRepository, DeviceFactory: deviceFactory}
 
+	// Shopping List Handler
 	shoppingListHandler := v1.ShoppingListHandler{UserRepository: userRepository, OccasionRepository: occasionRepostory,
 		ShoppingListFactory: shoppingListFactory, ShoppingListRepository: shoppingListRepository}
 
+	// Auth Handler
 	authHandler := v1.AuthHandler{UserRepository: userRepository, DeviceRepository: deviceRepository, DeviceFactory: deviceFactory,
 		SmsService: smsService}
 
+	// Occasion Handler
 	occasionHandler := v1.OccasionHandler{OccasionRepository: occasionRepostory}
 
+	// Shopping List Item Handler
+	shoppingListItemHandler := v1.ShoppingListItemHandler{UserRepository: userRepository, ShoppingListRepository: shoppingListRepository,
+		ShoppingListItemRepository: shoppingListItemRepository, ShoppingListItemFactory: shoppingListItemFactory,
+		ShoppingListItemImageFactory: shoppingListItemImageFactory}
+
+	// Shopping List Item Image Handler
+	shoppingListItemImageHandler := v1.ShoppingListItemImageHandler{UserRepository: userRepository, ShoppingListRepository: shoppingListRepository,
+		ShoppingListItemImageService: shoppingListItemImageService, ShoppingListItemImageFactory: shoppingListItemImageFactory,
+		ShoppingListItemRepository: shoppingListItemRepository, ShoppingListItemImageRepository: shoppingListItemImageRepository}
+
+	// V1 Routes
 	version1 := router.Group("/v1")
 	{
 		// Public Routes
@@ -106,6 +147,15 @@ func InitializeObjectAndSetRoutes(router *gin.Engine) *gin.Engine {
 			version1.PATCH("users/:guid/shopping_lists/:shopping_list_guid", shoppingListHandler.Update)
 			version1.DELETE("users/:guid/shopping_lists/:shopping_list_guid", shoppingListHandler.Delete)
 
+			// Shopping List Item Routes
+			version1.GET("users/:guid/shopping_lists/:shopping_list_guid/items/:item_guid", shoppingListItemHandler.View)
+			version1.POST("users/:guid/shopping_lists/:shopping_list_guid/items", shoppingListItemHandler.Create)
+			version1.PATCH("users/:guid/shopping_lists/:shopping_list_guid/items/:item_guid", shoppingListItemHandler.Update)
+
+			// Shopping List Item Image Routes
+			version1.GET("users/:guid/shopping_lists/:shopping_list_guid/items/:item_guid/images/:image_guid", shoppingListItemImageHandler.View)
+			version1.POST("users/:guid/shopping_lists/:shopping_list_guid/items/:item_guid/images", shoppingListItemImageHandler.Create)
+			version1.DELETE("users/:guid/shopping_lists/:shopping_list_guid/items/:item_guid/images/:image_guids", shoppingListItemImageHandler.Delete)
 		}
 
 	}

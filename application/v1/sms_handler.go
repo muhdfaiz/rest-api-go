@@ -30,17 +30,17 @@ func (sh *SmsHandler) Send(c *gin.Context) {
 
 	// Bind request based on content type and validate request data
 	if err := Binding.Bind(smsData, c); err != nil {
-		DB.Rollback().Close()
+		DB.Close()
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
 
 	// Retrieve user by GUID
-	user := sh.UserRepository.GetByGUID(smsData.UserGUID)
+	user := sh.UserRepository.GetByGUID(smsData.UserGUID, "")
 
 	// If user GUID empty return error message
 	if user.GUID == "" {
-		DB.Rollback().Close()
+		DB.Close()
 		c.JSON(http.StatusBadRequest, Error.ResourceNotFoundError("User", "guid", smsData.UserGUID))
 		return
 	}
@@ -55,7 +55,7 @@ func (sh *SmsHandler) Send(c *gin.Context) {
 
 		// If time interval in second below 250 return error message
 		if interval < 250 {
-			DB.Rollback().Close()
+			DB.Close()
 			durationUserMustWait := 250 - interval
 			errorMesg := Error.GenericError("500", systems.FailedToSendSMS, systems.TitleSentSmsError,
 				"", fmt.Sprintf(systems.ErrorSentSms, strconv.Itoa(durationUserMustWait)))
@@ -98,17 +98,17 @@ func (sh *SmsHandler) Verify(c *gin.Context) {
 
 	// Bind request based on content type and validate request data
 	if err := Binding.Bind(&smsData, c); err != nil {
-		DB.Rollback().Close()
+		DB.Close()
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
 
 	// Retrieve user by phone no
-	user := sh.UserRepository.GetByPhoneNo(smsData.PhoneNo)
+	user := sh.UserRepository.GetByPhoneNo(smsData.PhoneNo, "")
 
 	// If user phone_no empty return error message
 	if user.PhoneNo == "" {
-		DB.Rollback().Close()
+		DB.Close()
 		c.JSON(http.StatusBadRequest, Error.ResourceNotFoundError("User", "phone_no", smsData.PhoneNo))
 		return
 	}
@@ -127,12 +127,15 @@ func (sh *SmsHandler) Verify(c *gin.Context) {
 		}
 	}
 
+	DB.Commit()
+	DB = c.MustGet("DB").(*gorm.DB).Begin()
+
 	// Verify Sms verification code
 	smsHistory := sh.SmsHistoryRepository.VerifyVerificationCode(smsData.PhoneNo, strings.ToLower(smsData.VerificationCode))
 
 	// If sms history record not found return error message
 	if smsHistory == nil {
-		DB.Rollback().Close()
+		DB.Close()
 		errorMesg := Error.GenericError(strconv.Itoa(http.StatusBadRequest), systems.VerificationCodeInvalid,
 			systems.TitleVerificationCodeInvalid, "", fmt.Sprintf(systems.ErrorVerificationCodeInvalid, smsData.VerificationCode))
 		c.JSON(http.StatusBadRequest, errorMesg)
@@ -169,5 +172,6 @@ func (sh *SmsHandler) Verify(c *gin.Context) {
 	response := make(map[string]interface{})
 	response["user"] = user
 	response["access_token"] = jwtToken
+
 	c.JSON(http.StatusOK, gin.H{"data": response})
 }

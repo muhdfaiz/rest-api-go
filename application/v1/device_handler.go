@@ -24,7 +24,7 @@ func (dh *DeviceHandler) Create(c *gin.Context) {
 	// Bind request data based on header content type
 	deviceData := CreateDevice{}
 	if err := c.Bind(&deviceData); err != nil {
-		DB.Rollback().Close()
+		DB.Close()
 		c.JSON(http.StatusBadRequest, Error.ValidationErrors(err.(validator.ValidationErrors)))
 		return
 	}
@@ -34,7 +34,7 @@ func (dh *DeviceHandler) Create(c *gin.Context) {
 
 	// If device UUID not empty return error message
 	if device.UUID != "" {
-		DB.Rollback().Close()
+		DB.Close()
 		c.JSON(http.StatusConflict, Error.DuplicateValueErrors("Device", "uuid", device.UUID))
 		return
 	}
@@ -42,11 +42,11 @@ func (dh *DeviceHandler) Create(c *gin.Context) {
 	// If user GUID exist in the request
 	if deviceData.UserGUID != "" {
 		// Retrieve user by GUID
-		user := dh.UserRepository.GetByGUID(deviceData.UserGUID)
+		user := dh.UserRepository.GetByGUID(deviceData.UserGUID, "")
 
 		// If user GUID empty return error message
 		if user.GUID == "" {
-			DB.Rollback().Close()
+			DB.Close()
 			c.JSON(http.StatusBadRequest, Error.ResourceNotFoundError("User", "guid", deviceData.UserGUID))
 			return
 		}
@@ -79,7 +79,7 @@ func (dh *DeviceHandler) Update(c *gin.Context) {
 
 	// If device UUID empty return error message
 	if device.UUID == "" {
-		DB.Rollback().Close()
+		DB.Close()
 		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("Device", "uuid", deviceUUID))
 		return
 	}
@@ -89,7 +89,7 @@ func (dh *DeviceHandler) Update(c *gin.Context) {
 
 	// Bind request based on content type and validate request data
 	if err := Binding.Bind(&deviceData, c); err != nil {
-		DB.Rollback().Close()
+		DB.Close()
 		c.JSON(http.StatusUnprocessableEntity, err)
 		return
 	}
@@ -97,11 +97,11 @@ func (dh *DeviceHandler) Update(c *gin.Context) {
 	// If user GUID exist in the request
 	if deviceData.UserGUID != "" {
 		// Retrieve user by GUID
-		user := dh.UserRepository.GetByGUID(deviceData.UserGUID)
+		user := dh.UserRepository.GetByGUID(deviceData.UserGUID, "")
 
 		// If user GUID empty return error message
 		if user.GUID == "" {
-			DB.Rollback().Close()
+			DB.Close()
 			c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("User", "guid", deviceData.UserGUID))
 			return
 		}
@@ -116,10 +116,12 @@ func (dh *DeviceHandler) Update(c *gin.Context) {
 		return
 	}
 
+	DB.Commit()
+
 	// Retrieve device latest data
 	device = dh.DeviceRepository.GetByUUID(deviceUUID)
 
-	DB.Commit().Close()
+	DB.Close()
 	c.JSON(http.StatusOK, gin.H{"data": device})
 }
 
@@ -135,7 +137,7 @@ func (dh *DeviceHandler) Delete(c *gin.Context) {
 
 	// If device uuid empty return error message
 	if device.UUID == "" {
-		DB.Rollback().Close()
+		DB.Close()
 		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("Device", "uuid", deviceUUID))
 		return
 	}

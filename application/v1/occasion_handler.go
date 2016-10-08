@@ -13,14 +13,14 @@ type OccasionHandler struct {
 
 // Index function used to retrieve shopping list occasions
 func (oh *OccasionHandler) Index(c *gin.Context) {
-	DB := c.MustGet("DB").(*gorm.DB).Begin()
+	DB := c.MustGet("DB").(*gorm.DB)
 
 	// Retrieve filter query string in request
 	lastSyncDate := c.DefaultQuery("last_sync_date", "")
 
 	if lastSyncDate != "" {
 		occasions := oh.OccasionRepository.GetLatestUpdate(lastSyncDate)
-		DB.Commit().Close()
+		DB.Close()
 		c.JSON(http.StatusOK, gin.H{"last_update": occasions[len(occasions)-1].UpdatedAt, "data": occasions})
 		return
 	}
@@ -28,11 +28,11 @@ func (oh *OccasionHandler) Index(c *gin.Context) {
 	occasions := oh.OccasionRepository.GetAll()
 
 	if len(occasions) == 0 {
-		DB.Commit().Close()
+		DB.Close()
 		c.JSON(http.StatusOK, gin.H{"data": occasions})
 		return
 	}
 
-	DB.Commit().Close()
+	DB.Close()
 	c.JSON(http.StatusOK, gin.H{"last_update": occasions[len(occasions)-1].UpdatedAt, "data": occasions})
 }

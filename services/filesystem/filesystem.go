@@ -12,25 +12,16 @@ import (
 	filetype "gopkg.in/h2non/filetype.v0"
 )
 
-// type FileSystemInterface interface {
-// 	Upload(lci *LocalConfigInterface)
-// 	Delete(path string)
-// 	List(path string)
-// 	CreateDir(dirName string, configs map[string]string)
-// 	DeleteDir(dirname string)
-// 	FormatOutput()
-// }
-
 type FileSystem struct{}
 
 type FileValidation struct{}
 
-func (fs FileSystem) Driver(driver string) interface{} {
+func (fs *FileSystem) Driver(driver string) interface{} {
 	switch driver {
 	case "local":
 		return &LocalUpload{}
 	case "amazonS3":
-		return &AmazonS3ServiceUpload{}
+		return &AmazonS3Upload{}
 	}
 	return &LocalUpload{}
 }
@@ -60,26 +51,26 @@ func (fs *FileSystem) DetectFileType(file multipart.File) (string, *systems.Erro
 }
 
 // ValidateFileType function used to validate file type allow to upload
-func (fv *FileValidation) ValidateFileType(allowFileTypes []string, file multipart.File) (string, *systems.ErrorData) {
+func (fv *FileValidation) ValidateFileType(allowFileTypes []string, file multipart.File) *systems.ErrorData {
 	// Skip validation file type if FileTypeAllow empty
-	if allowFileTypes == nil {
-		return "", nil
+	if len(allowFileTypes) <= 0 {
+		return nil
 	}
 
 	// Detect filetype
 	fileSystem := FileSystem{}
 	fileType, err := fileSystem.DetectFileType(file)
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	for _, allowFileType := range allowFileTypes {
 		if allowFileType == fileType {
-			return fileType, nil
+			return nil
 		}
 	}
 
-	return "", Error.InvalidFileTypeError(strings.Join(allowFileTypes, ", "))
+	return Error.InvalidFileTypeError(strings.Join(allowFileTypes, ", "))
 }
 
 // ValidateFileSize function used to verify if file size want to upload is not bigger than system allowed
@@ -96,6 +87,7 @@ func (fv *FileValidation) ValidateFileSize(file multipart.File, maxFileSizeAllow
 	if fileSize > maxFileSizeAllow {
 		return fileSize, Error.FileSizeExceededLimit(fileAttribute, strconv.FormatInt(maxFileSizeAllow/1000, 10))
 	}
+
 	file.Seek(0, 0)
 	return fileSize, nil
 }

@@ -3,13 +3,10 @@ package filesystem
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"mime/multipart"
 	"os"
 
 	"bitbucket.org/cliqers/shoppermate-api/systems"
-
-	filetype "gopkg.in/h2non/filetype.v0"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -17,32 +14,29 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
-type AmazonS3ServiceUpload struct {
-	AccessKey string
-	SecretKey string
-	Region    string
-}
-
-type S3UploadConfigInterface interface {
-	SetAmazonS3UploadPath() string
-	SetLocalUploadPath() string
-	SetBucketName() string
+type AmazonS3Upload struct {
+	AccessKey  string
+	SecretKey  string
+	Region     string
+	BucketName string
 }
 
 // Upload function used to store file in local storage
-func (asu *AmazonS3ServiceUpload) Upload(s3uploadConfig S3UploadConfigInterface, file multipart.File) (map[string]string, *systems.ErrorData) {
+func (asu *AmazonS3Upload) Upload(file multipart.File, localUploadPath string, amazonS3UploadPath string) (map[string]string, *systems.ErrorData) {
 
 	localUploadService := LocalUpload{}
-	uploadedFile, err := localUploadService.Upload(s3uploadConfig, file)
+	uploadedFile, err := localUploadService.Upload(file, localUploadPath)
 	if err != nil {
 		return nil, err
 	}
 
 	// Read file
-	localFile, err1 := os.Open(s3uploadConfig.SetLocalUploadPath() + uploadedFile["name"])
+	localFile, err1 := os.Open(localUploadPath + uploadedFile["name"])
+
 	if err1 != nil {
 		return nil, Error.InternalServerError(err1.Error(), systems.CannotReadFile)
 	}
+
 	defer localFile.Close()
 
 	// Retrieve file size
@@ -56,16 +50,16 @@ func (asu *AmazonS3ServiceUpload) Upload(s3uploadConfig S3UploadConfigInterface,
 	fileBytes := bytes.NewReader(buffer)
 
 	// Specify path or folder that will be used to upload image
-	path := s3uploadConfig.SetAmazonS3UploadPath() + uploadedFile["name"]
+	path := amazonS3UploadPath + uploadedFile["name"]
 	params := &s3.PutObjectInput{
-		Bucket:        aws.String(s3uploadConfig.SetBucketName()),
+		Bucket:        aws.String(asu.BucketName),
 		Key:           aws.String(path),
 		Body:          fileBytes,
 		ContentLength: aws.Int64(fileSize),
 		ContentType:   aws.String(uploadedFile["type"]),
 	}
 
-	awsSession, err := asu.CreateSession()
+	awsSession, err := asu.createSession()
 	if err != nil {
 		return nil, err
 	}
@@ -81,34 +75,46 @@ func (asu *AmazonS3ServiceUpload) Upload(s3uploadConfig S3UploadConfigInterface,
 		return nil, Error.InternalServerError(err2.Error(), systems.CannotDeleteFile)
 	}
 
-	uploadedFile["path"] = fmt.Sprintf("https://s3-%s.amazonaws.com/%s%s%s", Config.Get("app.yaml", "aws_region_name", "ap-southeast-1"),
-		Config.Get("app.yaml", "aws_bucket_name", ""), s3uploadConfig.SetAmazonS3UploadPath(), uploadedFile["name"])
+	uploadedFile["path"] = fmt.Sprintf("https://s3-%s.amazonaws.com/%s%s%s", asu.Region,
+		asu.BucketName, amazonS3UploadPath, uploadedFile["name"])
 
 	return uploadedFile, nil
 }
 
-func (asu *AmazonS3ServiceUpload) Delete(filepath string) {
+// Delete function used to delete multiple file in Amazon S3
+func (asu *AmazonS3Upload) Delete(files []string) *systems.ErrorData {
+	amazonS3Objects := make([]*s3.ObjectIdentifier, len(files))
 
-}
-
-// GetFileType function will validate file type allow to upload or not
-func (asu *AmazonS3ServiceUpload) GetFileType(filePath string) (string, *systems.ErrorData) {
-	buffer, err := ioutil.ReadFile(filePath)
-
-	if err != nil {
-		return "", Error.InternalServerError(err.Error(), systems.CannotReadFile)
+	for key, file := range files {
+		fmt.Println(file)
+		amazonS3Objects[key] = &s3.ObjectIdentifier{Key: aws.String(file)}
 	}
 
-	filetype, err := filetype.Match(buffer)
+	awsSession, err := asu.createSession()
+
 	if err != nil {
-		return "", Error.InternalServerError(err.Error(), systems.CannotDetectFileType)
+		return err
 	}
 
-	return filetype.Extension, nil
+	params := &s3.DeleteObjectsInput{
+		Bucket: aws.String(asu.BucketName),
+		Delete: &s3.Delete{
+			Objects: amazonS3Objects,
+		},
+	}
+	fmt.Println(params)
+	_, err1 := awsSession.DeleteObjects(params)
+
+	if err1 != nil {
+		// Print the error, cast err to awserr.Error to get the Code and
+		// Message from an error.
+		return Error.InternalServerError(err1.Error(), systems.FailedToDeleteAmazonS3File)
+	}
+	return nil
 }
 
 // SetCredential function used to set Amazon Credential
-func (asu *AmazonS3ServiceUpload) SetCredential() (*credentials.Credentials, *systems.ErrorData) {
+func (asu *AmazonS3Upload) setCredential() (*credentials.Credentials, *systems.ErrorData) {
 	creds := credentials.NewStaticCredentials(asu.AccessKey, asu.SecretKey, "")
 
 	_, err1 := creds.Get()
@@ -120,8 +126,8 @@ func (asu *AmazonS3ServiceUpload) SetCredential() (*credentials.Credentials, *sy
 }
 
 // CreateSession function used to create new Amazon Session
-func (asu *AmazonS3ServiceUpload) CreateSession() (*s3.S3, *systems.ErrorData) {
-	credential, err := asu.SetCredential()
+func (asu *AmazonS3Upload) createSession() (*s3.S3, *systems.ErrorData) {
+	credential, err := asu.setCredential()
 	if err != nil {
 		return nil, err
 	}

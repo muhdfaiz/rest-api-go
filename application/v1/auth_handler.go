@@ -25,12 +25,12 @@ func (ah *AuthHandler) LoginViaPhone(c *gin.Context) {
 	// Bind request based on content type and validate request data.
 	if err := Binding.Bind(authData, c); err != nil {
 		c.JSON(http.StatusBadRequest, err)
-		DB.Rollback().Close()
+		DB.Close()
 		return
 	}
 
 	// Retrieve user by phone_no.
-	user := ah.UserRepository.GetByPhoneNo(authData.PhoneNo)
+	user := ah.UserRepository.GetByPhoneNo(authData.PhoneNo, "")
 
 	// If user phone_no empty return error message.
 	if user.PhoneNo == "" {
@@ -65,17 +65,17 @@ func (ah *AuthHandler) LoginViaFacebook(c *gin.Context) {
 
 	// Bind request based on content type and validate request data
 	if err := Binding.Bind(authData, c); err != nil {
-		DB.Rollback().Close()
+		DB.Close()
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
 
 	// Retrieve user facebook_id
-	user := ah.UserRepository.GetFacebookID(authData.FacebookID)
+	user := ah.UserRepository.GetFacebookID(authData.FacebookID, "")
 
 	// If facebook_id empty return error message
 	if user.FacebookID == "" {
-		DB.Rollback().Close()
+		DB.Close()
 		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("User", "facebook_id", authData.FacebookID))
 		return
 	}
@@ -147,7 +147,7 @@ func (ah *AuthHandler) Logout(c *gin.Context) {
 
 	// If device uuid empty return error message
 	if device.UUID == "" {
-		DB.Rollback().Close()
+		DB.Close()
 		c.JSON(http.StatusBadRequest, Error.ResourceNotFoundError("Device", "uuid", device.UUID))
 		return
 	}

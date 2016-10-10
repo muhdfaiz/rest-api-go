@@ -42,7 +42,7 @@ func (slih *ShoppingListItemHandler) View(c *gin.Context) {
 	// If shopping list GUID empty return error message
 	if shoppingList.GUID == "" {
 		DB.Rollback().Close()
-		c.JSON(http.StatusBadRequest, Error.ResourceNotFoundError("Shopping List", "guid", shoppingListGUID))
+		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("Shopping List", "guid", shoppingListGUID))
 		return
 	}
 
@@ -58,7 +58,7 @@ func (slih *ShoppingListItemHandler) View(c *gin.Context) {
 	// If shopping list item GUID empty return error message
 	if shoppingListItem.GUID == "" {
 		DB.Rollback().Close()
-		c.JSON(http.StatusBadRequest, Error.ResourceNotFoundError("Shopping List Item", "guid", shoppingListItemGUID))
+		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("Shopping List Item", "guid", shoppingListItemGUID))
 		return
 	}
 
@@ -91,7 +91,7 @@ func (slih *ShoppingListItemHandler) Create(c *gin.Context) {
 	// If shopping list GUID empty return error message
 	if shoppingList.GUID == "" {
 		DB.Close()
-		c.JSON(http.StatusBadRequest, Error.ResourceNotFoundError("Shopping List", "guid", shoppingListGUID))
+		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("Shopping List", "guid", shoppingListGUID))
 		return
 	}
 
@@ -156,7 +156,7 @@ func (slih *ShoppingListItemHandler) Update(c *gin.Context) {
 	// If shopping list GUID empty return error message
 	if shoppingList.GUID == "" {
 		DB.Close()
-		c.JSON(http.StatusBadRequest, Error.ResourceNotFoundError("Shopping List", "guid", shoppingListGUID))
+		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("Shopping List", "guid", shoppingListGUID))
 		return
 	}
 
@@ -169,7 +169,7 @@ func (slih *ShoppingListItemHandler) Update(c *gin.Context) {
 	// If shopping list item GUID empty return error message
 	if shoppingListItem.GUID == "" {
 		DB.Close()
-		c.JSON(http.StatusBadRequest, Error.ResourceNotFoundError("Shopping List Item", "guid", shoppingListItemGUID))
+		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("Shopping List Item", "guid", shoppingListItemGUID))
 		return
 	}
 
@@ -199,5 +199,62 @@ func (slih *ShoppingListItemHandler) Update(c *gin.Context) {
 	result := slih.ShoppingListItemRepository.GetByGUID(shoppingListItemGUID, "")
 
 	DB.Close()
+	c.JSON(http.StatusOK, gin.H{"data": result})
+}
+
+func (slih *ShoppingListItemHandler) Delete(c *gin.Context) {
+	DB := c.MustGet("DB").(*gorm.DB).Begin()
+	tokenData := c.MustGet("Token").(map[string]string)
+
+	// Retrieve user guid in url
+	userGUID := c.Param("guid")
+
+	// If user GUID not match user GUID inside the token return error message
+	if tokenData["user_guid"] != userGUID {
+		DB.Close()
+		c.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("update shopping list"))
+		return
+	}
+
+	// Retrieve shopping list guid in url
+	shoppingListGUID := c.Param("shopping_list_guid")
+
+	// Retrieve shopping list by guid and user guif
+	shoppingList := slih.ShoppingListRepository.GetByGUIDAndUserGUID(shoppingListGUID, userGUID, "")
+
+	// If shopping list GUID empty return error message
+	if shoppingList.GUID == "" {
+		DB.Close()
+		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("Shopping List", "guid", shoppingListGUID))
+		return
+	}
+
+	// Retrieve shopping list item guid in url
+	shoppingListItemGUID := c.Param("item_guid")
+
+	// Retrieve shopping list item by guid
+	shoppingListItem := slih.ShoppingListItemRepository.GetByShoppingListGUIDAndGUID(shoppingListItemGUID, shoppingListGUID, "")
+
+	// If shopping list item GUID empty return error message
+	if shoppingListItem.GUID == "" {
+		DB.Close()
+		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("Shopping List Item", "guid", shoppingListItemGUID))
+		return
+	}
+
+	// Soft delete Shopping List Item incuding relationship
+	err := slih.ShoppingListItemFactory.DeleteByGUID(shoppingListItem.GUID)
+
+	if err != nil {
+		DB.Rollback().Close()
+		c.JSON(http.StatusInternalServerError, err)
+		return
+	}
+
+	// Response data
+	result := make(map[string]string)
+	result["message"] = "Successfully deleted shopping list item with guid " + shoppingListItem.GUID
+
+	DB.Commit().Close()
 	c.JSON(http.StatusOK, gin.H{"data": result})
 }

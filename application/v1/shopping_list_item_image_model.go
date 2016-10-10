@@ -5,6 +5,8 @@ import "time"
 type ShoppingListItemImage struct {
 	ID                   int        `json:"id"`
 	GUID                 string     `json:"guid"`
+	UserGUID             string     `json:"user_guid"`
+	ShoppingListGUID     string     `json:"shopping_list_guid"`
 	ShoppingListItemGUID string     `json:"shopping_list_item_guid"`
 	URL                  string     `json:"url"`
 	CreatedAt            time.Time  `json:"created_at"`

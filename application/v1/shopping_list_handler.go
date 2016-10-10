@@ -10,10 +10,11 @@ import (
 
 // ShoppingListHandler will handle all request related to user shopping list
 type ShoppingListHandler struct {
-	UserRepository         UserRepositoryInterface
-	OccasionRepository     OccasionRepositoryInterface
-	ShoppingListFactory    ShoppingListFactoryInterface
-	ShoppingListRepository ShoppingListRepositoryInterface
+	UserRepository          UserRepositoryInterface
+	OccasionRepository      OccasionRepositoryInterface
+	ShoppingListFactory     ShoppingListFactoryInterface
+	ShoppingListRepository  ShoppingListRepositoryInterface
+	ShoppingListItemFactory ShoppingListItemFactoryInterface
 }
 
 // View function used to retrieve User Shopping List
@@ -80,7 +81,7 @@ func (slh *ShoppingListHandler) Create(c *gin.Context) {
 	// If Occasion GUID empty return error message
 	if occasion.GUID == "" {
 		DB.Close()
-		c.JSON(http.StatusBadRequest, Error.ResourceNotFoundError("Occasion", "guid", shoppingListData.OccasionGUID))
+		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("Occasion", "guid", shoppingListData.OccasionGUID))
 		return
 	}
 
@@ -154,7 +155,7 @@ func (slh *ShoppingListHandler) Update(c *gin.Context) {
 		// If Occasion GUID empty return error message
 		if occasion.GUID == "" {
 			DB.Close()
-			c.JSON(http.StatusBadRequest, Error.ResourceNotFoundError("Occasion", "guid", shoppingListData.OccasionGUID))
+			c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("Occasion", "guid", shoppingListData.OccasionGUID))
 			return
 		}
 	}
@@ -216,6 +217,15 @@ func (slh *ShoppingListHandler) Delete(c *gin.Context) {
 
 	// Soft delete device
 	err := slh.ShoppingListFactory.Delete("guid", shoppingListGUID)
+
+	if err != nil {
+		DB.Rollback().Close()
+		c.JSON(http.StatusInternalServerError, err)
+		return
+	}
+
+	// Soft delete Shopping List Item incuding relationship
+	err = slh.ShoppingListItemFactory.DeleteByShoppingListGUID(shoppingList.GUID)
 
 	if err != nil {
 		DB.Rollback().Close()

@@ -10,6 +10,8 @@ func Up_20161005105638(txn *sql.Tx) {
 	_, err := txn.Query(`CREATE TABLE shopping_list_item_images (
         id int(10) unsigned NOT NULL AUTO_INCREMENT,
         guid varchar(40) NOT NULL,
+		user_guid varchar(40) NOT NULL,
+		shopping_list_guid varchar(40) NOT NULL,
 		shopping_list_item_guid varchar(40) NOT NULL,
         url varchar(255) NOT NULL,
         created_at timestamp NULL DEFAULT NULL,

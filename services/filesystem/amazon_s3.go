@@ -86,7 +86,6 @@ func (asu *AmazonS3Upload) Delete(files []string) *systems.ErrorData {
 	amazonS3Objects := make([]*s3.ObjectIdentifier, len(files))
 
 	for key, file := range files {
-		fmt.Println(file)
 		amazonS3Objects[key] = &s3.ObjectIdentifier{Key: aws.String(file)}
 	}
 
@@ -102,7 +101,7 @@ func (asu *AmazonS3Upload) Delete(files []string) *systems.ErrorData {
 			Objects: amazonS3Objects,
 		},
 	}
-	fmt.Println(params)
+
 	_, err1 := awsSession.DeleteObjects(params)
 
 	if err1 != nil {
@@ -110,6 +109,7 @@ func (asu *AmazonS3Upload) Delete(files []string) *systems.ErrorData {
 		// Message from an error.
 		return Error.InternalServerError(err1.Error(), systems.FailedToDeleteAmazonS3File)
 	}
+
 	return nil
 }
 

@@ -4,6 +4,8 @@ import "github.com/jinzhu/gorm"
 
 type ShoppingListItemImageRepositoryInterface interface {
 	GetByItemGUIDAndGUID(shoppingListItemGUID string, shoppingListItemImageGUID string, relations string) *ShoppingListItemImage
+	GetByItemGUID(shoppingListItemGUID string, relations string) []*ShoppingListItemImage
+	GetByShoppingListGUID(shoppingListGUID string, relations string) []*ShoppingListItemImage
 }
 
 type ShoppingListItemImageRepository struct {
@@ -22,6 +24,36 @@ func (sliir *ShoppingListItemImageRepository) GetByItemGUIDAndGUID(shoppingListI
 	}
 
 	DB.Where(&ShoppingListItemImage{GUID: shoppingListItemImageGUID, ShoppingListItemGUID: shoppingListItemGUID}).First(&shoppingListItemImage)
+
+	return shoppingListItemImage
+}
+
+// GetByItemGUID function used to retrieve shopping list item images using shopping list item GUID
+func (sliir *ShoppingListItemImageRepository) GetByItemGUID(shoppingListItemGUID string, relations string) []*ShoppingListItemImage {
+	shoppingListItemImage := []*ShoppingListItemImage{}
+
+	DB := sliir.DB.Model(&ShoppingListItemImage{})
+
+	if relations != "" {
+		DB = LoadRelations(DB, relations)
+	}
+
+	DB.Where(&ShoppingListItemImage{ShoppingListItemGUID: shoppingListItemGUID}).Find(&shoppingListItemImage)
+
+	return shoppingListItemImage
+}
+
+// GetByShoppingListGUID function used to retrieve shopping list item images using shopping list GUID
+func (sliir *ShoppingListItemImageRepository) GetByShoppingListGUID(shoppingListGUID string, relations string) []*ShoppingListItemImage {
+	shoppingListItemImage := []*ShoppingListItemImage{}
+
+	DB := sliir.DB.Model(&ShoppingListItemImage{})
+
+	if relations != "" {
+		DB = LoadRelations(DB, relations)
+	}
+
+	DB.Where(&ShoppingListItemImage{ShoppingListGUID: shoppingListGUID}).Find(&shoppingListItemImage)
 
 	return shoppingListItemImage
 }

@@ -148,7 +148,7 @@ func (ah *AuthHandler) Logout(c *gin.Context) {
 	// If device uuid empty return error message
 	if device.UUID == "" {
 		DB.Close()
-		c.JSON(http.StatusBadRequest, Error.ResourceNotFoundError("Device", "uuid", device.UUID))
+		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("Device", "uuid", device.UUID))
 		return
 	}
 

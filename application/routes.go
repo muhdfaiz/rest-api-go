@@ -60,18 +60,21 @@ func InitializeObjectAndSetRoutes(router *gin.Engine) *gin.Engine {
 	// Occasion Objects
 	occasionRepostory := &v1.OccasionRepository{DB: DB}
 
+	// Item Objects
+	itemRepository := &v1.ItemRepository{DB: DB}
+
 	// Shopping List Objects
 	shoppingListFactory := &v1.ShoppingListFactory{DB: DB}
 	shoppingListRepository := &v1.ShoppingListRepository{DB: DB}
 
+	// Shopping List Item Image Objects
+	shoppingListItemImageService := &v1.ShoppingListItemImageService{DB: DB, AmazonS3FileSystem: amazonS3FileSystem}
+	shoppingListItemImageFactory := &v1.ShoppingListItemImageFactory{DB: DB, ShoppingListItemImageService: shoppingListItemImageService}
+	shoppingListItemImageRepository := &v1.ShoppingListItemImageRepository{DB: DB}
+
 	// Shopping List Item Objects
 	shoppingListItemRepository := &v1.ShoppingListItemRepository{DB: DB}
-	shoppingListItemFactory := &v1.ShoppingListItemFactory{DB: DB}
-
-	// Shopping List Item Image Objects
-	shoppingListItemImageFactory := &v1.ShoppingListItemImageFactory{DB: DB}
-	shoppingListItemImageService := &v1.ShoppingListItemImageService{DB: DB, AmazonS3FileSystem: amazonS3FileSystem}
-	shoppingListItemImageRepository := &v1.ShoppingListItemImageRepository{DB: DB}
+	shoppingListItemFactory := &v1.ShoppingListItemFactory{DB: DB, ShoppingListItemImageFactory: shoppingListItemImageFactory, ShoppingListItemImageRepository: shoppingListItemImageRepository}
 
 	// Sms Handler
 	smsHandler := v1.SmsHandler{UserRepository: userRepository, UserFactory: userFactory, SmsService: smsService,
@@ -86,7 +89,7 @@ func InitializeObjectAndSetRoutes(router *gin.Engine) *gin.Engine {
 
 	// Shopping List Handler
 	shoppingListHandler := v1.ShoppingListHandler{UserRepository: userRepository, OccasionRepository: occasionRepostory,
-		ShoppingListFactory: shoppingListFactory, ShoppingListRepository: shoppingListRepository}
+		ShoppingListFactory: shoppingListFactory, ShoppingListRepository: shoppingListRepository, ShoppingListItemFactory: shoppingListItemFactory}
 
 	// Auth Handler
 	authHandler := v1.AuthHandler{UserRepository: userRepository, DeviceRepository: deviceRepository, DeviceFactory: deviceFactory,
@@ -94,6 +97,9 @@ func InitializeObjectAndSetRoutes(router *gin.Engine) *gin.Engine {
 
 	// Occasion Handler
 	occasionHandler := v1.OccasionHandler{OccasionRepository: occasionRepostory}
+
+	// Item Handler
+	itemHandler := v1.ItemHandler{ItemRepository: itemRepository}
 
 	// Shopping List Item Handler
 	shoppingListItemHandler := v1.ShoppingListItemHandler{UserRepository: userRepository, ShoppingListRepository: shoppingListRepository,
@@ -127,6 +133,9 @@ func InitializeObjectAndSetRoutes(router *gin.Engine) *gin.Engine {
 		// Occasion Routes
 		version1.GET("/shopping_lists/occasions", occasionHandler.Index)
 
+		// Item Routes
+		version1.GET("/shopping_lists/items", itemHandler.Index)
+
 		// Protected Routes
 		version1.Use(middlewares.Auth())
 		{
@@ -151,6 +160,7 @@ func InitializeObjectAndSetRoutes(router *gin.Engine) *gin.Engine {
 			version1.GET("users/:guid/shopping_lists/:shopping_list_guid/items/:item_guid", shoppingListItemHandler.View)
 			version1.POST("users/:guid/shopping_lists/:shopping_list_guid/items", shoppingListItemHandler.Create)
 			version1.PATCH("users/:guid/shopping_lists/:shopping_list_guid/items/:item_guid", shoppingListItemHandler.Update)
+			version1.DELETE("users/:guid/shopping_lists/:shopping_list_guid/items/:item_guid", shoppingListItemHandler.Delete)
 
 			// Shopping List Item Image Routes
 			version1.GET("users/:guid/shopping_lists/:shopping_list_guid/items/:item_guid/images/:image_guid", shoppingListItemImageHandler.View)

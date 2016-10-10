@@ -11,10 +11,15 @@ import (
 type ShoppingListItemFactoryInterface interface {
 	Create(data CreateShoppingListItem) (*ShoppingListItem, *systems.ErrorData)
 	Update(userGUID string, shoppingListGUID string, shoppingListItemGUID string, data map[string]interface{}) *systems.ErrorData
+	DeleteByGUID(guid string) *systems.ErrorData
+	DeleteByShoppingListGUID(shoppingListGUID string) *systems.ErrorData
 }
 
+// ShoppingListItemFactory contain functions to create, update and delete shopping list item
 type ShoppingListItemFactory struct {
-	DB *gorm.DB
+	DB                              *gorm.DB
+	ShoppingListItemImageFactory    ShoppingListItemImageFactoryInterface
+	ShoppingListItemImageRepository ShoppingListItemImageRepositoryInterface
 }
 
 // Create function used to create user shopping list item
@@ -56,6 +61,58 @@ func (slif *ShoppingListItemFactory) Update(userGUID string, shoppingListGUID st
 
 	if result.Error != nil {
 		return Error.InternalServerError(result.Error, systems.DatabaseError)
+	}
+
+	return nil
+}
+
+// DeleteByGUID function used to soft delete shopping list via GUID including the relationship from database
+func (slif *ShoppingListItemFactory) DeleteByGUID(guid string) *systems.ErrorData {
+	deleteShoppingListItem := slif.DB.Where("guid = ?", guid).Delete(&ShoppingListItem{})
+
+	if deleteShoppingListItem.Error != nil {
+		return Error.InternalServerError(deleteShoppingListItem.Error, systems.DatabaseError)
+	}
+
+	itemImages := slif.ShoppingListItemImageRepository.GetByItemGUID(guid, "")
+
+	imageURLs := make([]string, len(itemImages))
+
+	for key, itemImage := range itemImages {
+		imageURLs[key] = itemImage.URL
+	}
+
+	err := slif.ShoppingListItemImageFactory.Delete("shopping_list_item_guid", []string{guid}, imageURLs)
+
+	if err != nil {
+		return Error.InternalServerError(err.Error, systems.DatabaseError)
+	}
+
+	return nil
+}
+
+// DeleteByShoppingListGUID function used to soft delete shopping list via shopping list GUID including the relationship from database
+func (slif *ShoppingListItemFactory) DeleteByShoppingListGUID(shoppingListGUID string) *systems.ErrorData {
+	// Delete shopping list item by shopping list GUID
+	deleteShoppingListItem := slif.DB.Where("shopping_list_guid = ?", shoppingListGUID).Delete(&ShoppingListItem{})
+
+	if deleteShoppingListItem.Error != nil {
+		return Error.InternalServerError(deleteShoppingListItem.Error, systems.DatabaseError)
+	}
+
+	// Retrieve Shopping List Item Images
+	itemImages := slif.ShoppingListItemImageRepository.GetByShoppingListGUID(shoppingListGUID, "")
+
+	imageURLs := make([]string, len(itemImages))
+
+	for key, itemImage := range itemImages {
+		imageURLs[key] = itemImage.URL
+	}
+
+	err := slif.ShoppingListItemImageFactory.Delete("shopping_list_guid", []string{shoppingListGUID}, imageURLs)
+
+	if err != nil {
+		return Error.InternalServerError(err.Error, systems.DatabaseError)
 	}
 
 	return nil

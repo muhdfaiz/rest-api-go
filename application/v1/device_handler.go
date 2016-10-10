@@ -47,7 +47,7 @@ func (dh *DeviceHandler) Create(c *gin.Context) {
 		// If user GUID empty return error message
 		if user.GUID == "" {
 			DB.Close()
-			c.JSON(http.StatusBadRequest, Error.ResourceNotFoundError("User", "guid", deviceData.UserGUID))
+			c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("User", "guid", deviceData.UserGUID))
 			return
 		}
 	}

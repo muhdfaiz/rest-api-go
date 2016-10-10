@@ -154,7 +154,7 @@ func (sliih *ShoppingListItemImageHandler) Create(c *gin.Context) {
 	}
 
 	// Store uploaded shopping list item image into database
-	result, err := sliih.ShoppingListItemImageFactory.Create(shoppingListItemGUID, uploadedImages)
+	result, err := sliih.ShoppingListItemImageFactory.Create(userGUID, shoppingListGUID, shoppingListItemGUID, uploadedImages)
 
 	//Return error message if failed to store uploaded shopping list item image into database
 	if err != nil {
@@ -205,7 +205,7 @@ func (sliih *ShoppingListItemImageHandler) Delete(c *gin.Context) {
 	// If shopping list item GUID empty return error message
 	if shoppingListItem.GUID == "" {
 		DB.Rollback().Close()
-		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("Shopping List Item", "guid", shoppingListGUID))
+		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("Shopping List Item", "guid", shoppingListItemGUID))
 		return
 	}
 
@@ -231,17 +231,8 @@ func (sliih *ShoppingListItemImageHandler) Delete(c *gin.Context) {
 		shoppingListItemImageURLs[key] = shoppingListItemImage.URL
 	}
 
-	// Delete shopping list item image from Amazon S3
-	err := sliih.ShoppingListItemImageService.DeleteImages(shoppingListItemImageURLs)
-
-	if err != nil {
-		DB.Close()
-		c.JSON(http.StatusInternalServerError, err)
-		return
-	}
-
 	// Delete shopping list item image from database
-	err = sliih.ShoppingListItemImageFactory.Delete("guid", splitShoppingListItemImageGUID)
+	err := sliih.ShoppingListItemImageFactory.Delete("guid", splitShoppingListItemImageGUID, shoppingListItemImageURLs)
 
 	if err != nil {
 		DB.Rollback().Close()

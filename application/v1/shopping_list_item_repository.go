@@ -54,7 +54,7 @@ func (slir *ShoppingListItemRepository) GetByShoppingListGUIDAndGUID(guid string
 		DB = LoadRelations(DB, relations)
 	}
 
-	DB.Where(&ShoppingListItem{GUID: guid, ShoppingListGUID: shoppingListGUID}).Preload("ShoppingListItemImages").First(&shoppingListItem)
+	DB.Where(&ShoppingListItem{GUID: guid, ShoppingListGUID: shoppingListGUID}).First(&shoppingListItem)
 
 	return shoppingListItem
 }

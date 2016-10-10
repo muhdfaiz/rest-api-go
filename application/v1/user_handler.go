@@ -40,7 +40,7 @@ func (uh *UserHandler) View(c *gin.Context) {
 	// If user GUID empty return error message
 	if user.GUID == "" {
 		DB.Close()
-		c.JSON(http.StatusBadRequest, Error.ResourceNotFoundError("User", "guid", userGUID))
+		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("User", "guid", userGUID))
 		return
 	}
 
@@ -207,7 +207,7 @@ func (uh *UserHandler) Update(c *gin.Context) {
 	// If user guid empty return error message
 	if user.GUID == "" {
 		DB.Close()
-		c.JSON(http.StatusBadRequest, Error.ResourceNotFoundError("User", "guid", userGUID))
+		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("User", "guid", userGUID))
 		return
 	}
 

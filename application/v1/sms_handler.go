@@ -41,7 +41,7 @@ func (sh *SmsHandler) Send(c *gin.Context) {
 	// If user GUID empty return error message
 	if user.GUID == "" {
 		DB.Close()
-		c.JSON(http.StatusBadRequest, Error.ResourceNotFoundError("User", "guid", smsData.UserGUID))
+		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("User", "guid", smsData.UserGUID))
 		return
 	}
 
@@ -109,7 +109,7 @@ func (sh *SmsHandler) Verify(c *gin.Context) {
 	// If user phone_no empty return error message
 	if user.PhoneNo == "" {
 		DB.Close()
-		c.JSON(http.StatusBadRequest, Error.ResourceNotFoundError("User", "phone_no", smsData.PhoneNo))
+		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("User", "phone_no", smsData.PhoneNo))
 		return
 	}
 

@@ -215,7 +215,7 @@ func (slh *ShoppingListHandler) Delete(c *gin.Context) {
 		return
 	}
 
-	// Soft delete device
+	// Soft delete shopping list
 	err := slh.ShoppingListFactory.Delete("guid", shoppingListGUID)
 
 	if err != nil {

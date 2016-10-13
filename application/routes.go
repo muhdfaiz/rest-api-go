@@ -59,9 +59,11 @@ func InitializeObjectAndSetRoutes(router *gin.Engine) *gin.Engine {
 
 	// Occasion Objects
 	occasionRepostory := &v1.OccasionRepository{DB: DB}
+	occasionTransformer := &v1.OccasionTransformer{}
 
 	// Item Objects
 	itemRepository := &v1.ItemRepository{DB: DB}
+	itemTransformer := &v1.ItemTransformer{}
 
 	// Shopping List Objects
 	shoppingListFactory := &v1.ShoppingListFactory{DB: DB}
@@ -96,10 +98,10 @@ func InitializeObjectAndSetRoutes(router *gin.Engine) *gin.Engine {
 		SmsService: smsService}
 
 	// Occasion Handler
-	occasionHandler := v1.OccasionHandler{OccasionRepository: occasionRepostory}
+	occasionHandler := v1.OccasionHandler{OccasionRepository: occasionRepostory, OccasionTransformer: occasionTransformer}
 
 	// Item Handler
-	itemHandler := v1.ItemHandler{ItemRepository: itemRepository}
+	itemHandler := v1.ItemHandler{ItemRepository: itemRepository, ItemTransformer: itemTransformer}
 
 	// Shopping List Item Handler
 	shoppingListItemHandler := v1.ShoppingListItemHandler{UserRepository: userRepository, ShoppingListRepository: shoppingListRepository,

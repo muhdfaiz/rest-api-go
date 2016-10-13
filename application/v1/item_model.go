@@ -1,23 +1,19 @@
 package v1
 
-import (
-	"time"
-
-	"github.com/shopspring/decimal"
-)
+import "time"
 
 // Item Model
 type Item struct {
-	ID             int             `json:"id"`
-	GUID           string          `json:"guid"`
-	MasterCategory string          `json:"master_category"`
-	Category       string          `json:"category"`
-	SubCategory    string          `json:"sub_category"`
-	Price          decimal.Decimal `json:"price"`
-	Remark         string          `json:"remarks"`
-	CreatedAt      time.Time       `json:"created_at"`
-	UpdatedAt      time.Time       `json:"updated_at"`
-	DeletedAt      *time.Time      `json:"deleted_at"`
+	ID          int        `json:"id"`
+	GUID        string     `json:"guid"`
+	GenericID   int        `json:"generic_id"`
+	Category    string     `json:"category"`
+	SubCategory string     `json:"sub_category"`
+	Name        string     `json:"name"`
+	Remark      string     `json:"remarks"`
+	CreatedAt   time.Time  `json:"created_at"`
+	UpdatedAt   time.Time  `json:"updated_at"`
+	DeletedAt   *time.Time `json:"deleted_at"`
 }
 
 // TableName function used to set Item table name to be `item``

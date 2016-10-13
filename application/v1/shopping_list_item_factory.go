@@ -76,16 +76,18 @@ func (slif *ShoppingListItemFactory) DeleteByGUID(guid string) *systems.ErrorDat
 
 	itemImages := slif.ShoppingListItemImageRepository.GetByItemGUID(guid, "")
 
-	imageURLs := make([]string, len(itemImages))
+	if len(itemImages) > 0 {
+		imageURLs := make([]string, len(itemImages))
 
-	for key, itemImage := range itemImages {
-		imageURLs[key] = itemImage.URL
-	}
+		for key, itemImage := range itemImages {
+			imageURLs[key] = itemImage.URL
+		}
 
-	err := slif.ShoppingListItemImageFactory.Delete("shopping_list_item_guid", []string{guid}, imageURLs)
+		err := slif.ShoppingListItemImageFactory.Delete("shopping_list_item_guid", []string{guid}, imageURLs)
 
-	if err != nil {
-		return Error.InternalServerError(err.Error, systems.DatabaseError)
+		if err != nil {
+			return Error.InternalServerError(err.Error, systems.DatabaseError)
+		}
 	}
 
 	return nil

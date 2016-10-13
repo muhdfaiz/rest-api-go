@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"strconv"
 	"strings"
 
 	"github.com/jinzhu/gorm"
@@ -42,4 +43,17 @@ func ProcessNestedRelations(DB *gorm.DB, relations []string) *gorm.DB {
 	}
 
 	return DB.Preload(strings.Join(nestedRelations, "."))
+}
+
+func SetOffsetValue(pageNumber string, pageLimit string) int {
+	pageNumberInt, _ := strconv.Atoi(pageNumber)
+	pageLimitInt, _ := strconv.Atoi(pageLimit)
+
+	offset := pageNumberInt*pageLimitInt - pageLimitInt
+
+	if pageNumberInt == 1 {
+		offset = 0
+	}
+
+	return offset
 }

@@ -8,31 +8,39 @@ import (
 )
 
 type OccasionHandler struct {
-	OccasionRepository OccasionRepositoryInterface
+	OccasionRepository  OccasionRepositoryInterface
+	OccasionTransformer OccasionTransformerInterface
 }
 
 // Index function used to retrieve shopping list occasions
 func (oh *OccasionHandler) Index(c *gin.Context) {
 	DB := c.MustGet("DB").(*gorm.DB)
 
+	// Validate query string
+	err := Validation.Validate(c, map[string]string{"last_sync_date": "time"})
+
+	// If validation error return error message
+	if err != nil {
+		DB.Close()
+		c.JSON(http.StatusUnprocessableEntity, err)
+		return
+	}
+
 	// Retrieve filter query string in request
 	lastSyncDate := c.DefaultQuery("last_sync_date", "")
 
 	if lastSyncDate != "" {
-		occasions := oh.OccasionRepository.GetLatestUpdate(lastSyncDate)
+		occasions, totalOccasion := oh.OccasionRepository.GetLatestUpdate(lastSyncDate)
+		result := oh.OccasionTransformer.transformCollection(occasions, totalOccasion)
+
 		DB.Close()
-		c.JSON(http.StatusOK, gin.H{"last_update": occasions[len(occasions)-1].UpdatedAt, "data": occasions})
+		c.JSON(http.StatusOK, result)
 		return
 	}
 
-	occasions := oh.OccasionRepository.GetAll()
-
-	if len(occasions) == 0 {
-		DB.Close()
-		c.JSON(http.StatusOK, gin.H{"data": occasions})
-		return
-	}
+	occasions, totalOccasion := oh.OccasionRepository.GetAll()
+	result := oh.OccasionTransformer.transformCollection(occasions, totalOccasion)
 
 	DB.Close()
-	c.JSON(http.StatusOK, gin.H{"last_update": occasions[len(occasions)-1].UpdatedAt, "data": occasions})
+	c.JSON(http.StatusOK, result)
 }

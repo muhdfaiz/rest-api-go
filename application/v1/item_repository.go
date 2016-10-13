@@ -1,34 +1,43 @@
 package v1
 
-import (
-	"time"
-
-	"github.com/jinzhu/gorm"
-)
+import "github.com/jinzhu/gorm"
 
 type ItemRepositoryInterface interface {
-	GetAll() []*Item
-	GetLatestUpdate(lastSyncDate string) []*Item
+	GetAll(pageNumber string, pageLimit string) ([]*Item, int)
+	GetLatestUpdate(lastSyncDate string, pageNumber string, pageLimit string) ([]*Item, int)
 }
 
+// ItemRepository will handle task related to retrieve and search shopping list items in database
 type ItemRepository struct {
 	DB *gorm.DB
 }
 
-func (or *ItemRepository) GetAll() []*Item {
+// GetAll function used to retrieve all shopping list item insert from admin control panel
+func (ir *ItemRepository) GetAll(pageNumber string, pageLimit string) ([]*Item, int) {
 	items := []*Item{}
 
-	or.DB.Model(&Item{}).Find(&items)
+	offset := SetOffsetValue(pageNumber, pageLimit)
 
-	return items
+	ir.DB.Model(&Item{}).Offset(offset).Limit(pageLimit).Find(&items)
+
+	var totalItem *int
+
+	ir.DB.Model(&Item{}).Count(&totalItem)
+
+	return items, *totalItem
 }
 
-func (or *ItemRepository) GetLatestUpdate(lastSyncDate string) []*Item {
-	lastSync, _ := time.Parse(time.RFC3339, lastSyncDate)
-
+// GetLatestUpdate function used to retrieve latest update shopping list item that happen after last sync date in the query string
+func (ir *ItemRepository) GetLatestUpdate(lastSyncDate string, pageNumber string, pageLimit string) ([]*Item, int) {
 	items := []*Item{}
 
-	or.DB.Table("item").Where("updated_at > ?", lastSync).Order("updated_at desc").Find(&items)
+	offset := SetOffsetValue(pageNumber, pageLimit)
 
-	return items
+	ir.DB.Model(&Item{}).Offset(offset).Limit(pageLimit).Where("updated_at > ?", lastSyncDate).Order("updated_at desc").Find(&items)
+
+	var totalItem *int
+
+	ir.DB.Model(&Item{}).Where("updated_at > ?", lastSyncDate).Count(&totalItem)
+
+	return items, *totalItem
 }

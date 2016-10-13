@@ -18,7 +18,7 @@ func (ir *ItemRepository) GetAll(pageNumber string, pageLimit string) ([]*Item, 
 
 	offset := SetOffsetValue(pageNumber, pageLimit)
 
-	ir.DB.Model(&Item{}).Offset(offset).Limit(pageLimit).Find(&items)
+	ir.DB.Model(&Item{}).Offset(offset).Limit(pageLimit).Order("updated_at desc").Find(&items)
 
 	var totalItem *int
 

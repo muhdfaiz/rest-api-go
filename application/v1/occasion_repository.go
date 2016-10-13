@@ -21,7 +21,7 @@ type OccasionRepository struct {
 func (or *OccasionRepository) GetAll() ([]*Occasion, int) {
 	occasions := []*Occasion{}
 
-	or.DB.Model(&Occasion{}).Find(&occasions)
+	or.DB.Model(&Occasion{}).Order("updated_at desc").Find(&occasions)
 
 	var totalOccasion *int
 

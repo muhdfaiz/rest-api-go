@@ -183,8 +183,7 @@ func (slih *ShoppingListItemHandler) Update(c *gin.Context) {
 	}
 
 	// Update Shopping List Item
-	// structs.Map(updateShoppingListItemData)
-	err := slih.ShoppingListItemFactory.Update(userGUID, shoppingListGUID, shoppingListItemGUID, structs.Map(updateShoppingListItemData))
+	err := slih.ShoppingListItemFactory.Update(userGUID, shoppingListGUID, shoppingListItemGUID, structs.Map(&updateShoppingListItemData))
 
 	// If update shopping list item error, return error message
 	if err != nil {

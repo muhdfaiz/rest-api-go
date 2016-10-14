@@ -1,8 +1,7 @@
 package v1
 
 import (
-	"fmt"
-	"strconv"
+	"strings"
 
 	"bitbucket.org/cliqers/shoppermate-api/systems"
 	"github.com/jinzhu/gorm"
@@ -24,13 +23,12 @@ type ShoppingListItemFactory struct {
 
 // Create function used to create user shopping list item
 func (slif *ShoppingListItemFactory) Create(data CreateShoppingListItem) (*ShoppingListItem, *systems.ErrorData) {
-	quantity, _ := strconv.Atoi(data.Quantity)
 	shoppingListItem := &ShoppingListItem{
 		GUID:             Helper.GenerateUUID(),
 		UserGUID:         data.UserGUID,
 		ShoppingListGUID: data.ShoppingListGUID,
 		Name:             data.Name,
-		Quantity:         quantity,
+		Quantity:         data.Quantity,
 	}
 
 	result := slif.DB.Create(shoppingListItem)
@@ -49,13 +47,14 @@ func (slif *ShoppingListItemFactory) Update(userGUID string, shoppingListGUID st
 
 	for key, value := range data {
 		if data, ok := value.(string); ok && value.(string) != "" {
-			updateData[key] = data
+			updateData[strings.ToLower(key)] = data
 		}
+
 		if data, ok := value.(int); ok && value.(int) != 0 {
-			updateData[key] = data
+			updateData[strings.ToLower(key)] = data
 		}
 	}
-	fmt.Println(updateData)
+
 	result := slif.DB.Model(&ShoppingListItem{}).Where(&ShoppingListItem{GUID: shoppingListItemGUID, ShoppingListGUID: shoppingListGUID, UserGUID: userGUID}).
 		Updates(updateData)
 

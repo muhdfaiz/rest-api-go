@@ -167,11 +167,15 @@ func (sh *SmsHandler) Verify(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, err)
 	}
 
-	DB.Commit().Close()
+	DB.Commit()
+
+	// Retrieve user by phone no
+	user = sh.UserRepository.GetByPhoneNo(smsData.PhoneNo, "")
 
 	response := make(map[string]interface{})
 	response["user"] = user
 	response["access_token"] = jwtToken
 
+	DB.Close()
 	c.JSON(http.StatusOK, gin.H{"data": response})
 }

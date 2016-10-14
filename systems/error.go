@@ -68,6 +68,8 @@ const (
 	ErrorValidationEmail    = "The %s parameter must be a valid email address."
 	ErrorValidationLength   = "The length of %s parameter must be %s."
 	ErrorValidationTime     = "The %s parameter must be valid time in RFC3339 format."
+	ErrorGreaterThanOrEqual = "The value for %s parameter must be greater than or equal to %s"
+	ErrorLessThanOrEqual    = "The value for %s parameter must be less than or equal to %s"
 	ErrorInternalServer     = "API cannot return results because an internal server error has occurred."
 
 	ErrorFileSizeExceededLimit   = "The %s attributes may not be greater than %s kilobytes."
@@ -267,6 +269,10 @@ func (e Error) ValidationErrors(errors map[string]*validator.FieldError) *ErrorD
 			message = fmt.Sprintf(ErrorValidationEmail, errMsg.Name)
 		case "len":
 			message = fmt.Sprintf(ErrorValidationLength, errMsg.Name, errMsg.Param)
+		case "gte":
+			message = fmt.Sprintf(ErrorGreaterThanOrEqual, errMsg.Name, errMsg.Param)
+		case "lte":
+			message = fmt.Sprintf(ErrorLessThanOrEqual, errMsg.Name, errMsg.Param)
 		}
 		errorMessages[errMsg.Name] = message
 	}

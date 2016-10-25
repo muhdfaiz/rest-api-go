@@ -13,12 +13,12 @@ type OccasionResponse struct {
 }
 
 type OccasionTransformerInterface interface {
-	transformCollection(data interface{}, totalData int) *OccasionResponse
+	TransformCollection(data interface{}, totalData int) *OccasionResponse
 }
 
 type OccasionTransformer struct{}
 
-func (ot *OccasionTransformer) transformCollection(data interface{}, totalData int) *OccasionResponse {
+func (ot *OccasionTransformer) TransformCollection(data interface{}, totalData int) *OccasionResponse {
 	occasions := data.([]*Occasion)
 
 	occasionResponse := &OccasionResponse{}

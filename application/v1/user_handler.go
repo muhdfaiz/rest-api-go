@@ -91,7 +91,7 @@ func (uh *UserHandler) Create(c *gin.Context) {
 	// If referral_code exist in request data
 	if userData.ReferralCode != "" {
 		// Search referral code
-		user = uh.UserRepository.SearchReferralCode(userData.ReferralCode, "")
+		user = uh.UserRepository.SearchByReferralCode(userData.ReferralCode, "")
 
 		// If referral code not found return error message
 		if user.ReferralCode == "" {

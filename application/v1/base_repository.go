@@ -26,7 +26,7 @@ func LoadRelations(DB *gorm.DB, relations string) *gorm.DB {
 		splitNestedRelations := strings.Split(relation, ".")
 
 		if len(splitNestedRelations) > 0 {
-			DB = ProcessNestedRelations(DB, splitNestedRelations)
+			DB = processNestedRelations(DB, splitNestedRelations)
 		} else {
 			DB = DB.Preload(strings.Title(relation))
 		}
@@ -35,7 +35,7 @@ func LoadRelations(DB *gorm.DB, relations string) *gorm.DB {
 	return DB
 }
 
-func ProcessNestedRelations(DB *gorm.DB, relations []string) *gorm.DB {
+func processNestedRelations(DB *gorm.DB, relations []string) *gorm.DB {
 	nestedRelations := make([]string, len(relations))
 
 	for key, relation := range relations {

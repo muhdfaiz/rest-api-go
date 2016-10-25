@@ -118,7 +118,7 @@ func (sliih *ShoppingListItemImageHandler) Create(c *gin.Context) {
 	// If shopping list item GUID empty return error message
 	if shoppingListItem.GUID == "" {
 		DB.Close()
-		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("Shopping List Item", "guid", shoppingListGUID))
+		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("Shopping List Item", "guid", shoppingListItemGUID))
 		return
 	}
 

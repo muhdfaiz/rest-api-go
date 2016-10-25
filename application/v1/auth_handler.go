@@ -71,7 +71,7 @@ func (ah *AuthHandler) LoginViaFacebook(c *gin.Context) {
 	}
 
 	// Retrieve user facebook_id
-	user := ah.UserRepository.GetFacebookID(authData.FacebookID, "")
+	user := ah.UserRepository.GetByFacebookID(authData.FacebookID, "")
 
 	// If facebook_id empty return error message
 	if user.FacebookID == "" {

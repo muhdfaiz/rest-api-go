@@ -13,4 +13,5 @@ type UpdateShoppingListItem struct {
 	Name             string `form:"name" json:"name" binding:"omitempty"`
 	Quantity         int    `form:"quantity" json:"quantity" binding:"omitempty,gte=0,lte=999"`
 	Remark           string `form:"remark" json:"remark" binding:"omitempty"`
+	AddedToCart      int    `form:"added_to_cart" json:"added_to_cart" binding:"omitempty,gte=0,lte=1"`
 }

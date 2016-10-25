@@ -6,6 +6,7 @@ type ShoppingListItemImageRepositoryInterface interface {
 	GetByItemGUIDAndGUID(shoppingListItemGUID string, shoppingListItemImageGUID string, relations string) *ShoppingListItemImage
 	GetByItemGUID(shoppingListItemGUID string, relations string) []*ShoppingListItemImage
 	GetByShoppingListGUID(shoppingListGUID string, relations string) []*ShoppingListItemImage
+	GetByUserGUID(useerGUID string, relations string) []*ShoppingListItemImage
 }
 
 type ShoppingListItemImageRepository struct {
@@ -54,6 +55,21 @@ func (sliir *ShoppingListItemImageRepository) GetByShoppingListGUID(shoppingList
 	}
 
 	DB.Where(&ShoppingListItemImage{ShoppingListGUID: shoppingListGUID}).Find(&shoppingListItemImage)
+
+	return shoppingListItemImage
+}
+
+// GetByUserGUID function used to retrieve shopping list item images using User GUID
+func (sliir *ShoppingListItemImageRepository) GetByUserGUID(userGUID string, relations string) []*ShoppingListItemImage {
+	shoppingListItemImage := []*ShoppingListItemImage{}
+
+	DB := sliir.DB.Model(&ShoppingListItemImage{})
+
+	if relations != "" {
+		DB = LoadRelations(DB, relations)
+	}
+
+	DB.Where(&ShoppingListItemImage{UserGUID: userGUID}).Find(&shoppingListItemImage)
 
 	return shoppingListItemImage
 }

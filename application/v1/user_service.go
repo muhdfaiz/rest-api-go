@@ -52,7 +52,7 @@ func (us *UserService) UploadProfileImage(file multipart.File) (map[string]strin
 
 // GiveReferralCashback function used to give cashback to user that refer by another user during registration
 func (us *UserService) GiveReferralCashback(referrerGUID string, referentGUID string) (interface{}, *systems.ErrorData) {
-	ReferralCashbackFactory := &ReferralCashbackFactory{}
+	ReferralCashbackFactory := &ReferralCashbackFactory{DB: us.DB}
 	referralCashbackCreated, err := ReferralCashbackFactory.CreateReferralCashbackFactory(referrerGUID, referentGUID)
 
 	if err != nil {
@@ -105,10 +105,13 @@ func (us *UserService) GenerateReferralCode(name string) string {
 func (us *UserService) DeleteImage(ImageURL string) *systems.ErrorData {
 	imageURLs := make([]string, 1)
 
+	// Example URI: `https://s3-ap-southeast-1.amazonaws.com/shoppermate-test/profile_images/f83617cd-2b17-3c59-81a5-78c9cfbe7c4f.png`
 	url, _ := url.Parse(ImageURL)
 
 	uriSegments := strings.SplitN(url.Path, "/", 3)
 
+	// Retrieve image path after bucket name
+	// Example: `profile_images/f83617cd-2b17-3c59-81a5-78c9cfbe7c4f.png`
 	imageURLs[0] = uriSegments[2]
 
 	err := us.AmazonS3FileSystem.Delete(imageURLs)

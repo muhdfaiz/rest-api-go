@@ -17,7 +17,7 @@ func (ih *ItemHandler) Index(c *gin.Context) {
 	DB := c.MustGet("DB").(*gorm.DB)
 
 	// Validate query string
-	err := Validation.Validate(c, map[string]string{"last_sync_date": "time", "page_number": "numeric", "page_limit": "numeric"})
+	err := Validation.Validate(c.Request.URL.Query(), map[string]string{"last_sync_date": "time", "page_number": "numeric", "page_limit": "numeric"})
 
 	// If validation error return error message
 	if err != nil {

@@ -76,7 +76,7 @@ func InitializeObjectAndSetRoutes(router *gin.Engine) *gin.Engine {
 
 	// Shopping List Item Objects
 	shoppingListItemRepository := &v1.ShoppingListItemRepository{DB: DB}
-	shoppingListItemFactory := &v1.ShoppingListItemFactory{DB: DB, ShoppingListItemImageFactory: shoppingListItemImageFactory, ShoppingListItemImageRepository: shoppingListItemImageRepository}
+	shoppingListItemFactory := &v1.ShoppingListItemFactory{DB: DB, ItemRepository: itemRepository, ShoppingListItemImageFactory: shoppingListItemImageFactory, ShoppingListItemImageRepository: shoppingListItemImageRepository}
 
 	// Sms Handler
 	smsHandler := v1.SmsHandler{UserRepository: userRepository, UserFactory: userFactory, SmsService: smsService,
@@ -160,9 +160,12 @@ func InitializeObjectAndSetRoutes(router *gin.Engine) *gin.Engine {
 
 			// Shopping List Item Routes
 			version1.GET("users/:guid/shopping_lists/:shopping_list_guid/items/:item_guid", shoppingListItemHandler.View)
+			version1.GET("users/:guid/shopping_lists/:shopping_list_guid/items", shoppingListItemHandler.ViewAll)
 			version1.POST("users/:guid/shopping_lists/:shopping_list_guid/items", shoppingListItemHandler.Create)
 			version1.PATCH("users/:guid/shopping_lists/:shopping_list_guid/items/:item_guid", shoppingListItemHandler.Update)
+			version1.PATCH("users/:guid/shopping_lists/:shopping_list_guid/items", shoppingListItemHandler.UpdateAll)
 			version1.DELETE("users/:guid/shopping_lists/:shopping_list_guid/items/:item_guid", shoppingListItemHandler.Delete)
+			version1.DELETE("users/:guid/shopping_lists/:shopping_list_guid/items/", shoppingListItemHandler.DeleteAll)
 
 			// Shopping List Item Image Routes
 			version1.GET("users/:guid/shopping_lists/:shopping_list_guid/items/:item_guid/images/:image_guid", shoppingListItemImageHandler.View)

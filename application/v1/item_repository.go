@@ -5,6 +5,7 @@ import "github.com/jinzhu/gorm"
 type ItemRepositoryInterface interface {
 	GetAll(pageNumber string, pageLimit string) ([]*Item, int)
 	GetLatestUpdate(lastSyncDate string, pageNumber string, pageLimit string) ([]*Item, int)
+	GetByName(name string) *Item
 }
 
 // ItemRepository will handle task related to retrieve and search shopping list items in database
@@ -40,4 +41,13 @@ func (ir *ItemRepository) GetLatestUpdate(lastSyncDate string, pageNumber string
 	ir.DB.Model(&Item{}).Where("updated_at > ?", lastSyncDate).Count(&totalItem)
 
 	return items, *totalItem
+}
+
+// GetByName function used to retrieve shopping list item by name
+func (ir *ItemRepository) GetByName(name string) *Item {
+	item := &Item{}
+
+	ir.DB.Model(&Item{}).Where("name = ?", name).First(&item)
+
+	return item
 }

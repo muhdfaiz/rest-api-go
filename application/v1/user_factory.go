@@ -3,6 +3,7 @@ package v1
 import (
 	"bitbucket.org/cliqers/shoppermate-api/systems"
 	"github.com/jinzhu/gorm"
+	"github.com/serenize/snaker"
 )
 
 type UserFactoryInterface interface {
@@ -52,10 +53,10 @@ func (uf *UserFactory) Update(guid string, data map[string]interface{}) *systems
 	updateData := map[string]interface{}{}
 	for key, value := range data {
 		if data, ok := value.(string); ok && value.(string) != "" {
-			updateData[key] = data
+			updateData[snaker.CamelToSnake(key)] = data
 		}
 		if data, ok := value.(int); ok && value.(int) != 0 {
-			updateData[key] = data
+			updateData[snaker.CamelToSnake(key)] = data
 		}
 	}
 

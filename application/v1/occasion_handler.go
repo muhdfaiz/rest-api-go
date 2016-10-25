@@ -17,7 +17,7 @@ func (oh *OccasionHandler) Index(c *gin.Context) {
 	DB := c.MustGet("DB").(*gorm.DB)
 
 	// Validate query string
-	err := Validation.Validate(c, map[string]string{"last_sync_date": "time"})
+	err := Validation.Validate(c.Request.URL.Query(), map[string]string{"last_sync_date": "time"})
 
 	// If validation error return error message
 	if err != nil {
@@ -31,7 +31,7 @@ func (oh *OccasionHandler) Index(c *gin.Context) {
 
 	if lastSyncDate != "" {
 		occasions, totalOccasion := oh.OccasionRepository.GetLatestUpdate(lastSyncDate)
-		result := oh.OccasionTransformer.transformCollection(occasions, totalOccasion)
+		result := oh.OccasionTransformer.TransformCollection(occasions, totalOccasion)
 
 		DB.Close()
 		c.JSON(http.StatusOK, result)
@@ -39,7 +39,7 @@ func (oh *OccasionHandler) Index(c *gin.Context) {
 	}
 
 	occasions, totalOccasion := oh.OccasionRepository.GetAll()
-	result := oh.OccasionTransformer.transformCollection(occasions, totalOccasion)
+	result := oh.OccasionTransformer.TransformCollection(occasions, totalOccasion)
 
 	DB.Close()
 	c.JSON(http.StatusOK, result)

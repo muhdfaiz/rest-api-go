@@ -5,8 +5,8 @@ import "github.com/jinzhu/gorm"
 type UserRepositoryInterface interface {
 	GetByGUID(guid string, relations string) *User
 	GetByPhoneNo(phoneNo string, relations string) *User
-	GetFacebookID(facebookID string, relations string) *User
-	SearchReferralCode(referralCode string, relations string) *User
+	GetByFacebookID(facebookID string, relations string) *User
+	SearchByReferralCode(referralCode string, relations string) *User
 }
 
 type UserRepository struct {
@@ -45,9 +45,9 @@ func (ur *UserRepository) GetByPhoneNo(phoneNo string, relations string) *User {
 	return user
 }
 
-// GetFacebookID function used to retrieve user by facebook id.
+// GetByFacebookID function used to retrieve user by facebook id.
 // Return user data if found and return empty user if not found
-func (ur *UserRepository) GetFacebookID(facebookID string, relations string) *User {
+func (ur *UserRepository) GetByFacebookID(facebookID string, relations string) *User {
 	user := &User{}
 
 	DB := ur.DB.Model(&User{})
@@ -61,9 +61,9 @@ func (ur *UserRepository) GetFacebookID(facebookID string, relations string) *Us
 	return user
 }
 
-// SearchReferralCode function used to search user by referral code
+// SearchByReferralCode function used to search user by referral code
 // Return user data if foun and return empty user if not found
-func (ur *UserRepository) SearchReferralCode(referralCode string, relations string) *User {
+func (ur *UserRepository) SearchByReferralCode(referralCode string, relations string) *User {
 	user := &User{}
 
 	DB := ur.DB.Model(&User{})
@@ -72,7 +72,7 @@ func (ur *UserRepository) SearchReferralCode(referralCode string, relations stri
 		DB = LoadRelations(DB, relations)
 	}
 
-	DB.Where("referral_code LIKE ?", "%"+referralCode+"%").First(&User{})
+	DB.Where(&User{ReferralCode: referralCode}).First(&user)
 
 	return user
 }

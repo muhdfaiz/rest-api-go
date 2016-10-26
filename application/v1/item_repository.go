@@ -6,6 +6,7 @@ type ItemRepositoryInterface interface {
 	GetAll(pageNumber string, pageLimit string) ([]*Item, int)
 	GetLatestUpdate(lastSyncDate string, pageNumber string, pageLimit string) ([]*Item, int)
 	GetByName(name string) *Item
+	GetUniqueCategories() ([]string, int)
 }
 
 // ItemRepository will handle task related to retrieve and search shopping list items in database
@@ -50,4 +51,14 @@ func (ir *ItemRepository) GetByName(name string) *Item {
 	ir.DB.Model(&Item{}).Where("name = ?", name).First(&item)
 
 	return item
+}
+
+// GetUniqueCategories function used to retrieve unique shopping list item category
+func (ir *ItemRepository) GetUniqueCategories() ([]string, int) {
+	items := []*Item{}
+	var shoppingListItemCategories []string
+
+	ir.DB.Model(&Item{}).Group("category").Find(&items).Pluck("category", &shoppingListItemCategories)
+
+	return shoppingListItemCategories, len(shoppingListItemCategories)
 }

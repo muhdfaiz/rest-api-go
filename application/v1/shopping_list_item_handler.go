@@ -343,29 +343,6 @@ func (slih *ShoppingListItemHandler) DeleteAll(c *gin.Context) {
 		return
 	}
 
-	// // Retrieve remove_from_cart_only query string param in url and convert to boolean
-	// removeFromCardOnly, err := strconv.ParseBool(c.Query("uncheck_all"))
-
-	// // If only_remove_from_cart true, set 0 as the value for column added_to_cart for all shopping list item
-	// // belong to the shopping_list_items pass in URI
-	// if err == nil && removeFromCardOnly {
-	// 	err := slih.ShoppingListItemFactory.UpdateByUserGUIDAndShoppingListGUID(userGUID, shoppingListGUID, map[string]interface{}{"added_to_cart": 0})
-
-	// 	if err != nil {
-	// 		DB.Rollback().Close()
-	// 		c.JSON(http.StatusInternalServerError, err)
-	// 		return
-	// 	}
-
-	// 	// Response data
-	// 	result := make(map[string]string)
-	// 	result["message"] = "Successfully deleted all shopping list item from cart for shopping list guid " + shoppingListGUID
-
-	// 	DB.Commit().Close()
-	// 	c.JSON(http.StatusOK, gin.H{"data": result})
-	// 	return
-	// }
-
 	// Soft delete Shopping List Item incuding relationship
 	err1 := slih.ShoppingListItemFactory.DeleteByUserGUID(userGUID)
 

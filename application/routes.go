@@ -135,8 +135,11 @@ func InitializeObjectAndSetRoutes(router *gin.Engine) *gin.Engine {
 		// Occasion Routes
 		version1.GET("/shopping_lists/occasions", occasionHandler.Index)
 
-		// Item Routes
+		// Shopping List Item Routes
 		version1.GET("/shopping_lists/items", itemHandler.Index)
+
+		// Shopping List Item Categories Routes
+		version1.GET("/shopping_lists/items/categories", itemHandler.GetCategories)
 
 		// Protected Routes
 		version1.Use(middlewares.Auth())

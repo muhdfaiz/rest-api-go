@@ -47,3 +47,14 @@ func (ih *ItemHandler) Index(c *gin.Context) {
 
 	c.JSON(http.StatusOK, result)
 }
+
+// GetCategories function used to retrieve unique item categories list from database
+func (ih *ItemHandler) GetCategories(c *gin.Context) {
+	DB := c.MustGet("DB").(*gorm.DB)
+
+	itemCategories, totalItemCategories := ih.ItemRepository.GetUniqueCategories()
+
+	DB.Close()
+
+	c.JSON(http.StatusOK, gin.H{"total_data": totalItemCategories, "data": itemCategories})
+}

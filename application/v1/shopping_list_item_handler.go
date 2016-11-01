@@ -1,7 +1,6 @@
 package v1
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -104,12 +103,12 @@ func (slih *ShoppingListItemHandler) ViewAll(c *gin.Context) {
 
 	if err != nil {
 		// Retrieve shopping list item by guid
-		userShoppingListItems := slih.ShoppingListItemRepository.GetUserShoppingListItemNotAddedToCart(userGUID, shoppingListGUID, relations)
+		userShoppingListItems := slih.ShoppingListItemRepository.GetUserShoppingListItem(userGUID, shoppingListGUID, relations)
 		DB.Close()
 		c.JSON(http.StatusOK, gin.H{"data": userShoppingListItems})
 		return
 	}
-	fmt.Println(addedToCartBool)
+
 	if addedToCartBool == true {
 		userShoppingListItems := slih.ShoppingListItemRepository.GetUserShoppingListItemAddedToCart(userGUID, shoppingListGUID, relations)
 		DB.Close()

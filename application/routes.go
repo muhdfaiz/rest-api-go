@@ -168,7 +168,7 @@ func InitializeObjectAndSetRoutes(router *gin.Engine) *gin.Engine {
 			version1.PATCH("users/:guid/shopping_lists/:shopping_list_guid/items/:item_guid", shoppingListItemHandler.Update)
 			version1.PATCH("users/:guid/shopping_lists/:shopping_list_guid/items", shoppingListItemHandler.UpdateAll)
 			version1.DELETE("users/:guid/shopping_lists/:shopping_list_guid/items/:item_guid", shoppingListItemHandler.Delete)
-			version1.DELETE("users/:guid/shopping_lists/:shopping_list_guid/items/", shoppingListItemHandler.DeleteAll)
+			version1.DELETE("users/:guid/shopping_lists/:shopping_list_guid/items", shoppingListItemHandler.DeleteAll)
 
 			// Shopping List Item Image Routes
 			version1.GET("users/:guid/shopping_lists/:shopping_list_guid/items/:item_guid/images/:image_guid", shoppingListItemImageHandler.View)

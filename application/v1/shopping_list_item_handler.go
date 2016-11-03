@@ -329,6 +329,16 @@ func (slih *ShoppingListItemHandler) DeleteAll(c *gin.Context) {
 		return
 	}
 
+	// Validate query string
+	err := Validation.Validate(c.Request.URL.Query(), map[string]string{"added_to_cart": "numeric,len=1"})
+
+	// If validation error return error message
+	if err != nil {
+		DB.Close()
+		c.JSON(http.StatusUnprocessableEntity, err)
+		return
+	}
+
 	// Retrieve shopping list guid in url
 	shoppingListGUID := c.Param("shopping_list_guid")
 
@@ -342,13 +352,56 @@ func (slih *ShoppingListItemHandler) DeleteAll(c *gin.Context) {
 		return
 	}
 
-	// Soft delete Shopping List Item incuding relationship
-	err1 := slih.ShoppingListItemFactory.DeleteByUserGUID(userGUID)
+	// Retrieve only_added_to_cart query string in request
+	addedToCart := c.Query("added_to_cart")
 
-	if err1 != nil {
-		DB.Rollback().Close()
-		c.JSON(http.StatusInternalServerError, err1)
+	if addedToCart == "1" {
+		// Soft delete Shopping List Item incuding relationship
+		err1 := slih.ShoppingListItemFactory.DeleteItemsHasBeenAddedToCartByUserGUID(userGUID)
+
+		if err1 != nil {
+			DB.Rollback().Close()
+			c.JSON(http.StatusInternalServerError, err1)
+			return
+		}
+
+		// Response data
+		result := make(map[string]string)
+		result["message"] = "Successfully deleted all shopping list items those has been added to cart for user guid " + userGUID
+
+		DB.Commit().Close()
+		c.JSON(http.StatusOK, gin.H{"data": result})
 		return
+	}
+
+	if addedToCart == "0" {
+		// Soft delete Shopping List Item incuding relationship
+		err1 := slih.ShoppingListItemFactory.DeleteItemsHasNotBeenAddedToCartByUserGUID(userGUID)
+
+		if err1 != nil {
+			DB.Rollback().Close()
+			c.JSON(http.StatusInternalServerError, err1)
+			return
+		}
+
+		// Response data
+		result := make(map[string]string)
+		result["message"] = "Successfully deleted all shopping list items those hasn't been added to cart for user guid " + userGUID
+
+		DB.Commit().Close()
+		c.JSON(http.StatusOK, gin.H{"data": result})
+		return
+	}
+
+	if addedToCart == "" {
+		// Soft delete Shopping List Item incuding relationship
+		err1 := slih.ShoppingListItemFactory.DeleteByUserGUID(userGUID)
+
+		if err1 != nil {
+			DB.Rollback().Close()
+			c.JSON(http.StatusInternalServerError, err1)
+			return
+		}
 	}
 
 	// Response data

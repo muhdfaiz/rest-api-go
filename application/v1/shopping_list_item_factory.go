@@ -15,6 +15,8 @@ type ShoppingListItemFactoryInterface interface {
 	DeleteByGUID(guid string) *systems.ErrorData
 	DeleteByShoppingListGUID(shoppingListGUID string) *systems.ErrorData
 	DeleteByUserGUID(userGUID string) *systems.ErrorData
+	DeleteItemsHasBeenAddedToCartByUserGUID(userGUID string) *systems.ErrorData
+	DeleteItemsHasNotBeenAddedToCartByUserGUID(userGUID string) *systems.ErrorData
 }
 
 // ShoppingListItemFactory contain functions to create, update and delete shopping list item
@@ -182,6 +184,80 @@ func (slif *ShoppingListItemFactory) DeleteByUserGUID(userGUID string) *systems.
 
 		if err != nil {
 			return Error.InternalServerError(err.Error, systems.DatabaseError)
+		}
+	}
+
+	return nil
+}
+
+// DeleteItemsHasBeenAddedToCartByUserGUID function used to soft delete all shopping list item via user GUID
+// and items those has been added to cart including the relationship from database
+func (slif *ShoppingListItemFactory) DeleteItemsHasBeenAddedToCartByUserGUID(userGUID string) *systems.ErrorData {
+	userShoppingListItemsHasBeenAddedToCart := []*ShoppingListItem{}
+
+	// Retrieve shopping list item those has been added to cart by user
+	slif.DB.Where("user_guid = ? AND added_to_cart = ?", userGUID, 1).Find(&userShoppingListItemsHasBeenAddedToCart)
+
+	// Delete shopping list item by user_guid and itemsadded to cart
+	deleteShoppingListItem := slif.DB.Where("user_guid = ? AND added_to_cart = ?", userGUID, 1).Delete(&ShoppingListItem{})
+
+	if deleteShoppingListItem.Error != nil {
+		return Error.InternalServerError(deleteShoppingListItem.Error, systems.DatabaseError)
+	}
+	fmt.Println(userShoppingListItemsHasBeenAddedToCart)
+	for _, userShoppingListItemHasBeenAddedToCart := range userShoppingListItemsHasBeenAddedToCart {
+		// Retrieve Shopping List Item Images
+		itemImages := slif.ShoppingListItemImageRepository.GetByItemGUID(userShoppingListItemHasBeenAddedToCart.GUID, "")
+
+		if len(itemImages) > 0 {
+			imageURLs := make([]string, len(itemImages))
+
+			for key, itemImage := range itemImages {
+				imageURLs[key] = itemImage.URL
+			}
+
+			err := slif.ShoppingListItemImageFactory.Delete("shopping_list_item_guid", []string{userShoppingListItemHasBeenAddedToCart.GUID}, imageURLs)
+
+			if err != nil {
+				return Error.InternalServerError(err.Error, systems.DatabaseError)
+			}
+		}
+	}
+
+	return nil
+}
+
+// DeleteItemsHasNotBeenAddedToCartByUserGUID function used to soft delete all shopping list item via user GUID
+// and items those has been added to cart including the relationship from database
+func (slif *ShoppingListItemFactory) DeleteItemsHasNotBeenAddedToCartByUserGUID(userGUID string) *systems.ErrorData {
+	userShoppingListItemsHasBeenAddedToCart := []*ShoppingListItem{}
+
+	// Retrieve shopping list item those has been added to cart by user
+	slif.DB.Where("user_guid = ? AND added_to_cart = ?", userGUID, 0).Find(&userShoppingListItemsHasBeenAddedToCart)
+
+	// Delete shopping list item by user_guid and itemsadded to cart
+	deleteShoppingListItem := slif.DB.Where("user_guid = ? AND added_to_cart = ?", userGUID, 0).Delete(&ShoppingListItem{})
+
+	if deleteShoppingListItem.Error != nil {
+		return Error.InternalServerError(deleteShoppingListItem.Error, systems.DatabaseError)
+	}
+	fmt.Println(userShoppingListItemsHasBeenAddedToCart)
+	for _, userShoppingListItemHasBeenAddedToCart := range userShoppingListItemsHasBeenAddedToCart {
+		// Retrieve Shopping List Item Images
+		itemImages := slif.ShoppingListItemImageRepository.GetByItemGUID(userShoppingListItemHasBeenAddedToCart.GUID, "")
+
+		if len(itemImages) > 0 {
+			imageURLs := make([]string, len(itemImages))
+
+			for key, itemImage := range itemImages {
+				imageURLs[key] = itemImage.URL
+			}
+
+			err := slif.ShoppingListItemImageFactory.Delete("shopping_list_item_guid", []string{userShoppingListItemHasBeenAddedToCart.GUID}, imageURLs)
+
+			if err != nil {
+				return Error.InternalServerError(err.Error, systems.DatabaseError)
+			}
 		}
 	}
 

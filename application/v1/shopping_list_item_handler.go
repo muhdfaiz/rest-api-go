@@ -28,7 +28,7 @@ func (slih *ShoppingListItemHandler) View(c *gin.Context) {
 
 	// If user GUID not match user GUID inside the token return error message
 	if tokenData["user_guid"] != userGUID {
-		DB.Rollback().Close()
+		DB.Close()
 		c.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("update shopping list"))
 		return
 	}
@@ -41,7 +41,7 @@ func (slih *ShoppingListItemHandler) View(c *gin.Context) {
 
 	// If shopping list GUID empty return error message
 	if shoppingList.GUID == "" {
-		DB.Rollback().Close()
+		DB.Close()
 		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("Shopping List", "guid", shoppingListGUID))
 		return
 	}
@@ -57,7 +57,7 @@ func (slih *ShoppingListItemHandler) View(c *gin.Context) {
 
 	// If shopping list item GUID empty return error message
 	if shoppingListItem.GUID == "" {
-		DB.Rollback().Close()
+		DB.Close()
 		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("Shopping List Item", "guid", shoppingListItemGUID))
 		return
 	}
@@ -72,25 +72,35 @@ func (slih *ShoppingListItemHandler) ViewAll(c *gin.Context) {
 	DB := c.MustGet("DB").(*gorm.DB)
 	tokenData := c.MustGet("Token").(map[string]string)
 
+	// Validate query string
+	err := Validation.Validate(c.Request.URL.Query(), map[string]string{"added_to_cart": "numeric", "latitude": "required,latitude", "longitude": "required,longitude"})
+
+	// If validation error return error message
+	if err != nil {
+		DB.Close()
+		c.JSON(http.StatusUnprocessableEntity, err)
+		return
+	}
+
 	// Retrieve user guid in url
 	userGUID := c.Param("guid")
 
 	// If user GUID not match user GUID inside the token return error message
 	if tokenData["user_guid"] != userGUID {
-		DB.Rollback().Close()
-		c.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("update shopping list"))
+		DB.Close()
+		c.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("update shopping list item"))
 		return
 	}
 
 	// Retrieve shopping list guid in url
 	shoppingListGUID := c.Param("shopping_list_guid")
 
-	// Retrieve shopping list by guid and user guif
+	// Retrieve shopping list by guid and user guid
 	shoppingList := slih.ShoppingListRepository.GetByGUIDAndUserGUID(shoppingListGUID, userGUID, "")
 
 	// If shopping list GUID empty return error message
 	if shoppingList.GUID == "" {
-		DB.Rollback().Close()
+		DB.Close()
 		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("Shopping List", "guid", shoppingListGUID))
 		return
 	}
@@ -98,12 +108,17 @@ func (slih *ShoppingListItemHandler) ViewAll(c *gin.Context) {
 	// Retrieve query string for relations
 	relations := c.DefaultQuery("include", "")
 
-	// Retrieve added_to_cart query string param in url
-	addedToCartBool, err := strconv.ParseBool(c.Query("added_to_cart"))
+	// Retrieve query string for latitude and longitude
+	latitude := c.Query("latitude")
+	longitude := c.Query("longitude")
 
-	if err != nil {
+	// Retrieve added_to_cart query string param in url
+	addedToCartBool, err1 := strconv.ParseBool(c.Query("added_to_cart"))
+
+	if err1 != nil {
 		// Retrieve shopping list item by guid
-		userShoppingListItems := slih.ShoppingListItemRepository.GetUserShoppingListItem(userGUID, shoppingListGUID, relations)
+		userShoppingListItems := slih.ShoppingListItemRepository.GetUserShoppingListItem(userGUID, shoppingListGUID, relations, latitude, longitude)
+
 		DB.Close()
 		c.JSON(http.StatusOK, gin.H{"data": userShoppingListItems})
 		return
@@ -116,7 +131,8 @@ func (slih *ShoppingListItemHandler) ViewAll(c *gin.Context) {
 		return
 	}
 
-	userShoppingListItems := slih.ShoppingListItemRepository.GetUserShoppingListItemNotAddedToCart(userGUID, shoppingListGUID, relations)
+	userShoppingListItems := slih.ShoppingListItemRepository.GetUserShoppingListItemNotAddedToCart(userGUID, shoppingListGUID, relations, latitude, longitude)
+
 	DB.Close()
 	c.JSON(http.StatusOK, gin.H{"data": userShoppingListItems})
 	return

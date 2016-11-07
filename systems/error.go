@@ -58,19 +58,22 @@ const (
 	TitleErrorTokenNotValid      = "Access token error"
 	TitleTokenIdentityNotMatch   = "Your access token belong to other user"
 
-	ErrorValidationRequired = "The %s parameter is required."
-	ErrorValidationUUID     = "The %s parameter is not valid uuid v5."
-	ErrorValidationAlpha    = "The %s parameter may only contain letters."
-	ErrorValidationAlphaNum = "The %s parameter may only contain letters and numbers."
-	ErrorValidationNumeric  = "The %s parameter must be a number."
-	ErrorValidationMin      = "The %s parameter length must be at least %s."
-	ErrorValidationMax      = "The %s parameter length may not be greater than %s."
-	ErrorValidationEmail    = "The %s parameter must be a valid email address."
-	ErrorValidationLength   = "The length of %s parameter must be %s."
-	ErrorValidationTime     = "The %s parameter must be valid time in RFC3339 format."
-	ErrorGreaterThanOrEqual = "The value for %s parameter must be greater than or equal to %s"
-	ErrorLessThanOrEqual    = "The value for %s parameter must be less than or equal to %s"
-	ErrorInternalServer     = "API cannot return results because an internal server error has occurred."
+	ErrorValidationRequired  = "The %s parameter is required."
+	ErrorValidationUUID5     = "The %s parameter is not valid uuid v5."
+	ErrorValidationUUID4     = "The %s parameter is not valid uuid v4."
+	ErrorValidationAlpha     = "The %s parameter may only contain letters."
+	ErrorValidationAlphaNum  = "The %s parameter may only contain letters and numbers."
+	ErrorValidationNumeric   = "The %s parameter must be a number."
+	ErrorValidationMin       = "The %s parameter length must be at least %s."
+	ErrorValidationMax       = "The %s parameter length may not be greater than %s."
+	ErrorValidationEmail     = "The %s parameter must be a valid email address."
+	ErrorValidationLength    = "The length of %s parameter must be %s."
+	ErrorValidationLatitude  = "The %s parameter must be valid latitude."
+	ErrorValidationLongitude = "The %s parameter must be valid longitude."
+	ErrorValidationTime      = "The %s parameter must be valid time in RFC3339 format."
+	ErrorGreaterThanOrEqual  = "The value for %s parameter must be greater than or equal to %s"
+	ErrorLessThanOrEqual     = "The value for %s parameter must be less than or equal to %s"
+	ErrorInternalServer      = "API cannot return results because an internal server error has occurred."
 
 	ErrorFileSizeExceededLimit   = "The %s attributes may not be greater than %s kilobytes."
 	ErrorFileType                = "You have uploaded an invalid file type. Only file type %s are allowed."
@@ -254,7 +257,9 @@ func (e Error) ValidationErrors(errors map[string]*validator.FieldError) *ErrorD
 		case "required":
 			message = fmt.Sprintf(ErrorValidationRequired, errMsg.Name)
 		case "uuid5":
-			message = fmt.Sprintf(ErrorValidationUUID, errMsg.Name)
+			message = fmt.Sprintf(ErrorValidationUUID5, errMsg.Name)
+		case "uuid4":
+			message = fmt.Sprintf(ErrorValidationUUID4, errMsg.Name)
 		case "alpha":
 			message = fmt.Sprintf(ErrorValidationAlpha, errMsg.Name)
 		case "alphanum":

@@ -11,6 +11,10 @@ type ShoppingListItem struct {
 	Category         string     `json:"category"`
 	Quantity         int        `json:"quantity"`
 	Remark           string     `json:"remark"`
+	AddedFromDeal    int        `json:"added_from_deal"`
+	DealGUID         *string    `json:"deal_guid"`
+	CashbackAmount   *float64   `json:"cashback_amount"`
+	DealExpired      *int       `json:"deal_expired"`
 	AddedToCart      int        `json:"added_to_cart"`
 	CreatedAt        time.Time  `json:"created_at"`
 	UpdatedAt        time.Time  `json:"updated_at"`
@@ -18,4 +22,7 @@ type ShoppingListItem struct {
 
 	// Has many Shopping List Item Image
 	Images []*ShoppingListItemImage `json:"images,omitempty" gorm:"ForeignKey:ShoppingListItemGUID;AssociationForeignKey:GUID"`
+
+	// Has many Deals
+	Deals []*Deal `json:"deals"`
 }

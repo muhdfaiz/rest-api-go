@@ -3,10 +3,11 @@ package v1
 import "github.com/jinzhu/gorm"
 
 type ItemRepositoryInterface interface {
-	GetAll(pageNumber string, pageLimit string) ([]*Item, int)
-	GetLatestUpdate(lastSyncDate string, pageNumber string, pageLimit string) ([]*Item, int)
-	GetByName(name string) *Item
-	GetUniqueCategories() ([]string, int)
+	GetAll(pageNumber string, pageLimit string, relations string) ([]*Item, int)
+	GetLatestUpdate(lastSyncDate string, pageNumber string, pageLimit string, relations string) ([]*Item, int)
+	GetByID(id int, relations string) *Item
+	GetByName(name string, relations string) *Item
+	GetUniqueCategories(relations string) ([]string, int)
 }
 
 // ItemRepository will handle task related to retrieve and search shopping list items in database
@@ -15,7 +16,7 @@ type ItemRepository struct {
 }
 
 // GetAll function used to retrieve all shopping list item insert from admin control panel
-func (ir *ItemRepository) GetAll(pageNumber string, pageLimit string) ([]*Item, int) {
+func (ir *ItemRepository) GetAll(pageNumber string, pageLimit string, relations string) ([]*Item, int) {
 	items := []*Item{}
 
 	offset := SetOffsetValue(pageNumber, pageLimit)
@@ -30,7 +31,7 @@ func (ir *ItemRepository) GetAll(pageNumber string, pageLimit string) ([]*Item, 
 }
 
 // GetLatestUpdate function used to retrieve latest update shopping list item that happen after last sync date in the query string
-func (ir *ItemRepository) GetLatestUpdate(lastSyncDate string, pageNumber string, pageLimit string) ([]*Item, int) {
+func (ir *ItemRepository) GetLatestUpdate(lastSyncDate string, pageNumber string, pageLimit string, relations string) ([]*Item, int) {
 	items := []*Item{}
 
 	offset := SetOffsetValue(pageNumber, pageLimit)
@@ -44,17 +45,32 @@ func (ir *ItemRepository) GetLatestUpdate(lastSyncDate string, pageNumber string
 	return items, *totalItem
 }
 
-// GetByName function used to retrieve shopping list item by name
-func (ir *ItemRepository) GetByName(name string) *Item {
+// GetByID function used to retrieve shopping list item by GUID
+func (ir *ItemRepository) GetByID(id int, relations string) *Item {
 	item := &Item{}
 
-	ir.DB.Model(&Item{}).Where("name = ?", name).First(&item)
+	DB := ir.DB.Model(&Item{}).Where(&Item{ID: id})
+
+	if relations != "" {
+		DB = LoadRelations(DB, relations)
+	}
+
+	DB.First(&item)
+
+	return item
+}
+
+// GetByName function used to retrieve shopping list item by name
+func (ir *ItemRepository) GetByName(name string, relations string) *Item {
+	item := &Item{}
+
+	ir.DB.Model(&Item{}).Where(&Item{Name: name}).First(&item)
 
 	return item
 }
 
 // GetUniqueCategories function used to retrieve unique shopping list item category
-func (ir *ItemRepository) GetUniqueCategories() ([]string, int) {
+func (ir *ItemRepository) GetUniqueCategories(relations string) ([]string, int) {
 	items := []*Item{}
 	var shoppingListItemCategories []string
 

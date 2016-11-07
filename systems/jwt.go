@@ -1,7 +1,6 @@
 package systems
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -60,7 +59,7 @@ func (j *Jwt) GenerateToken(userGUID string, phoneNo string, deviceUUID string) 
 	tokenData.Token = tokenString
 
 	tokenExpiredDate := time.Unix(expired, 0).UTC().Format(time.RFC3339)
-	fmt.Println(tokenExpiredDate)
+
 	tokenData.Expired = tokenExpiredDate
 	return tokenData, nil
 }

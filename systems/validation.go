@@ -48,6 +48,10 @@ func (v *Validation) Validate(values map[string][]string, validationTags map[str
 				message = v.validateLength(values[validationKey], validationKey, validationRule[1])
 			case "time":
 				message = v.validateTime(values[validationKey], validationKey)
+			case "latitude":
+				message = v.validateLatitude(values[validationKey], validationKey)
+			case "longitude":
+				message = v.validateLongitude(values[validationKey], validationKey)
 			}
 
 			if message != "" {
@@ -78,6 +82,10 @@ func (v *Validation) initValidator() {
 }
 
 func (v *Validation) validateRequired(values []string, validationKey string) string {
+	if len(values) == 0 {
+		return fmt.Sprintf(ErrorValidationRequired, validationKey)
+	}
+
 	for _, value := range values {
 		err := v.Validator.Field(value, "required")
 
@@ -95,7 +103,7 @@ func (v *Validation) validateUUIDV5(values []string, validationKey string) strin
 			err := v.Validator.Field(value, "uuid5")
 
 			if err != nil {
-				return fmt.Sprintf(ErrorValidationUUID, validationKey)
+				return fmt.Sprintf(ErrorValidationUUID5, validationKey)
 			}
 		}
 	}
@@ -208,6 +216,34 @@ func (v *Validation) validateTime(values []string, validationKey string) string 
 
 			if err != nil {
 				return fmt.Sprintf(ErrorValidationTime, validationKey)
+			}
+		}
+	}
+
+	return ""
+}
+
+func (v *Validation) validateLatitude(values []string, validationKey string) string {
+	for _, value := range values {
+		if value != "" {
+			err := v.Validator.Field(value, "latitude")
+
+			if err != nil {
+				return fmt.Sprintf(ErrorValidationLatitude, validationKey)
+			}
+		}
+	}
+
+	return ""
+}
+
+func (v *Validation) validateLongitude(values []string, validationKey string) string {
+	for _, value := range values {
+		if value != "" {
+			err := v.Validator.Field(value, "longitude")
+
+			if err != nil {
+				return fmt.Sprintf(ErrorValidationLongitude, validationKey)
 			}
 		}
 	}

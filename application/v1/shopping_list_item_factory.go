@@ -261,7 +261,7 @@ func (slif *ShoppingListItemFactory) DeleteItemsHasBeenAddedToCartByUserGUID(use
 	if deleteShoppingListItem.Error != nil {
 		return Error.InternalServerError(deleteShoppingListItem.Error, systems.DatabaseError)
 	}
-	fmt.Println(userShoppingListItemsHasBeenAddedToCart)
+
 	for _, userShoppingListItemHasBeenAddedToCart := range userShoppingListItemsHasBeenAddedToCart {
 		// Retrieve Shopping List Item Images
 		itemImages := slif.ShoppingListItemImageRepository.GetByItemGUID(userShoppingListItemHasBeenAddedToCart.GUID, "")
@@ -298,7 +298,7 @@ func (slif *ShoppingListItemFactory) DeleteItemsHasNotBeenAddedToCartByUserGUID(
 	if deleteShoppingListItem.Error != nil {
 		return Error.InternalServerError(deleteShoppingListItem.Error, systems.DatabaseError)
 	}
-	fmt.Println(userShoppingListItemsHasBeenAddedToCart)
+
 	for _, userShoppingListItemHasBeenAddedToCart := range userShoppingListItemsHasBeenAddedToCart {
 		// Retrieve Shopping List Item Images
 		itemImages := slif.ShoppingListItemImageRepository.GetByItemGUID(userShoppingListItemHasBeenAddedToCart.GUID, "")

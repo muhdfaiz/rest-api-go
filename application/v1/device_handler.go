@@ -23,6 +23,8 @@ func (dh *DeviceHandler) Create(c *gin.Context) {
 
 	// Bind request data based on header content type
 	deviceData := CreateDevice{}
+
+	// TODO change binding to custom binding create in system package
 	if err := c.Bind(&deviceData); err != nil {
 		DB.Close()
 		c.JSON(http.StatusBadRequest, Error.ValidationErrors(err.(validator.ValidationErrors)))

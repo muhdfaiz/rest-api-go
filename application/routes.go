@@ -5,6 +5,7 @@ import (
 	"bitbucket.org/cliqers/shoppermate-api/middlewares"
 	"bitbucket.org/cliqers/shoppermate-api/services/facebook"
 	"bitbucket.org/cliqers/shoppermate-api/services/filesystem"
+	"bitbucket.org/cliqers/shoppermate-api/services/location"
 	"bitbucket.org/cliqers/shoppermate-api/systems"
 	"github.com/gin-gonic/gin"
 )
@@ -65,6 +66,12 @@ func InitializeObjectAndSetRoutes(router *gin.Engine) *gin.Engine {
 	itemRepository := &v1.ItemRepository{DB: DB}
 	itemTransformer := &v1.ItemTransformer{}
 
+	// Item Category Objects
+	itemCategoryRepository := &v1.ItemCategoryRepository{DB: DB}
+	itemCategoryTransformer := &v1.ItemCategoryTransformer{}
+	itemCategoryService := &v1.ItemCategoryService{ItemCategoryRepository: itemCategoryRepository,
+		ItemCategoryTransformer: itemCategoryTransformer}
+
 	// Shopping List Objects
 	shoppingListFactory := &v1.ShoppingListFactory{DB: DB}
 	shoppingListRepository := &v1.ShoppingListRepository{DB: DB}
@@ -74,9 +81,48 @@ func InitializeObjectAndSetRoutes(router *gin.Engine) *gin.Engine {
 	shoppingListItemImageFactory := &v1.ShoppingListItemImageFactory{DB: DB, ShoppingListItemImageService: shoppingListItemImageService}
 	shoppingListItemImageRepository := &v1.ShoppingListItemImageRepository{DB: DB}
 
-	// Shopping List Item Objects
-	shoppingListItemRepository := &v1.ShoppingListItemRepository{DB: DB}
-	shoppingListItemFactory := &v1.ShoppingListItemFactory{DB: DB, ItemRepository: itemRepository, ShoppingListItemImageFactory: shoppingListItemImageFactory, ShoppingListItemImageRepository: shoppingListItemImageRepository}
+	// LocationService
+	locationService := &location.LocationService{}
+
+	dealCashbackFactory := &v1.DealCashbackFactory{DB: DB}
+
+	// Grocer Location Repository
+	grocerLocationRepository := &v1.GrocerLocationRepository{DB: DB}
+
+	// Grocer Location Service
+	grocerLocationService := &v1.GrocerLocationService{GrocerLocationRepository: grocerLocationRepository}
+
+	// Deal Repository
+	dealRepository := &v1.DealRepository{DB: DB, GrocerLocationService: grocerLocationService}
+
+	// Shopping List Item Factory
+	shoppingListItemFactory := &v1.ShoppingListItemFactory{DB: DB, ItemRepository: itemRepository, ShoppingListItemImageFactory: shoppingListItemImageFactory,
+		ShoppingListItemImageRepository: shoppingListItemImageRepository, DealRepository: dealRepository, ItemCategoryRepository: itemCategoryRepository}
+
+	// Deal Cashback Repository
+	dealCashbackRepository := &v1.DealCashbackRepository{DB: DB}
+
+	// Deal Service
+	dealService := &v1.DealService{DealRepository: dealRepository, LocationService: locationService, DealCashbackFactory: dealCashbackFactory,
+		ShoppingListItemFactory: shoppingListItemFactory, DealCashbackRepository: dealCashbackRepository, ItemRepository: itemRepository}
+
+	// Deal Transformer
+	dealTransformer := &v1.DealTransformer{}
+
+	// Shopping List Item Repository
+	shoppingListItemRepository := &v1.ShoppingListItemRepository{DB: DB, DealService: dealService}
+
+	// Deal Cashback Service
+	dealCashbackService := &v1.DealCashbackService{DealCashbackRepository: dealCashbackRepository, DealRepository: dealRepository,
+		DealCashbackFactory: dealCashbackFactory, ShoppingListItemFactory: shoppingListItemFactory}
+
+	// Grocer Objects
+	grocerRepository := &v1.GrocerRepository{DB: DB}
+	grocerTransformer := &v1.GrocerTransformer{}
+
+	// Event Objects
+	eventRepository := &v1.EventRepository{DB: DB}
+	eventService := &v1.EventService{EventRepository: eventRepository}
 
 	// Sms Handler
 	smsHandler := v1.SmsHandler{UserRepository: userRepository, UserFactory: userFactory, SmsService: smsService,
@@ -103,6 +149,9 @@ func InitializeObjectAndSetRoutes(router *gin.Engine) *gin.Engine {
 	// Item Handler
 	itemHandler := v1.ItemHandler{ItemRepository: itemRepository, ItemTransformer: itemTransformer}
 
+	// Item Category Handler
+	itemCategoryHandler := v1.ItemCategoryHandler{ItemCategoryService: itemCategoryService}
+
 	// Shopping List Item Handler
 	shoppingListItemHandler := v1.ShoppingListItemHandler{UserRepository: userRepository, ShoppingListRepository: shoppingListRepository,
 		ShoppingListItemRepository: shoppingListItemRepository, ShoppingListItemFactory: shoppingListItemFactory,
@@ -112,6 +161,18 @@ func InitializeObjectAndSetRoutes(router *gin.Engine) *gin.Engine {
 	shoppingListItemImageHandler := v1.ShoppingListItemImageHandler{UserRepository: userRepository, ShoppingListRepository: shoppingListRepository,
 		ShoppingListItemImageService: shoppingListItemImageService, ShoppingListItemImageFactory: shoppingListItemImageFactory,
 		ShoppingListItemRepository: shoppingListItemRepository, ShoppingListItemImageRepository: shoppingListItemImageRepository}
+
+	// Deal Cashback Handler
+	dealCashbackHandler := v1.DealCashbackHandler{ShoppingListRepository: shoppingListRepository, DealCashbackService: dealCashbackService}
+
+	// Deal Handler
+	dealHandler := v1.DealHandler{DealService: dealService, DealTransformer: dealTransformer}
+
+	// Grocer Handler
+	grocerHandler := v1.GrocerHandler{GrocerRepository: grocerRepository, GrocerTransformer: grocerTransformer}
+
+	// Event Handler
+	eventHandler := v1.EventHandler{EventService: eventService}
 
 	// V1 Routes
 	version1 := router.Group("/v1")
@@ -139,7 +200,10 @@ func InitializeObjectAndSetRoutes(router *gin.Engine) *gin.Engine {
 		version1.GET("/shopping_lists/items", itemHandler.Index)
 
 		// Shopping List Item Categories Routes
-		version1.GET("/shopping_lists/items/categories", itemHandler.GetCategories)
+		version1.GET("/shopping_lists/items/categories", itemCategoryHandler.ViewAll)
+
+		// Grocer Routes
+		version1.GET("/grocers", grocerHandler.Index)
 
 		// Protected Routes
 		version1.Use(middlewares.Auth())
@@ -174,8 +238,17 @@ func InitializeObjectAndSetRoutes(router *gin.Engine) *gin.Engine {
 			version1.GET("users/:guid/shopping_lists/:shopping_list_guid/items/:item_guid/images/:image_guid", shoppingListItemImageHandler.View)
 			version1.POST("users/:guid/shopping_lists/:shopping_list_guid/items/:item_guid/images", shoppingListItemImageHandler.Create)
 			version1.DELETE("users/:guid/shopping_lists/:shopping_list_guid/items/:item_guid/images/:image_guids", shoppingListItemImageHandler.Delete)
-		}
 
+			// Deal Cashback Handler
+			version1.POST("users/:guid/deal_cashbacks", dealCashbackHandler.Create)
+
+			// Deal Handler
+			version1.GET("deals/:guid", dealHandler.View)
+			version1.GET("deals", dealHandler.ViewAll)
+
+			// Feature Deal (In Carousel) Handler
+			version1.GET("featured_deals", eventHandler.ViewAll)
+		}
 	}
 
 	return router

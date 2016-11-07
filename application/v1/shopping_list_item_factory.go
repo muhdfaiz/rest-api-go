@@ -1,8 +1,6 @@
 package v1
 
 import (
-	"fmt"
-
 	"bitbucket.org/cliqers/shoppermate-api/systems"
 	"github.com/jinzhu/gorm"
 	"github.com/serenize/snaker"
@@ -10,8 +8,11 @@ import (
 
 type ShoppingListItemFactoryInterface interface {
 	Create(data CreateShoppingListItem) (*ShoppingListItem, *systems.ErrorData)
-	UpdateByUserGUIDShoppingListGUIDAndShoppingListItemGUID(userGUID string, shoppingListGUID string, shoppingListItemGUID string, data map[string]interface{}) *systems.ErrorData
+	CreateForDeal(data CreateShoppingListItem) (*ShoppingListItem, *systems.ErrorData)
+	UpdateByUserGUIDShoppingListGUIDAndShoppingListItemGUID(userGUID string, shoppingListGUID string, shoppingListItemGUID string,
+		data map[string]interface{}) *systems.ErrorData
 	UpdateByUserGUIDAndShoppingListGUID(userGUID string, shoppingListGUID string, data map[string]interface{}) *systems.ErrorData
+	UpdateByUserGUIDAndDealGUID(userGUID string, dealGUID string, data map[string]interface{}) *systems.ErrorData
 	DeleteByGUID(guid string) *systems.ErrorData
 	DeleteByShoppingListGUID(shoppingListGUID string) *systems.ErrorData
 	DeleteByUserGUID(userGUID string) *systems.ErrorData
@@ -23,18 +24,21 @@ type ShoppingListItemFactoryInterface interface {
 type ShoppingListItemFactory struct {
 	DB                              *gorm.DB
 	ItemRepository                  ItemRepositoryInterface
+	DealRepository                  DealRepositoryInterface
 	ShoppingListItemImageFactory    ShoppingListItemImageFactoryInterface
 	ShoppingListItemImageRepository ShoppingListItemImageRepositoryInterface
+	ItemCategoryRepository          ItemCategoryRepositoryInterface
 }
 
 // Create function used to create user shopping list item
 func (slif *ShoppingListItemFactory) Create(data CreateShoppingListItem) (*ShoppingListItem, *systems.ErrorData) {
-	item := slif.ItemRepository.GetByName(data.Name)
+	item := slif.ItemRepository.GetByName(data.Name, "")
 
 	shoppingListItemCategory := "Others"
 
-	if item.Category != "" {
-		shoppingListItemCategory = item.Category
+	if item.CategoryID != 0 {
+		itemCategory := slif.ItemCategoryRepository.GetByID(item.CategoryID)
+		shoppingListItemCategory = itemCategory.Name
 	}
 
 	shoppingListItem := &ShoppingListItem{
@@ -44,6 +48,36 @@ func (slif *ShoppingListItemFactory) Create(data CreateShoppingListItem) (*Shopp
 		Name:             data.Name,
 		Category:         shoppingListItemCategory,
 		Quantity:         data.Quantity,
+	}
+
+	result := slif.DB.Create(shoppingListItem)
+
+	if result.Error != nil || result.RowsAffected == 0 {
+		return nil, Error.InternalServerError(result.Error, systems.DatabaseError)
+	}
+
+	return result.Value.(*ShoppingListItem), nil
+}
+
+// CreateForDeal function used to create user shopping list item
+func (slif *ShoppingListItemFactory) CreateForDeal(data CreateShoppingListItem) (*ShoppingListItem, *systems.ErrorData) {
+	item := slif.ItemRepository.GetByName(data.Name, "")
+
+	itemCategory := slif.ItemCategoryRepository.GetByID(item.CategoryID)
+	shoppingListItemCategory := itemCategory.Name
+
+	deal := slif.DealRepository.GetDealByGUID(data.DealGUID)
+
+	shoppingListItem := &ShoppingListItem{
+		GUID:             Helper.GenerateUUID(),
+		UserGUID:         data.UserGUID,
+		ShoppingListGUID: data.ShoppingListGUID,
+		Name:             data.Name,
+		Category:         shoppingListItemCategory,
+		Quantity:         data.Quantity,
+		AddedFromDeal:    data.AddedFromDeal,
+		DealGUID:         &data.DealGUID,
+		CashbackAmount:   &deal.CashbackAmount,
 	}
 
 	result := slif.DB.Create(shoppingListItem)
@@ -69,7 +103,7 @@ func (slif *ShoppingListItemFactory) UpdateByUserGUIDShoppingListGUIDAndShopping
 			updateData[snaker.CamelToSnake(key)] = data
 		}
 	}
-	fmt.Println(updateData)
+
 	result := slif.DB.Model(&ShoppingListItem{}).Where(&ShoppingListItem{GUID: shoppingListItemGUID, ShoppingListGUID: shoppingListGUID, UserGUID: userGUID}).
 		Updates(updateData)
 
@@ -80,8 +114,7 @@ func (slif *ShoppingListItemFactory) UpdateByUserGUIDShoppingListGUIDAndShopping
 	return nil
 }
 
-// UpdateByUserGUIDAndShoppingListGUID function used to update device data
-// Require device uuid. Must provide in url
+// UpdateByUserGUIDAndShoppingListGUID function used to update user shopping list item data by user GUID and shopping list GUID
 func (slif *ShoppingListItemFactory) UpdateByUserGUIDAndShoppingListGUID(userGUID string, shoppingListGUID string, data map[string]interface{}) *systems.ErrorData {
 	updateData := map[string]interface{}{}
 
@@ -96,6 +129,30 @@ func (slif *ShoppingListItemFactory) UpdateByUserGUIDAndShoppingListGUID(userGUI
 	}
 
 	result := slif.DB.Model(&ShoppingListItem{}).Where(&ShoppingListItem{ShoppingListGUID: shoppingListGUID, UserGUID: userGUID}).
+		Updates(updateData)
+
+	if result.Error != nil {
+		return Error.InternalServerError(result.Error, systems.DatabaseError)
+	}
+
+	return nil
+}
+
+// UpdateByUserGUIDAndDealGUID function used to update user shopping list item by user GUID and deal GUID
+func (slif *ShoppingListItemFactory) UpdateByUserGUIDAndDealGUID(userGUID string, dealGUID string, data map[string]interface{}) *systems.ErrorData {
+	updateData := map[string]interface{}{}
+
+	for key, value := range data {
+		if data, ok := value.(string); ok && value.(string) != "" {
+			updateData[snaker.CamelToSnake(key)] = data
+		}
+
+		if data, ok := value.(int); ok {
+			updateData[snaker.CamelToSnake(key)] = data
+		}
+	}
+
+	result := slif.DB.Model(&ShoppingListItem{}).Where(&ShoppingListItem{UserGUID: userGUID, DealGUID: &dealGUID}).
 		Updates(updateData)
 
 	if result.Error != nil {

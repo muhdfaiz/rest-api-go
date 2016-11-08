@@ -49,7 +49,7 @@ func (sh *SmsHandler) Send(c *gin.Context) {
 	smsHistory := sh.SmsHistoryRepository.GetByRecipientNo(smsData.RecipientNo)
 
 	// If recipient_no not empty
-	if smsHistory == nil {
+	if smsHistory.GUID != "" {
 		// Calculate time interval in second between current time and last sms sent time
 		interval := sh.SmsHistoryRepository.CalculateIntervalBetweenCurrentTimeAndLastSmsSentTime(smsHistory.CreatedAt)
 

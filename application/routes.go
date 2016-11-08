@@ -72,6 +72,9 @@ func InitializeObjectAndSetRoutes(router *gin.Engine) *gin.Engine {
 	itemCategoryService := &v1.ItemCategoryService{ItemCategoryRepository: itemCategoryRepository,
 		ItemCategoryTransformer: itemCategoryTransformer}
 
+	// Item SubCategory Objects
+	itemSubCategoryRepository := &v1.ItemSubCategoryRepository{DB: DB}
+
 	// Shopping List Objects
 	shoppingListFactory := &v1.ShoppingListFactory{DB: DB}
 	shoppingListRepository := &v1.ShoppingListRepository{DB: DB}
@@ -97,7 +100,8 @@ func InitializeObjectAndSetRoutes(router *gin.Engine) *gin.Engine {
 
 	// Shopping List Item Factory
 	shoppingListItemFactory := &v1.ShoppingListItemFactory{DB: DB, ItemRepository: itemRepository, ShoppingListItemImageFactory: shoppingListItemImageFactory,
-		ShoppingListItemImageRepository: shoppingListItemImageRepository, DealRepository: dealRepository, ItemCategoryRepository: itemCategoryRepository}
+		ShoppingListItemImageRepository: shoppingListItemImageRepository, DealRepository: dealRepository, ItemCategoryRepository: itemCategoryRepository,
+		ItemSubCategoryRepository: itemSubCategoryRepository}
 
 	// Deal Cashback Repository
 	dealCashbackRepository := &v1.DealCashbackRepository{DB: DB}

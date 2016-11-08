@@ -28,6 +28,7 @@ type ShoppingListItemFactory struct {
 	ShoppingListItemImageFactory    ShoppingListItemImageFactoryInterface
 	ShoppingListItemImageRepository ShoppingListItemImageRepositoryInterface
 	ItemCategoryRepository          ItemCategoryRepositoryInterface
+	ItemSubCategoryRepository       ItemSubCategoryRepositoryInterface
 }
 
 // Create function used to create user shopping list item
@@ -35,10 +36,16 @@ func (slif *ShoppingListItemFactory) Create(data CreateShoppingListItem) (*Shopp
 	item := slif.ItemRepository.GetByName(data.Name, "")
 
 	shoppingListItemCategory := "Others"
+	shoppingListItemSubCategory := "Others"
 
-	if item.CategoryID != 0 {
+	if item.GUID != "" {
 		itemCategory := slif.ItemCategoryRepository.GetByID(item.CategoryID)
+
 		shoppingListItemCategory = itemCategory.Name
+
+		itemSubCategory := slif.ItemSubCategoryRepository.GetByID(item.SubcategoryID)
+
+		shoppingListItemSubCategory = itemSubCategory.Name
 	}
 
 	shoppingListItem := &ShoppingListItem{
@@ -47,6 +54,7 @@ func (slif *ShoppingListItemFactory) Create(data CreateShoppingListItem) (*Shopp
 		ShoppingListGUID: data.ShoppingListGUID,
 		Name:             data.Name,
 		Category:         shoppingListItemCategory,
+		SubCategory:      shoppingListItemSubCategory,
 		Quantity:         data.Quantity,
 	}
 

@@ -9,6 +9,7 @@ type ShoppingListItem struct {
 	ShoppingListGUID string     `json:"shopping_list_guid"`
 	Name             string     `json:"name"`
 	Category         string     `json:"category"`
+	SubCategory      string     `json:"sub_category"`
 	Quantity         int        `json:"quantity"`
 	Remark           string     `json:"remark"`
 	AddedFromDeal    int        `json:"added_from_deal"`

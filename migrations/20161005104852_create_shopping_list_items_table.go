@@ -14,6 +14,7 @@ func Up_20161005104852(txn *sql.Tx) {
 		shopping_list_guid varchar(40) NOT NULL,
         name varchar(255) NOT NULL,
         category varchar(255) NOT NULL,
+        sub_category varchar(255) NOT NULL,
         quantity int(6) NOT NULL,
         remark text DEFAULT NULL,
         added_from_deal int(1) NOT NULL DEFAULT 0,

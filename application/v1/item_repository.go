@@ -21,23 +21,19 @@ func (ir *ItemRepository) GetAll(pageNumber string, pageLimit string, relations 
 
 	offset := SetOffsetValue(pageNumber, pageLimit)
 
-	DB := ir.DB.Table("item").Select("SQL_CALC_FOUND_ROWS item.*, category.name as category")
+	DB := ir.DB.Table("item").Select("item.*, category.name as category")
 
 	if relations != "" {
 		DB = LoadRelations(DB, relations)
 	}
 
 	DB.Joins("LEFT JOIN category ON item.category_id = category.id").Offset(offset).Limit(pageLimit).Order("updated_at desc").Find(&items)
-	//ir.DB.Raw("SELECT item.*, category.name as category FROM `item` RIGHT JOIN category ON item.category_id = category.id WHERE `item`.deleted_at IS NULL ORDER BY updated_at desc LIMIT 10").Scan(&items)
-	type TotalDeal struct {
-		Total int `json:"total"`
-	}
 
-	totalDeal := &TotalDeal{}
+	var totalItem *int
 
-	ir.DB.Raw("SELECT FOUND_ROWS() as total;").Scan(totalDeal)
+	ir.DB.Model(&Item{}).Count(&totalItem)
 
-	return items, totalDeal.Total
+	return items, *totalItem
 }
 
 // GetLatestUpdate function used to retrieve latest update shopping list item that happen after last sync date in the query string
@@ -46,7 +42,13 @@ func (ir *ItemRepository) GetLatestUpdate(lastSyncDate string, pageNumber string
 
 	offset := SetOffsetValue(pageNumber, pageLimit)
 
-	ir.DB.Model(&Item{}).Offset(offset).Limit(pageLimit).Where("updated_at > ?", lastSyncDate).Order("updated_at desc").Find(&items)
+	DB := ir.DB.Table("item").Select("item.*, category.name as category")
+
+	if relations != "" {
+		DB = LoadRelations(DB, relations)
+	}
+
+	DB.Joins("LEFT JOIN category ON item.category_id = category.id").Where("item.updated_at > ?", lastSyncDate).Offset(offset).Limit(pageLimit).Order("updated_at desc").Find(&items)
 
 	var totalItem *int
 

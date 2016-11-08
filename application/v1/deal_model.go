@@ -12,7 +12,7 @@ type Deal struct {
 	FrontName          string     `json:"front_name"`
 	Name               string     `json:"name"`
 	Body               string     `json:"body"`
-	Category           string     `json:"category"`
+	CategoryID         int        `json:"category_id"`
 	PositiveTag        string     `json:"positive_tag"`
 	NegativeTag        string     `json:"negative_tag"`
 	Type               string     `json:"type"`
@@ -30,7 +30,12 @@ type Deal struct {
 	DeletedAt          *time.Time `json:"deleted_at"`
 
 	// Has One Shopping List Item
-	Items   *Item     `json:"items,omitempty" gorm:"ForeignKey:ItemID;AssociationForeignKey:ID"`
+	Items *Item `json:"items,omitempty" gorm:"ForeignKey:ItemID;AssociationForeignKey:ID"`
+
+	// Has One Targeted Item Category
+	Category *ItemCategory `json:"category,omitempty" gorm:"ForeignKey:CategoryID;AssociationForeignKey:ID"`
+
+	// Have Many Grocers
 	Grocers []*Grocer `json:"grocer_locations,omitempty" gorm:"many2many:ads_grocer;"`
 }
 

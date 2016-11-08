@@ -21,13 +21,23 @@ func (ir *ItemRepository) GetAll(pageNumber string, pageLimit string, relations 
 
 	offset := SetOffsetValue(pageNumber, pageLimit)
 
-	ir.DB.Model(&Item{}).Offset(offset).Limit(pageLimit).Order("updated_at desc").Find(&items)
+	DB := ir.DB.Table("item").Select("SQL_CALC_FOUND_ROWS item.*, category.name as category")
 
-	var totalItem *int
+	if relations != "" {
+		DB = LoadRelations(DB, relations)
+	}
 
-	ir.DB.Model(&Item{}).Count(&totalItem)
+	DB.Joins("LEFT JOIN category ON item.category_id = category.id").Offset(offset).Limit(pageLimit).Order("updated_at desc").Find(&items)
+	//ir.DB.Raw("SELECT item.*, category.name as category FROM `item` RIGHT JOIN category ON item.category_id = category.id WHERE `item`.deleted_at IS NULL ORDER BY updated_at desc LIMIT 10").Scan(&items)
+	type TotalDeal struct {
+		Total int `json:"total"`
+	}
 
-	return items, *totalItem
+	totalDeal := &TotalDeal{}
+
+	ir.DB.Raw("SELECT FOUND_ROWS() as total;").Scan(totalDeal)
+
+	return items, totalDeal.Total
 }
 
 // GetLatestUpdate function used to retrieve latest update shopping list item that happen after last sync date in the query string

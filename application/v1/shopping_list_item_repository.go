@@ -85,28 +85,29 @@ func (slir *ShoppingListItemRepository) GetByUserGUIDAndShoppingListGUID(userGUI
 func (slir *ShoppingListItemRepository) GetUserShoppingListItem(userGUID string, shoppingListGUID string, relations string, latitude string,
 	longitude string) map[string][]*ShoppingListItem {
 
-	userShoppingListItemsGroupByCategory := make(map[string][]*ShoppingListItem)
+	userShoppingListItemsGroupBySubCategory := make(map[string][]*ShoppingListItem)
 
 	DB := slir.DB.Model(&ShoppingListItem{})
 
-	// Load Database Relation
 	if relations != "" {
 		DB = LoadRelations(DB, relations)
 	}
 
-	shoppingListItemsGroupByCategory := []*ShoppingListItem{}
+	shoppingListItemsGroupBySubCategory := []*ShoppingListItem{}
 
 	dealsCollection := []*Deal{}
 
 	// Retrieve unique shopping list item category from user shopping list
-	DB.Where(&ShoppingListItem{UserGUID: userGUID, ShoppingListGUID: shoppingListGUID}).Group("category").Find(&shoppingListItemsGroupByCategory)
+	// Get Unique Category for user shopping list items
+	DB.Where(&ShoppingListItem{UserGUID: userGUID, ShoppingListGUID: shoppingListGUID}).Group("sub_category").
+		Find(&shoppingListItemsGroupBySubCategory)
 
 	// Loop through each shopping list item category
-	for _, shoppingListItemGroupByCategory := range shoppingListItemsGroupByCategory {
+	for _, shoppingListItemGroupBySubCategory := range shoppingListItemsGroupBySubCategory {
 		userShoppingListItems := []*ShoppingListItem{}
 
 		// Retrieve shopping list item by shopping list item category
-		DB.Where(&ShoppingListItem{UserGUID: userGUID, ShoppingListGUID: shoppingListGUID, Category: shoppingListItemGroupByCategory.Category}).Find(&userShoppingListItems)
+		DB.Where(&ShoppingListItem{UserGUID: userGUID, ShoppingListGUID: shoppingListGUID, SubCategory: shoppingListItemGroupBySubCategory.SubCategory}).Find(&userShoppingListItems)
 
 		// Retrieve available deals for each item. Maximum deal per item is 3
 		for key, userShopppingListItem := range userShoppingListItems {
@@ -129,17 +130,15 @@ func (slir *ShoppingListItemRepository) GetUserShoppingListItem(userGUID string,
 			}
 		}
 
-		userShoppingListItemsGroupByCategory[shoppingListItemGroupByCategory.Category] = userShoppingListItems
+		userShoppingListItemsGroupBySubCategory[shoppingListItemGroupBySubCategory.SubCategory] = userShoppingListItems
 	}
 
-	return userShoppingListItemsGroupByCategory
+	return userShoppingListItemsGroupBySubCategory
 }
 
 // GetUserShoppingListItemAddedToCart function used to retrieve shopping list item by user guid and shopping list guid that added to cart
 func (slir *ShoppingListItemRepository) GetUserShoppingListItemAddedToCart(userGUID string, shoppingListGUID string, relations string) map[string][]*ShoppingListItem {
-	shoppingListItemsGroupByCategory := []*ShoppingListItem{}
-
-	userShoppingListItemsGroupByCategory := make(map[string][]*ShoppingListItem)
+	userShoppingListItemsGroupBySubCategory := make(map[string][]*ShoppingListItem)
 
 	DB := slir.DB.Model(&ShoppingListItem{})
 
@@ -147,26 +146,28 @@ func (slir *ShoppingListItemRepository) GetUserShoppingListItemAddedToCart(userG
 		DB = LoadRelations(DB, relations)
 	}
 
-	DB.Where(&ShoppingListItem{UserGUID: userGUID, ShoppingListGUID: shoppingListGUID, AddedToCart: 1}).Group("category").
-		Find(&shoppingListItemsGroupByCategory)
+	shoppingListItemsGroupBySubCategory := []*ShoppingListItem{}
 
-	for _, shoppingListItemGroupByCategory := range shoppingListItemsGroupByCategory {
+	DB.Where(&ShoppingListItem{UserGUID: userGUID, ShoppingListGUID: shoppingListGUID, AddedToCart: 1}).Group("sub_category").
+		Find(&shoppingListItemsGroupBySubCategory)
+
+	for _, shoppingListItemGroupBySubCategory := range shoppingListItemsGroupBySubCategory {
 		userShoppingListItems := []*ShoppingListItem{}
 
-		DB.Where(&ShoppingListItem{UserGUID: userGUID, ShoppingListGUID: shoppingListGUID, Category: shoppingListItemGroupByCategory.Category, AddedToCart: 1}).
+		DB.Where(&ShoppingListItem{UserGUID: userGUID, ShoppingListGUID: shoppingListGUID, SubCategory: shoppingListItemGroupBySubCategory.SubCategory, AddedToCart: 1}).
 			Find(&userShoppingListItems)
 
-		userShoppingListItemsGroupByCategory[shoppingListItemGroupByCategory.Category] = userShoppingListItems
+		userShoppingListItemsGroupBySubCategory[shoppingListItemGroupBySubCategory.SubCategory] = userShoppingListItems
 	}
 
-	return userShoppingListItemsGroupByCategory
+	return userShoppingListItemsGroupBySubCategory
 }
 
 // GetUserShoppingListItemNotAddedToCart function used to retrieve shopping list item by user guid and shopping list guid that not added to cart
 func (slir *ShoppingListItemRepository) GetUserShoppingListItemNotAddedToCart(userGUID string, shoppingListGUID string, relations string,
 	latitude string, longitude string) map[string][]*ShoppingListItem {
 
-	userShoppingListItemsGroupByCategory := make(map[string][]*ShoppingListItem)
+	userShoppingListItemsGroupBySubCategory := make(map[string][]*ShoppingListItem)
 
 	DB := slir.DB.Model(&ShoppingListItem{})
 
@@ -174,26 +175,26 @@ func (slir *ShoppingListItemRepository) GetUserShoppingListItemNotAddedToCart(us
 		DB = LoadRelations(DB, relations)
 	}
 
-	shoppingListItemsGroupByCategory := []*ShoppingListItem{}
+	shoppingListItemsGroupBySubCategory := []*ShoppingListItem{}
 
 	// Get Unique Category for user shopping list items
-	DB.Where("user_guid = ? AND shopping_list_guid = ? AND added_to_cart != ?", userGUID, shoppingListGUID, 1).Group("category").
-		Find(&shoppingListItemsGroupByCategory)
+	DB.Where("user_guid = ? AND shopping_list_guid = ? AND added_to_cart != ?", userGUID, shoppingListGUID, 1).Group("sub_category").
+		Find(&shoppingListItemsGroupBySubCategory)
 
 	dealsCollection := []*Deal{}
 
 	// Loop through each of user shopping list item category
-	for _, shoppingListItemGroupByCategory := range shoppingListItemsGroupByCategory {
+	for _, shoppingListItemGroupBySubCategory := range shoppingListItemsGroupBySubCategory {
 		userShoppingListItems := []*ShoppingListItem{}
 
-		DB.Where("user_guid = ? AND shopping_list_guid = ? AND added_to_cart != ? AND category = ?", userGUID, shoppingListGUID, 1, shoppingListItemGroupByCategory.Category).
+		DB.Where("user_guid = ? AND shopping_list_guid = ? AND added_to_cart != ? AND sub_category = ?", userGUID, shoppingListGUID, 1, shoppingListItemGroupBySubCategory.SubCategory).
 			Find(&userShoppingListItems)
 
 		// Retrieve available deals for each item. Maximum deal per item is 3
 		for key, userShopppingListItem := range userShoppingListItems {
 
 			// If user shopping list item was not added from deal and not added to cart, retrieve valid deals
-			if userShopppingListItem.AddedFromDeal == 0 && userShopppingListItem.AddedToCart == 0 {
+			if userShopppingListItem.AddedFromDeal == 0 && userShopppingListItem.AddedToCart == 0 && latitude != "" && longitude != "" {
 				deals := slir.DealService.GetDealsBasedOnUserShoppingListItem(userGUID, userShopppingListItem, latitude, longitude, dealsCollection)
 
 				dealsCollection = append(dealsCollection, deals...)
@@ -207,8 +208,8 @@ func (slir *ShoppingListItemRepository) GetUserShoppingListItemNotAddedToCart(us
 			}
 		}
 
-		userShoppingListItemsGroupByCategory[shoppingListItemGroupByCategory.Category] = userShoppingListItems
+		userShoppingListItemsGroupBySubCategory[shoppingListItemGroupBySubCategory.SubCategory] = userShoppingListItems
 	}
 
-	return userShoppingListItemsGroupByCategory
+	return userShoppingListItemsGroupBySubCategory
 }

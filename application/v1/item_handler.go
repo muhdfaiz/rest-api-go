@@ -30,9 +30,10 @@ func (ih *ItemHandler) Index(c *gin.Context) {
 	lastSyncDate := c.DefaultQuery("last_sync_date", "")
 	offset := c.DefaultQuery("page_number", "1")
 	limit := c.DefaultQuery("page_limit", "-1")
+	relations := c.DefaultQuery("include", "")
 
 	if lastSyncDate != "" {
-		items, totalItems := ih.ItemRepository.GetLatestUpdate(lastSyncDate, offset, limit, "")
+		items, totalItems := ih.ItemRepository.GetLatestUpdate(lastSyncDate, offset, limit, relations)
 		result := ih.ItemTransformer.transformCollection(c.Request, items, totalItems, limit)
 
 		DB.Close()
@@ -40,7 +41,7 @@ func (ih *ItemHandler) Index(c *gin.Context) {
 		return
 	}
 
-	items, totalItems := ih.ItemRepository.GetAll(offset, limit, "")
+	items, totalItems := ih.ItemRepository.GetAll(offset, limit, relations)
 
 	result := ih.ItemTransformer.transformCollection(c.Request, items, totalItems, limit)
 	DB.Close()

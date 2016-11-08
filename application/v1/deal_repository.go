@@ -20,8 +20,9 @@ type DealRepository struct {
 func (dr *DealRepository) GetDealsByCategoryAndValidStartEndDate(todayDateInGMT8 string, shoppingListItem *ShoppingListItem) []*Deal {
 	deals := []*Deal{}
 
-	dr.DB.Model(&Deal{}).Where("category = ? AND start_date <= ? AND end_date > ? AND status = ?", shoppingListItem.Category,
-		todayDateInGMT8, todayDateInGMT8, "publish").Find(&deals)
+	dr.DB.Model(&Deal{}).Preload("Category", func(db *gorm.DB) *gorm.DB {
+		return db.Where(&ItemCategory{Name: shoppingListItem.Category})
+	}).Where("start_date <= ? AND end_date > ? AND status = ?", todayDateInGMT8, todayDateInGMT8, "publish").Find(&deals)
 
 	return deals
 }
@@ -81,7 +82,7 @@ func (dr *DealRepository) GetAllDealsWithinValidRangeAndQuota(latitude float64, 
 	dealsWithin10KM := []*Deal{}
 
 	offset := SetOffsetValue(pageNumber, pageLimit)
-	sqlQueryStatement := `SELECT deals.*,
+	sqlQueryStatement := `SELECT SQL_CALC_FOUND_ROWS deals.*,
        count(deal_cashbacks.deal_guid) AS total_cashback
 	FROM
 		(SELECT ads.id AS ads_id,
@@ -91,11 +92,11 @@ func (dr *DealRepository) GetAllDealsWithinValidRangeAndQuota(latitude float64, 
 				ads.advertiser_id,
 				ads.campaign_id,
 				ads.item_id,
+				ads.category_id,
 				ads.img,
 				ads.front_name,
 				ads.name,
 				ads.body,
-				ads.category,
 				ads.positive_tag,
 				ads.negative_tag,
 				ads.time,

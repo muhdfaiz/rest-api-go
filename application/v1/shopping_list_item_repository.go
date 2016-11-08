@@ -112,7 +112,7 @@ func (slir *ShoppingListItemRepository) GetUserShoppingListItem(userGUID string,
 		for key, userShopppingListItem := range userShoppingListItems {
 
 			// If user shopping list item was not added from deal and not added to cart, retrieve valid deals
-			if userShopppingListItem.AddedFromDeal == 0 && userShopppingListItem.AddedToCart == 0 {
+			if userShopppingListItem.AddedFromDeal == 0 && userShopppingListItem.AddedToCart == 0 && latitude != "" && longitude != "" {
 				deals := slir.DealService.GetDealsBasedOnUserShoppingListItem(userGUID, userShopppingListItem, latitude, longitude, dealsCollection)
 
 				userShoppingListItems[key].Deals = nil

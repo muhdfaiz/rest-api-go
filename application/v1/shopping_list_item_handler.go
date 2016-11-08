@@ -73,7 +73,7 @@ func (slih *ShoppingListItemHandler) ViewAll(c *gin.Context) {
 	tokenData := c.MustGet("Token").(map[string]string)
 
 	// Validate query string
-	err := Validation.Validate(c.Request.URL.Query(), map[string]string{"added_to_cart": "numeric", "latitude": "required,latitude", "longitude": "required,longitude"})
+	err := Validation.Validate(c.Request.URL.Query(), map[string]string{"added_to_cart": "numeric", "latitude": "latitude", "longitude": "longitude"})
 
 	// If validation error return error message
 	if err != nil {

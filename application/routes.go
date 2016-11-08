@@ -209,6 +209,10 @@ func InitializeObjectAndSetRoutes(router *gin.Engine) *gin.Engine {
 		// Grocer Routes
 		version1.GET("/grocers", grocerHandler.Index)
 
+		// Deal Handler
+		version1.GET("deals/:guid", dealHandler.View)
+		version1.GET("deals", dealHandler.ViewAllForGuestUser)
+
 		// Protected Routes
 		version1.Use(middlewares.Auth())
 		{
@@ -247,8 +251,7 @@ func InitializeObjectAndSetRoutes(router *gin.Engine) *gin.Engine {
 			version1.POST("users/:guid/deal_cashbacks", dealCashbackHandler.Create)
 
 			// Deal Handler
-			version1.GET("deals/:guid", dealHandler.View)
-			version1.GET("deals", dealHandler.ViewAll)
+			version1.GET("users/:guid/deals", dealHandler.ViewAllForRegisteredUser)
 
 			// Feature Deal (In Carousel) Handler
 			version1.GET("featured_deals", eventHandler.ViewAll)

@@ -15,15 +15,6 @@ type DealCashbackService struct {
 
 // CreateDealCashbackAndShoppingListItem function used to create deal cashback and store new shopping list item based on deal item
 func (dcs *DealCashbackService) CreateDealCashbackAndShoppingListItem(userGUID string, dealCashbackData CreateDealCashback) *systems.ErrorData {
-
-	// Retrieve deal by user GUID and deal GUID
-	dealCashback := dcs.DealCashbackRepository.GetByDealGUIDAndUserGUID(dealCashbackData.DealGUID, userGUID)
-
-	// Check If user already add the deal to list
-	if dealCashback.GUID != "" {
-		return Error.DuplicateValueErrors("Deal Cashback", "deal_guid", dealCashbackData.DealGUID)
-	}
-
 	// Create New Deal Cashback
 	_, err := dcs.DealCashbackFactory.Create(userGUID, dealCashbackData)
 

@@ -1,7 +1,6 @@
 package v1
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -15,7 +14,8 @@ type DealServiceInterface interface {
 		latitude string, longitude string, dealsCollection []*Deal) []*Deal
 	RemoveDealCashbackAndSetItemDealExpired(userGUID string, dealGUID string) *systems.ErrorData
 	ViewDealDetails(dealGUID string, relations string) *Ads
-	GetAllDealsBasedOnLatitudeAndLongitudeAndQuota(latitude string, longitude string, offset string, limit string, relations string) ([]*Deal, int)
+	GetAvailableDealsForGuestUser(latitude string, longitude string, offset string, limit string, relations string) ([]*Deal, int)
+	GetAvailableDealsForRegisteredUser(userGUID string, latitude string, longitude string, offset string, limit string, relations string) ([]*Deal, int)
 }
 
 type DealService struct {
@@ -37,7 +37,8 @@ func (ds *DealService) GetDealsBasedOnUserShoppingListItem(userGUID string, shop
 	latitude1InFLoat64, _ := strconv.ParseFloat(strings.TrimSpace(latitude), 64)
 	longitude1InFLoat64, _ := strconv.ParseFloat(strings.TrimSpace(longitude), 64)
 
-	deals := ds.DealRepository.GetDealsByCategoryAndValidStartEndDate(currentDateInGMT8, shoppingListItem)
+	deals, _ := ds.DealRepository.GetAllDealsWithinValidRangeStartDateEndDateCategoryAndQuota(latitude1InFLoat64, longitude1InFLoat64,
+		currentDateInGMT8, shoppingListItem.Category, "1", "-1", "")
 
 	filteredDealsUniqueForEachShoppingList := []*Deal{}
 
@@ -93,15 +94,16 @@ func (ds *DealService) GetDealsBasedOnUserShoppingListItem(userGUID string, shop
 
 	filteredDealsByPositiveTags := []*Deal{}
 
+	itemNameInLowercase := strings.ToLower(shoppingListItem.Name)
+	splitItemNames := strings.Fields(itemNameInLowercase)
+
 	// If positive_tag not empty, filtered deal those only has match positive_tag
 	for _, filteredDealByStartAndEndTime := range filteredDealsByStartAndEndTime {
 		if filteredDealByStartAndEndTime.PositiveTag != "" {
-			splitItemNames := strings.Split(strings.ToLower(shoppingListItem.Name), " ")
+			for key := range splitItemNames {
+				matchPositiveTag := strings.Contains(strings.ToLower(filteredDealByStartAndEndTime.PositiveTag), splitItemNames[key])
 
-			for _, splitItemName := range splitItemNames {
-				matchPositiveTag := strings.Contains(strings.ToLower(filteredDealByStartAndEndTime.PositiveTag), splitItemName)
-
-				if matchPositiveTag {
+				if matchPositiveTag == true {
 					filteredDealsByPositiveTags = append(filteredDealsByPositiveTags, filteredDealByStartAndEndTime)
 					break
 				}
@@ -120,17 +122,16 @@ func (ds *DealService) GetDealsBasedOnUserShoppingListItem(userGUID string, shop
 	// If negative_tag not empty, filtered deal those only has match negative_tag
 	for _, filteredDealByPositiveTags := range filteredDealsByPositiveTags {
 		if filteredDealByPositiveTags.NegativeTag != "" {
-			splitItemNames := strings.Split(strings.ToLower(shoppingListItem.Name), " ")
 
-			for _, splitItemName := range splitItemNames {
-				matchNegativeTag := strings.Contains(strings.ToLower(filteredDealByPositiveTags.NegativeTag), splitItemName)
+			for key := range splitItemNames {
+				matchNegativeTag := strings.Contains(strings.ToLower(filteredDealByPositiveTags.NegativeTag), splitItemNames[key])
 
-				if matchNegativeTag {
+				if matchNegativeTag == true {
 					break
 				}
 
 				filteredDealsByNegativeTags = append(filteredDealsByNegativeTags, filteredDealByPositiveTags)
-				break
+
 			}
 		} else {
 			filteredDealsByNegativeTags = append(filteredDealsByNegativeTags, filteredDealByPositiveTags)
@@ -141,52 +142,7 @@ func (ds *DealService) GetDealsBasedOnUserShoppingListItem(userGUID string, shop
 		return nil
 	}
 
-	filteredDealsByConversionLocation := []*Deal{}
-
-	// If negative_tag not empty, filtered deal those only has match negative_tag
-	for _, filteredDealByNegativeTags := range filteredDealsByNegativeTags {
-		if filteredDealByNegativeTags.ConversionLocation != "" {
-			splitConversionLocations := strings.Split(filteredDealByNegativeTags.ConversionLocation, ";")
-
-			for _, splitConversionLocation := range splitConversionLocations {
-				splitConversionLocations := strings.Split(splitConversionLocation, ",")
-
-				// Convert Latitude and Longitude from string to float64
-				latitude2InFLoat64, _ := strconv.ParseFloat(strings.TrimSpace(splitConversionLocations[0]), 64)
-				longitude2InFLoat64, _ := strconv.ParseFloat(strings.TrimSpace(splitConversionLocations[1]), 64)
-
-				distanceInKM := ds.LocationService.CalculateDistanceInKilometer(latitude1InFLoat64, longitude1InFLoat64, latitude2InFLoat64, longitude2InFLoat64)
-
-				if distanceInKM < 10 {
-					filteredDealsByConversionLocation = append(filteredDealsByConversionLocation, filteredDealByNegativeTags)
-					break
-				}
-			}
-		} else {
-			filteredDealsByConversionLocation = append(filteredDealsByConversionLocation, filteredDealByNegativeTags)
-		}
-	}
-
-	if len(filteredDealsByConversionLocation) < 1 {
-		return nil
-	}
-
-	filteredDealsByQuota := []*Deal{}
-
-	// Check deal already used more than quota available
-	for _, filteredDealByConversionLocation := range filteredDealsByConversionLocation {
-		totalDealAddedToList := ds.DealCashbackRepository.CountByDealGUID(filteredDealByConversionLocation.GUID)
-		fmt.Println(totalDealAddedToList)
-		if totalDealAddedToList < filteredDealByConversionLocation.Quota {
-			filteredDealsByQuota = append(filteredDealsByQuota, filteredDealByConversionLocation)
-		}
-	}
-
-	if len(filteredDealsByQuota) < 1 {
-		return nil
-	}
-
-	return filteredDealsByQuota
+	return filteredDealsByNegativeTags
 }
 
 func (ds *DealService) RemoveDealCashbackAndSetItemDealExpired(userGUID string, dealGUID string) *systems.ErrorData {
@@ -222,18 +178,43 @@ func (ds *DealService) ViewDealDetails(dealGUID string, relations string) *Ads {
 	// Retrieve deal ID
 	deal := ds.DealRepository.GetDealByGUID(dealGUID)
 
+	if deal.GUID == "" {
+		return &Ads{}
+	}
+
 	dealWithRelations := ds.DealRepository.GetDealByIDWithRelations(deal.ID, relations)
 
 	return dealWithRelations
 }
 
-// GetAllDealsBasedOnLatitudeAndLongitudeAndQuota function used to retrieve all deals within valid range 10KM
-func (ds *DealService) GetAllDealsBasedOnLatitudeAndLongitudeAndQuota(latitude string, longitude string, offset string, limit string, relations string) ([]*Deal, int) {
+// GetAvailableDealsForGuestUser function used to retrieve all deals within valid range 10KM
+func (ds *DealService) GetAvailableDealsForGuestUser(latitude string, longitude string, offset string, limit string, relations string) ([]*Deal, int) {
+	currentDateInGMT8 := time.Now().UTC().Add(time.Hour * 8).Format("2006-01-02")
+
 	// Convert Latitude and Longitude from string to float65
 	latitude1InFLoat64, _ := strconv.ParseFloat(strings.TrimSpace(latitude), 64)
 	longitude1InFLoat64, _ := strconv.ParseFloat(strings.TrimSpace(longitude), 64)
 
-	validDeals, totalDeal := ds.DealRepository.GetAllDealsWithinValidRangeAndQuota(latitude1InFLoat64, longitude1InFLoat64, offset, limit, relations)
+	validDeals, totalDeal := ds.DealRepository.GetAllDealsWithinValidRangeStartDateEndDateAndQuota(latitude1InFLoat64, longitude1InFLoat64,
+		currentDateInGMT8, offset, limit, relations)
+
+	for key, validDeal := range validDeals {
+		validDeals[key].Items = ds.ItemRepository.GetByID(validDeal.ItemID, "Categories,Subcategories")
+	}
+
+	return validDeals, totalDeal
+}
+
+// GetAvailableDealsForRegisteredUser function used to retrieve all deals within valid range 10KM
+func (ds *DealService) GetAvailableDealsForRegisteredUser(userGUID string, latitude string, longitude string, offset string, limit string, relations string) ([]*Deal, int) {
+	currentDateInGMT8 := time.Now().UTC().Add(time.Hour * 8).Format("2006-01-02")
+
+	// Convert Latitude and Longitude from string to float65
+	latitude1InFLoat64, _ := strconv.ParseFloat(strings.TrimSpace(latitude), 64)
+	longitude1InFLoat64, _ := strconv.ParseFloat(strings.TrimSpace(longitude), 64)
+
+	validDeals, totalDeal := ds.DealRepository.GetAllDealsWithinValidRangeStartDateEndDateUserLimitAndQuota(userGUID, latitude1InFLoat64, longitude1InFLoat64,
+		currentDateInGMT8, offset, limit, relations)
 
 	for key, validDeal := range validDeals {
 		validDeals[key].Items = ds.ItemRepository.GetByID(validDeal.ItemID, "Categories,Subcategories")

@@ -25,5 +25,5 @@ type ShoppingListItem struct {
 	Images []*ShoppingListItemImage `json:"images,omitempty" gorm:"ForeignKey:ShoppingListItemGUID;AssociationForeignKey:GUID"`
 
 	// Has many Deals
-	Deals []*Deal `json:"deals,omitempty"`
+	Deals []*Deal `json:"deals"`
 }

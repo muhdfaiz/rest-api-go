@@ -179,16 +179,6 @@ func (slih *ShoppingListItemHandler) Create(c *gin.Context) {
 	createShoppingListItemData.ShoppingListGUID = shoppingListGUID
 	createShoppingListItemData.UserGUID = userGUID
 
-	// If shopping list item name already exist in the shopping list return error message
-	shoppingListItem := slih.ShoppingListItemRepository.GetByName(createShoppingListItemData.Name, "")
-
-	// If shopping list GUID empty return error message
-	if shoppingListItem.Name != "" {
-		DB.Close()
-		c.JSON(http.StatusConflict, Error.DuplicateValueErrors("Shopping List Item", shoppingListItem.Name, "name"))
-		return
-	}
-
 	// Create Shopping List item
 	result, err := slih.ShoppingListItemFactory.Create(createShoppingListItemData)
 

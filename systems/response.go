@@ -71,7 +71,7 @@ func (pr *PaginationResponse) BuildPaginationLinks(request *http.Request, totalD
 	paginationLinks.Next = pr.buildNextLink()
 	paginationLinks.Prev = pr.buildPreviousLink()
 
-	lastLinkPageNumber := math.Ceil((float64(pr.TotalData) / float64(pr.PageLimit)))
+	lastLinkPageNumber := math.Ceil(float64(pr.TotalData) / float64(pr.PageLimit))
 
 	if pr.PageNumber == 1 || (paginationLinks.Next == nil && float64(pr.PageNumber) > lastLinkPageNumber) {
 		paginationLinks.Prev = nil
@@ -107,7 +107,7 @@ func (pr *PaginationResponse) buildFirstLink() string {
 func (pr *PaginationResponse) buildNextLink() *string {
 	nextLinkQueryString := pr.QueryStrings
 
-	lastLinkPageNumber := (float64(pr.TotalData) / float64(pr.PageLimit))
+	lastLinkPageNumber := math.Ceil(float64(pr.TotalData) / float64(pr.PageLimit))
 	nextLinkPageNumber := pr.PageNumber + 1
 
 	if float64(nextLinkPageNumber) > lastLinkPageNumber {
@@ -142,7 +142,7 @@ func (pr *PaginationResponse) buildPreviousLink() *string {
 func (pr *PaginationResponse) buildLastLink() *string {
 	lastLinkQueryString := pr.QueryStrings
 
-	lastLinkPageNumber := (float64(pr.TotalData) / float64(pr.PageLimit))
+	lastLinkPageNumber := math.Ceil(float64(pr.TotalData) / float64(pr.PageLimit))
 
 	lastLinkQueryString.Set("page_number", strconv.FormatFloat(lastLinkPageNumber, 'f', 0, 64))
 

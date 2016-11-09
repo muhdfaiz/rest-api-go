@@ -38,7 +38,7 @@ func (ds *DealService) GetDealsBasedOnUserShoppingListItem(userGUID string, shop
 	longitude1InFLoat64, _ := strconv.ParseFloat(strings.TrimSpace(longitude), 64)
 
 	deals, _ := ds.DealRepository.GetAllDealsWithinValidRangeStartDateEndDateCategoryAndQuota(latitude1InFLoat64, longitude1InFLoat64,
-		currentDateInGMT8, shoppingListItem.Category, "1", "-1", "")
+		currentDateInGMT8, shoppingListItem.Category, "1", "10000", "")
 
 	filteredDealsUniqueForEachShoppingList := []*Deal{}
 

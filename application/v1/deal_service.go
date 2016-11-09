@@ -130,11 +130,14 @@ func (ds *DealService) GetDealsBasedOnUserShoppingListItem(userGUID string, shop
 					break
 				}
 
-				filteredDealsByNegativeTags = append(filteredDealsByNegativeTags, filteredDealByPositiveTags)
-
+				if len(filteredDealsByNegativeTags) < 3 {
+					filteredDealsByNegativeTags = append(filteredDealsByNegativeTags, filteredDealByPositiveTags)
+				}
 			}
 		} else {
-			filteredDealsByNegativeTags = append(filteredDealsByNegativeTags, filteredDealByPositiveTags)
+			if len(filteredDealsByNegativeTags) < 3 {
+				filteredDealsByNegativeTags = append(filteredDealsByNegativeTags, filteredDealByPositiveTags)
+			}
 		}
 	}
 

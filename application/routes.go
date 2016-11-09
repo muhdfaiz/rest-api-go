@@ -126,7 +126,7 @@ func InitializeObjectAndSetRoutes(router *gin.Engine) *gin.Engine {
 
 	// Event Objects
 	eventRepository := &v1.EventRepository{DB: DB}
-	eventService := &v1.EventService{EventRepository: eventRepository}
+	eventService := &v1.EventService{EventRepository: eventRepository, DealCashbackRepository: dealCashbackRepository}
 
 	// Sms Handler
 	smsHandler := v1.SmsHandler{UserRepository: userRepository, UserFactory: userFactory, SmsService: smsService,
@@ -254,7 +254,7 @@ func InitializeObjectAndSetRoutes(router *gin.Engine) *gin.Engine {
 			version1.GET("users/:guid/deals", dealHandler.ViewAllForRegisteredUser)
 
 			// Feature Deal (In Carousel) Handler
-			version1.GET("featured_deals", eventHandler.ViewAll)
+			version1.GET("users/:guid/featured_deals", eventHandler.ViewAll)
 		}
 	}
 

@@ -14,4 +14,12 @@ type Event struct {
 	CreatedAt time.Time  `json:"created_at"`
 	UpdatedAt time.Time  `json:"updated_at"`
 	DeletedAt *time.Time `json:"deleted_at"`
+
+	// Event Has Many Deals
+	//Eventdeals []*EventDeal `json:"deals,omitempty" gorm:"ForeignKey:EventID;AssociationForeignKey:ID"`
+	Deals []*Deal `json:"deals,omitempty" gorm:"many2many:event_deal;"`
+}
+
+func (e Event) TableName() string {
+	return "event"
 }

@@ -4,6 +4,7 @@ import "github.com/jinzhu/gorm"
 
 type DealCashbackRepositoryInterface interface {
 	GetByDealGUIDAndUserGUID(dealGUID string, userGUID string) *DealCashback
+	CountByDealGUIDAndUserGUID(dealGUID string, userGUID string) int
 	CountByDealGUID(dealGUID string) int
 }
 
@@ -19,10 +20,18 @@ func (dcr *DealCashbackRepository) GetByDealGUIDAndUserGUID(dealGUID string, use
 	return dealCashback
 }
 
+func (dcr *DealCashbackRepository) CountByDealGUIDAndUserGUID(dealGUID string, userGUID string) int {
+	var totalNumberOfUserDealCashback int
+
+	dcr.DB.Model(&DealCashback{}).Where(DealCashback{DealGUID: dealGUID, UserGUID: userGUID}).Count(&totalNumberOfUserDealCashback)
+
+	return totalNumberOfUserDealCashback
+}
+
 func (dcr *DealCashbackRepository) CountByDealGUID(dealGUID string) int {
-	var totalDeal int
+	var totalDealCashback int
 
-	dcr.DB.Model(&DealCashback{}).Where(&DealCashback{DealGUID: dealGUID}).Count(&totalDeal)
+	dcr.DB.Model(&DealCashback{}).Where(&DealCashback{DealGUID: dealGUID}).Count(&totalDealCashback)
 
-	return totalDeal
+	return totalDealCashback
 }

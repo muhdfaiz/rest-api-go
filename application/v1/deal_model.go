@@ -45,7 +45,7 @@ type Deal struct {
 	Grocers []*Grocer `json:"grocer_locations,omitempty" gorm:"many2many:ads_grocer;"`
 }
 
-// TableName function used to set Item table name to be `item``
+// TableName function used to set Item table name to be `item`
 func (d Deal) TableName() string {
 	return "ads"
 }

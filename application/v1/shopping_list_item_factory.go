@@ -74,6 +74,9 @@ func (slif *ShoppingListItemFactory) CreateForDeal(data CreateShoppingListItem) 
 	itemCategory := slif.ItemCategoryRepository.GetByID(item.CategoryID)
 	shoppingListItemCategory := itemCategory.Name
 
+	itemSubCategory := slif.ItemSubCategoryRepository.GetByID(item.SubcategoryID)
+	shoppingListItemSubCategory := itemSubCategory.Name
+
 	deal := slif.DealRepository.GetDealByGUID(data.DealGUID)
 
 	shoppingListItem := &ShoppingListItem{
@@ -82,6 +85,7 @@ func (slif *ShoppingListItemFactory) CreateForDeal(data CreateShoppingListItem) 
 		ShoppingListGUID: data.ShoppingListGUID,
 		Name:             data.Name,
 		Category:         shoppingListItemCategory,
+		SubCategory:      shoppingListItemSubCategory,
 		Quantity:         data.Quantity,
 		AddedFromDeal:    data.AddedFromDeal,
 		DealGUID:         &data.DealGUID,

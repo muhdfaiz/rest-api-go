@@ -12,7 +12,9 @@ type ItemCategoryHandler struct {
 
 // ViewAll function used to retrieve all item categories
 func (ich *ItemCategoryHandler) ViewAll(c *gin.Context) {
-	itemCategories := ich.ItemCategoryService.GetAllItemCategoryNames()
+	itemCategoryNames, total := ich.ItemCategoryService.GetItemCategoryNames()
+
+	itemCategories := ich.ItemCategoryService.TransformItemCategories(itemCategoryNames, total)
 
 	c.JSON(http.StatusOK, itemCategories)
 }

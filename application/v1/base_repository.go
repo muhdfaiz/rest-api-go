@@ -49,9 +49,9 @@ func SetOffsetValue(pageNumber string, pageLimit string) int {
 	pageNumberInt, _ := strconv.Atoi(pageNumber)
 	pageLimitInt, _ := strconv.Atoi(pageLimit)
 
-	offset := pageNumberInt*pageLimitInt - pageLimitInt
+	offset := (pageNumberInt * pageLimitInt) - pageLimitInt
 
-	if pageNumberInt == 1 {
+	if pageNumberInt == 1 || pageNumberInt == 0 {
 		offset = 0
 	}
 

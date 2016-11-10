@@ -108,7 +108,8 @@ func InitializeObjectAndSetRoutes(router *gin.Engine) *gin.Engine {
 
 	// Deal Service
 	dealService := &v1.DealService{DealRepository: dealRepository, LocationService: locationService, DealCashbackFactory: dealCashbackFactory,
-		ShoppingListItemFactory: shoppingListItemFactory, DealCashbackRepository: dealCashbackRepository, ItemRepository: itemRepository}
+		ShoppingListItemFactory: shoppingListItemFactory, DealCashbackRepository: dealCashbackRepository, ItemRepository: itemRepository,
+		ItemCategoryService: itemCategoryService}
 
 	// Deal Transformer
 	dealTransformer := &v1.DealTransformer{}
@@ -170,7 +171,7 @@ func InitializeObjectAndSetRoutes(router *gin.Engine) *gin.Engine {
 	dealCashbackHandler := v1.DealCashbackHandler{ShoppingListRepository: shoppingListRepository, DealCashbackService: dealCashbackService}
 
 	// Deal Handler
-	dealHandler := v1.DealHandler{DealService: dealService, DealTransformer: dealTransformer}
+	dealHandler := v1.DealHandler{DealService: dealService, DealTransformer: dealTransformer, ItemCategoryService: itemCategoryService}
 
 	// Grocer Handler
 	grocerHandler := v1.GrocerHandler{GrocerRepository: grocerRepository, GrocerTransformer: grocerTransformer}
@@ -252,6 +253,8 @@ func InitializeObjectAndSetRoutes(router *gin.Engine) *gin.Engine {
 
 			// Deal Handler
 			version1.GET("users/:guid/deals", dealHandler.ViewAllForRegisteredUser)
+			version1.GET("users/:guid/deals/categories", dealHandler.ViewAllGroupByCategory)
+			version1.GET("users/:guid/deals/categories/:category_guid", dealHandler.ViewAllByCategory)
 
 			// Feature Deal (In Carousel) Handler
 			version1.GET("users/:guid/featured_deals", eventHandler.ViewAll)

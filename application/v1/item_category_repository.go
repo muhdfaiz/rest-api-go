@@ -8,6 +8,7 @@ type ItemCategoryRepositoryInterface interface {
 	GetAll() ([]*ItemCategory, int)
 	GetAllCategoryNames() ([]string, int)
 	GetByID(ID int) *ItemCategory
+	GetByGUID(GUID string) *ItemCategory
 }
 
 type ItemCategoryRepository struct {
@@ -27,7 +28,7 @@ func (icr *ItemCategoryRepository) GetAll() ([]*ItemCategory, int) {
 	return itemCategories, *totalItemCategory
 }
 
-// GetAllCategoryNames function used to retrieve all shopping list item categories name
+// GetAllCategoryNames function used to retrieve all shopping list item categories name only
 func (icr *ItemCategoryRepository) GetAllCategoryNames() ([]string, int) {
 	shoppingListCategories := []*ItemCategory{}
 
@@ -43,6 +44,15 @@ func (icr *ItemCategoryRepository) GetByID(ID int) *ItemCategory {
 	itemCategory := &ItemCategory{}
 
 	icr.DB.Model(&ItemCategory{}).Where(&ItemCategory{ID: ID}).First(&itemCategory)
+
+	return itemCategory
+}
+
+// GetByGUID function used to retrieve shopping list item category by GUID
+func (icr *ItemCategoryRepository) GetByGUID(GUID string) *ItemCategory {
+	itemCategory := &ItemCategory{}
+
+	icr.DB.Model(&ItemCategory{}).Where(&ItemCategory{GUID: GUID}).First(&itemCategory)
 
 	return itemCategory
 }

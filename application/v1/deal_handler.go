@@ -10,12 +10,24 @@ type DealHandler struct {
 	DealService         DealServiceInterface
 	DealTransformer     DealTransformerInterface
 	ItemCategoryService ItemCategoryServiceInterface
+	DealCashbackService DealCashbackServiceInterface
+	UserRepository      UserRepositoryInterface
 }
 
-// View function used to retrieve deal details
+// View function used to view deal details
 func (dh *DealHandler) View(c *gin.Context) {
+	tokenData := c.MustGet("Token").(map[string]string)
+
+	user := dh.UserRepository.GetByGUID(tokenData["user_guid"], "")
+
+	// If user GUID not match user GUID inside the token return error message
+	if user.GUID == "" {
+		c.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("view deals"))
+		return
+	}
+
 	// Retrieve deal guid in url
-	dealGUID := c.Param("guid")
+	dealGUID := c.Param("deal_guid")
 
 	// Retrieve query string for relations
 	relations := c.Query("include")
@@ -25,6 +37,15 @@ func (dh *DealHandler) View(c *gin.Context) {
 	if deal.GUID == "" {
 		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("Deal", "guid", dealGUID))
 		return
+	}
+
+	// Check If deal quota still available for the user.
+	total := dh.DealCashbackService.CountTotalNumberUserAlreadyAddDealToList(user.GUID, deal.GUID)
+
+	deal.CanAddTolist = 1
+
+	if total >= deal.Perlimit {
+		deal.CanAddTolist = 0
 	}
 
 	c.JSON(http.StatusOK, gin.H{"data": deal})

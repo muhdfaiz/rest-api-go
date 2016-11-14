@@ -86,7 +86,7 @@ func (dh *DealHandler) ViewAllForRegisteredUser(c *gin.Context) {
 	longitude := c.Query("longitude")
 
 	offset := c.DefaultQuery("page_number", "1")
-	limit := c.DefaultQuery("page_limit", "-1")
+	limit := c.DefaultQuery("page_limit", "100000")
 
 	// Retrieve query string parameter for relations
 	relations := c.Query("include")
@@ -125,7 +125,7 @@ func (dh *DealHandler) ViewAllForGuestUser(c *gin.Context) {
 	longitude := c.Query("longitude")
 
 	offset := c.DefaultQuery("page_number", "1")
-	limit := c.DefaultQuery("page_limit", "-1")
+	limit := c.DefaultQuery("page_limit", "100000")
 
 	// Retrieve query string parameter for relations
 	relations := c.Query("include")

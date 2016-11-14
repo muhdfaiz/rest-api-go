@@ -4,6 +4,7 @@ import "bitbucket.org/cliqers/shoppermate-api/systems"
 
 type DealCashbackServiceInterface interface {
 	CreateDealCashbackAndShoppingListItem(userGUID string, dealCashbackData CreateDealCashback) *systems.ErrorData
+	CountTotalNumberUserAlreadyAddDealToList(userGUID string, dealGUID string) int
 }
 
 type DealCashbackService struct {
@@ -41,4 +42,10 @@ func (dcs *DealCashbackService) CreateDealCashbackAndShoppingListItem(userGUID s
 	}
 
 	return nil
+}
+
+func (dcs *DealCashbackService) CountTotalNumberUserAlreadyAddDealToList(userGUID string, dealGUID string) int {
+	total := dcs.DealCashbackRepository.CountByDealGUIDAndUserGUID(dealGUID, userGUID)
+
+	return total
 }

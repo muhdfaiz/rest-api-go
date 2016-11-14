@@ -171,7 +171,8 @@ func InitializeObjectAndSetRoutes(router *gin.Engine) *gin.Engine {
 	dealCashbackHandler := v1.DealCashbackHandler{ShoppingListRepository: shoppingListRepository, DealCashbackService: dealCashbackService}
 
 	// Deal Handler
-	dealHandler := v1.DealHandler{DealService: dealService, DealTransformer: dealTransformer, ItemCategoryService: itemCategoryService}
+	dealHandler := v1.DealHandler{DealService: dealService, DealTransformer: dealTransformer, ItemCategoryService: itemCategoryService,
+		DealCashbackService: dealCashbackService, UserRepository: userRepository}
 
 	// Grocer Handler
 	grocerHandler := v1.GrocerHandler{GrocerRepository: grocerRepository, GrocerTransformer: grocerTransformer}
@@ -211,7 +212,6 @@ func InitializeObjectAndSetRoutes(router *gin.Engine) *gin.Engine {
 		version1.GET("/grocers", grocerHandler.Index)
 
 		// Deal Handler
-		version1.GET("deals/:guid", dealHandler.View)
 		version1.GET("deals", dealHandler.ViewAllForGuestUser)
 
 		// Protected Routes
@@ -253,6 +253,7 @@ func InitializeObjectAndSetRoutes(router *gin.Engine) *gin.Engine {
 
 			// Deal Handler
 			version1.GET("users/:guid/deals", dealHandler.ViewAllForRegisteredUser)
+			version1.GET("deals/:deal_guid", dealHandler.View)
 			version1.GET("users/:guid/deals/categories", dealHandler.ViewAllGroupByCategory)
 			version1.GET("users/:guid/deals/categories/:category_guid", dealHandler.ViewAllByCategory)
 

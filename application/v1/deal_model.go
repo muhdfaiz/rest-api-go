@@ -102,5 +102,5 @@ type Ads struct {
 	Category *ItemCategory `json:"category,omitempty" gorm:"ForeignKey:CategoryID;AssociationForeignKey:ID"`
 
 	// Have Many Grocers
-	Grocers []*Grocer `json:"grocer_locations,omitempty" gorm:"many2many:ads_grocer;"`
+	Grocers []*Grocer `json:"grocers,omitempty" gorm:"many2many:ads_grocer;"`
 }

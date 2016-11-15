@@ -86,16 +86,13 @@ func (dh *DealHandler) ViewAllForRegisteredUser(c *gin.Context) {
 	latitude := c.Query("latitude")
 	longitude := c.Query("longitude")
 
-	offset := c.DefaultQuery("page_number", "1")
-	limit := c.DefaultQuery("page_limit", "100000")
-
-	// Retrieve query string parameter for relations
-	relations := c.Query("include")
+	pageNumber := c.Query("page_number")
+	pageLimit := c.Query("page_limit")
 
 	// Retrieve deals
-	deals, totalDeal := dh.DealService.GetAvailableDealsForRegisteredUser(userGUID, latitude, longitude, offset, limit, relations)
+	deals, totalDeal := dh.DealService.GetAvailableDealsForRegisteredUser(userGUID, latitude, longitude, pageNumber, pageLimit, "")
 
-	result := dh.DealTransformer.transformCollection(c.Request, deals, totalDeal, limit)
+	result := dh.DealTransformer.transformCollection(c.Request, deals, totalDeal, pageLimit)
 
 	c.JSON(http.StatusOK, gin.H{"data": result})
 }
@@ -125,16 +122,16 @@ func (dh *DealHandler) ViewAllForGuestUser(c *gin.Context) {
 	latitude := c.Query("latitude")
 	longitude := c.Query("longitude")
 
-	offset := c.DefaultQuery("page_number", "1")
-	limit := c.DefaultQuery("page_limit", "100000")
+	pageNumber := c.Query("page_number")
+	pageLimit := c.Query("page_limit")
 
 	// Retrieve query string parameter for relations
 	relations := c.Query("include")
 
 	// Retrieve deals
-	deals, totalDeal := dh.DealService.GetAvailableDealsForGuestUser(latitude, longitude, offset, limit, relations)
+	deals, totalDeal := dh.DealService.GetAvailableDealsForGuestUser(latitude, longitude, pageNumber, pageLimit, relations)
 
-	result := dh.DealTransformer.transformCollection(c.Request, deals, totalDeal, limit)
+	result := dh.DealTransformer.transformCollection(c.Request, deals, totalDeal, pageLimit)
 
 	c.JSON(http.StatusOK, gin.H{"data": result})
 }
@@ -171,10 +168,10 @@ func (dh *DealHandler) ViewAndGroupByCategory(c *gin.Context) {
 	// Retrieve query string parameters for latitude and longitude
 	latitude := c.Query("latitude")
 	longitude := c.Query("longitude")
-	dealLimitPerCategory := c.DefaultQuery("deal_limit_per_category", "10000")
+	dealLimitPerCategory := c.Query("deal_limit_per_category")
 
 	// Retrieve deals group by category
-	dealCategories := dh.DealService.GetAvailableDealsGroupByCategoryForRegisteredUser(userGUID, latitude, longitude, "1", dealLimitPerCategory, "")
+	dealCategories := dh.DealService.GetAvailableDealsGroupByCategoryForRegisteredUser(userGUID, latitude, longitude, dealLimitPerCategory, "")
 
 	c.JSON(http.StatusOK, gin.H{"data": dealCategories})
 }
@@ -213,9 +210,10 @@ func (dh *DealHandler) ViewByCategoryAndGroupBySubCategory(c *gin.Context) {
 	// Retrieve query string parameters for latitude and longitude
 	latitude := c.Query("latitude")
 	longitude := c.Query("longitude")
+	dealLimitPerSubcategory := c.Query("deal_limit_per_subcategory")
 
 	// Retrieve deals group by category
-	dealsGroupBySubCategory := dh.DealService.GetAvailableDealsByCategoryGroupBySubCategoryForRegisteredUser(userGUID, categoryGUID, latitude, longitude, "", "", "")
+	dealsGroupBySubCategory := dh.DealService.GetAvailableDealsByCategoryGroupBySubCategoryForRegisteredUser(userGUID, categoryGUID, latitude, longitude, dealLimitPerSubcategory, "")
 
 	c.JSON(http.StatusOK, gin.H{"data": dealsGroupBySubCategory})
 }
@@ -243,8 +241,8 @@ func (dh *DealHandler) ViewByCategory(c *gin.Context) {
 	latitude := c.Query("latitude")
 	longitude := c.Query("longitude")
 
-	pageNumber := c.DefaultQuery("page_number", "1")
-	pageLimit := c.DefaultQuery("page_limit", "-1")
+	pageNumber := c.Query("page_number")
+	pageLimit := c.Query("page_limit")
 
 	tokenData := c.MustGet("Token").(map[string]string)
 
@@ -300,8 +298,8 @@ func (dh *DealHandler) ViewBySubCategory(c *gin.Context) {
 	latitude := c.Query("latitude")
 	longitude := c.Query("longitude")
 
-	pageNumber := c.DefaultQuery("page_number", "1")
-	pageLimit := c.DefaultQuery("page_limit", "-1")
+	pageNumber := c.Query("page_number")
+	pageLimit := c.Query("page_limit")
 
 	tokenData := c.MustGet("Token").(map[string]string)
 

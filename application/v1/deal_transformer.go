@@ -24,10 +24,12 @@ func (dt *DealTransformer) transformCollection(request *http.Request, data inter
 	dealResponse.TotalCount = totalData
 	dealResponse.Data = data
 
-	limitInt, _ := strconv.Atoi(limit)
+	if limit != "" {
+		limitInt, _ := strconv.Atoi(limit)
 
-	if limitInt != -1 {
-		dealResponse.Links = PaginationReponse.BuildPaginationLinks(request, totalData)
+		if limitInt != -1 {
+			dealResponse.Links = PaginationReponse.BuildPaginationLinks(request, totalData)
+		}
 	}
 
 	return dealResponse

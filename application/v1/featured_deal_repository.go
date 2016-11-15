@@ -15,7 +15,7 @@ func (er *EventRepository) GetAllIncludingRelations(todayDateInGMT8 string) []*E
 
 	er.DB.Model(&Event{}).Preload("Deals", func(db *gorm.DB) *gorm.DB {
 		return db.Where("ads.start_date <= ? AND ads.end_date > ? AND ads.status = ?", todayDateInGMT8, todayDateInGMT8, "publish")
-	}).Preload("Deals.Items").Preload("Deals.Category").Preload("Deals.Items.Categories").Preload("Deals.Items.Subcategories").Find(&events)
+	}).Preload("Deals.Items").Preload("Deals.Category").Preload("Deals.Items.Categories").Preload("Deals.Items.Subcategories").Preload("Deals.Grocerexclusives").Find(&events)
 
 	return events
 }

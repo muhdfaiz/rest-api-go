@@ -25,7 +25,7 @@ type Deal struct {
 	CashbackAmount            float64    `json:"cashback_amount"`
 	Quota                     int        `json:"quota"`
 	Status                    string     `json:"status"`
-	GrocerExclusive           string     `json:"grocer_exclusive"`
+	GrocerExclusive           int        `json:"grocer_exclusive"`
 	Terms                     string     `json:"terms"`
 	AddedToList               int        `json:"added_to_list"`
 	NearestGrocerDistanceInKm float64    `json:"nearest_grocer_distance_in_km,omitempty"`
@@ -45,7 +45,7 @@ type Deal struct {
 	Category *ItemCategory `json:"category,omitempty" gorm:"ForeignKey:CategoryID;AssociationForeignKey:ID"`
 
 	// Grocer Exclusive
-	Grocerexclusives *Grocer `json:"grocer_exclusives" gorm:"ForeignKey:GrocerExclusive;AssociationForeignKey:ID"`
+	Grocerexclusives *Grocer `json:"grocer_exclusives,omitempty" gorm:"ForeignKey:GrocerExclusive;AssociationForeignKey:ID"`
 
 	// Have Many Grocers
 	Grocers []*Grocer `json:"grocer_locations,omitempty" gorm:"many2many:ads_grocer;"`
@@ -79,7 +79,7 @@ type Ads struct {
 	CashbackAmount            float64    `json:"cashback_amount"`
 	Quota                     int        `json:"quota"`
 	Status                    string     `json:"status"`
-	GrocerExclusive           string     `json:"grocer_exclusive"`
+	GrocerExclusive           int        `json:"grocer_exclusive"`
 	Terms                     string     `json:"terms"`
 	CanAddTolist              int        `json:"can_add_to_list"`
 	NearestGrocerDistanceInKm float64    `json:"nearest_grocer_distance_in_km,omitempty"`
@@ -93,7 +93,7 @@ type Ads struct {
 	DeletedAt                 *time.Time `json:"deleted_at"`
 
 	// Grocer Exclusive
-	Grocerexclusives *Grocer `json:"grocer_exclusives" gorm:"ForeignKey:GrocerExclusive;AssociationForeignKey:ID"`
+	Grocerexclusives *Grocer `json:"grocer_exclusives,omitempty" gorm:"ForeignKey:GrocerExclusive;AssociationForeignKey:ID"`
 
 	// Has One Shopping List Item
 	Items *Item `json:"items,omitempty" gorm:"ForeignKey:ItemID;AssociationForeignKey:ID"`

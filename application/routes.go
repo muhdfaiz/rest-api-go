@@ -106,10 +106,14 @@ func InitializeObjectAndSetRoutes(router *gin.Engine) *gin.Engine {
 	// Deal Cashback Repository
 	dealCashbackRepository := &v1.DealCashbackRepository{DB: DB}
 
+	// Grocer Objects
+	grocerRepository := &v1.GrocerRepository{DB: DB}
+	grocerTransformer := &v1.GrocerTransformer{}
+
 	// Deal Service
 	dealService := &v1.DealService{DealRepository: dealRepository, LocationService: locationService, DealCashbackFactory: dealCashbackFactory,
 		ShoppingListItemFactory: shoppingListItemFactory, DealCashbackRepository: dealCashbackRepository, ItemRepository: itemRepository,
-		ItemCategoryService: itemCategoryService, ItemSubCategoryRepository: itemSubCategoryRepository}
+		ItemCategoryService: itemCategoryService, ItemSubCategoryRepository: itemSubCategoryRepository, GrocerRepository: grocerRepository}
 
 	// Deal Transformer
 	dealTransformer := &v1.DealTransformer{}
@@ -120,10 +124,6 @@ func InitializeObjectAndSetRoutes(router *gin.Engine) *gin.Engine {
 	// Deal Cashback Service
 	dealCashbackService := &v1.DealCashbackService{DealCashbackRepository: dealCashbackRepository, DealRepository: dealRepository,
 		DealCashbackFactory: dealCashbackFactory, ShoppingListItemFactory: shoppingListItemFactory}
-
-	// Grocer Objects
-	grocerRepository := &v1.GrocerRepository{DB: DB}
-	grocerTransformer := &v1.GrocerTransformer{}
 
 	// Event Objects
 	eventRepository := &v1.EventRepository{DB: DB}

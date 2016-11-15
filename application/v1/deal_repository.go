@@ -129,6 +129,8 @@ func (dr *DealRepository) GetAllDealsWithinValidRangeStartDateEndDateAndQuota(la
 				ads.quota AS ads_quota,
 				ads.quota,
 				ads.status,
+				ads.grocer_exclusive,
+				ads.terms,
 				ads.created_at as deal_created_time,
 				ads.created_at,
 				ads.updated_at,
@@ -147,11 +149,14 @@ func (dr *DealRepository) GetAllDealsWithinValidRangeStartDateEndDateAndQuota(la
 	LEFT JOIN deal_cashbacks ON deal_cashbacks.deal_guid = ads_guid
 	GROUP BY ads_guid
 	HAVING total_deal_cashback < ads_quota
-	ORDER BY deal_created_time DESC 
-	LIMIT ?
-	OFFSET ?;`
+	ORDER BY deal_created_time DESC`
 
-	dr.DB.Raw(sqlQueryStatement, latitude, longitude, latitude, currentDateInGMT8, currentDateInGMT8, 10, pageLimit, offset).Scan(&dealsWithin10KM)
+	if pageLimit != "" {
+		sqlQueryStatement = sqlQueryStatement + " LIMIT ? OFFSET ?"
+		dr.DB.Raw(sqlQueryStatement, latitude, longitude, latitude, currentDateInGMT8, currentDateInGMT8, 10, pageLimit, offset).Scan(&dealsWithin10KM)
+	} else {
+		dr.DB.Raw(sqlQueryStatement, latitude, longitude, latitude, currentDateInGMT8, currentDateInGMT8, 10).Scan(&dealsWithin10KM)
+	}
 
 	type TotalDeal struct {
 		Total int `json:"total"`
@@ -200,6 +205,8 @@ func (dr *DealRepository) GetAllDealsWithinValidRangeStartDateEndDateUserLimitAn
 				ads.quota AS ads_quota,
 				ads.quota,
 				ads.status,
+				ads.grocer_exclusive,
+				ads.terms,
 				ads.created_at as deal_created_time,
 				ads.created_at,
 				ads.updated_at,
@@ -219,11 +226,14 @@ func (dr *DealRepository) GetAllDealsWithinValidRangeStartDateEndDateUserLimitAn
 	LEFT OUTER JOIN deal_cashbacks ON ads_guid = deal_cashbacks.deal_guid
 	GROUP BY ads_guid
 	HAVING total_deal_cashback < ads_quota AND total_user_deal_cashback < ads_perlimit
-	ORDER BY deal_created_time DESC 
-	LIMIT ?
-	OFFSET ?;`
+	ORDER BY deal_created_time DESC`
 
-	dr.DB.Raw(sqlQueryStatement, userGUID, latitude, longitude, latitude, currentDateInGMT8, currentDateInGMT8, 10, pageLimit, offset).Scan(&dealsWithin10KM)
+	if pageLimit != "" {
+		sqlQueryStatement = sqlQueryStatement + " LIMIT ? OFFSET ?"
+		dr.DB.Raw(sqlQueryStatement, userGUID, latitude, longitude, latitude, currentDateInGMT8, currentDateInGMT8, 10, pageLimit, offset).Scan(&dealsWithin10KM)
+	} else {
+		dr.DB.Raw(sqlQueryStatement, userGUID, latitude, longitude, latitude, currentDateInGMT8, currentDateInGMT8, 10).Scan(&dealsWithin10KM)
+	}
 
 	type TotalDeal struct {
 		Total int `json:"total"`
@@ -272,6 +282,8 @@ func (dr *DealRepository) GetAllDealsForCategoryWithinValidRangeStartDateEndDate
 				ads.quota AS ads_quota,
 				ads.quota,
 				ads.status,
+				ads.grocer_exclusive,
+				ads.terms,
 				ads.created_at as deal_created_time,
 				ads.created_at,
 				ads.updated_at,
@@ -291,12 +303,16 @@ func (dr *DealRepository) GetAllDealsForCategoryWithinValidRangeStartDateEndDate
 	LEFT OUTER JOIN deal_cashbacks ON ads_guid = deal_cashbacks.deal_guid
 	GROUP BY ads_guid
 	HAVING total_deal_cashback < ads_quota AND total_user_deal_cashback < ads_perlimit
-	ORDER BY deal_created_time DESC 
-	LIMIT ?
-	OFFSET ?;`
+	ORDER BY deal_created_time DESC`
 
-	dr.DB.Raw(sqlQueryStatement, userGUID, latitude, longitude, latitude, currentDateInGMT8, currentDateInGMT8,
-		category, 10, pageLimit, offset).Scan(&deals)
+	if pageLimit != "" {
+		sqlQueryStatement = sqlQueryStatement + " LIMIT ? OFFSET ?"
+		dr.DB.Raw(sqlQueryStatement, userGUID, latitude, longitude, latitude, currentDateInGMT8, currentDateInGMT8,
+			category, 10, pageLimit, offset).Scan(&deals)
+	} else {
+		dr.DB.Raw(sqlQueryStatement, userGUID, latitude, longitude, latitude, currentDateInGMT8, currentDateInGMT8,
+			category, 10).Scan(&deals)
+	}
 
 	type TotalDeal struct {
 		Total int `json:"total"`
@@ -345,6 +361,8 @@ func (dr *DealRepository) GetUniqueSubCategoriesForDealsWithinValidRangeStartDat
 				ads.cashback_amount AS ads_cashback_amount,
 				ads.quota AS ads_quota,
 				ads.status AS ads_status,
+				ads.grocer_exclusive,
+				ads.terms,
 				ads.created_at as deal_created_time,
 				grocer_location.name AS nearest_grocer_name,
 				grocer_location.lat AS nearest_grocer_latitude,
@@ -416,6 +434,8 @@ func (dr *DealRepository) GetAllDealsForSubCategoryWithinValidRangeStartDateEndD
 				ads.quota AS ads_quota,
 				ads.quota,
 				ads.status,
+				ads.grocer_exclusive,
+				ads.terms,
 				ads.created_at as deal_created_time,
 				ads.created_at,
 				ads.updated_at,

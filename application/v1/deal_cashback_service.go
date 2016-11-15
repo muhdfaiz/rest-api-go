@@ -3,8 +3,10 @@ package v1
 import "bitbucket.org/cliqers/shoppermate-api/systems"
 
 type DealCashbackServiceInterface interface {
+	CountTotalNumberOfDealUserAddToList(userGUID string, dealGUID string) int
 	CreateDealCashbackAndShoppingListItem(userGUID string, dealCashbackData CreateDealCashback) *systems.ErrorData
-	CountTotalNumberUserAlreadyAddDealToList(userGUID string, dealGUID string) int
+	GetUserDealCashbackForUserShoppingList(userGUID string, shoppingListGUID string, pageNumber string,
+		pageLimit string, relations string) ([]*DealCashback, int)
 }
 
 type DealCashbackService struct {
@@ -44,8 +46,16 @@ func (dcs *DealCashbackService) CreateDealCashbackAndShoppingListItem(userGUID s
 	return nil
 }
 
-func (dcs *DealCashbackService) CountTotalNumberUserAlreadyAddDealToList(userGUID string, dealGUID string) int {
+func (dcs *DealCashbackService) CountTotalNumberOfDealUserAddToList(userGUID string, dealGUID string) int {
 	total := dcs.DealCashbackRepository.CountByDealGUIDAndUserGUID(dealGUID, userGUID)
 
 	return total
+}
+
+func (dcs *DealCashbackService) GetUserDealCashbackForUserShoppingList(userGUID string, shoppingListGUID string, pageNumber string,
+	pageLimit string, relations string) ([]*DealCashback, int) {
+
+	userDealCashbacks, totalUserDealCashbacks := dcs.DealCashbackRepository.GetByUserGUIDShoppingListGUIDAndTransactionGUIDEmpty(userGUID, shoppingListGUID, pageNumber, pageLimit, relations)
+
+	return userDealCashbacks, totalUserDealCashbacks
 }

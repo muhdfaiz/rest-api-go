@@ -121,6 +121,9 @@ func InitializeObjectAndSetRoutes(router *gin.Engine) *gin.Engine {
 	// Shopping List Item Repository
 	shoppingListItemRepository := &v1.ShoppingListItemRepository{DB: DB, DealService: dealService}
 
+	// Deal Cashback Transformer
+	dealCashbackTransformer := &v1.DealCashbackTransformer{}
+
 	// Deal Cashback Service
 	dealCashbackService := &v1.DealCashbackService{DealCashbackRepository: dealCashbackRepository, DealRepository: dealRepository,
 		DealCashbackFactory: dealCashbackFactory, ShoppingListItemFactory: shoppingListItemFactory}
@@ -168,7 +171,8 @@ func InitializeObjectAndSetRoutes(router *gin.Engine) *gin.Engine {
 		ShoppingListItemRepository: shoppingListItemRepository, ShoppingListItemImageRepository: shoppingListItemImageRepository}
 
 	// Deal Cashback Handler
-	dealCashbackHandler := v1.DealCashbackHandler{ShoppingListRepository: shoppingListRepository, DealCashbackService: dealCashbackService}
+	dealCashbackHandler := v1.DealCashbackHandler{ShoppingListRepository: shoppingListRepository, DealCashbackService: dealCashbackService,
+		DealCashbackTransformer: dealCashbackTransformer}
 
 	// Deal Handler
 	dealHandler := v1.DealHandler{DealService: dealService, DealTransformer: dealTransformer, ItemCategoryService: itemCategoryService,
@@ -248,9 +252,6 @@ func InitializeObjectAndSetRoutes(router *gin.Engine) *gin.Engine {
 			version1.POST("users/:guid/shopping_lists/:shopping_list_guid/items/:item_guid/images", shoppingListItemImageHandler.Create)
 			version1.DELETE("users/:guid/shopping_lists/:shopping_list_guid/items/:item_guid/images/:image_guids", shoppingListItemImageHandler.Delete)
 
-			// Deal Cashback Handler
-			version1.POST("users/:guid/deal_cashbacks", dealCashbackHandler.Create)
-
 			// Deal Handler
 			version1.GET("users/:guid/deals", dealHandler.ViewAllForRegisteredUser)
 			version1.GET("deals/:deal_guid", dealHandler.View)
@@ -261,6 +262,10 @@ func InitializeObjectAndSetRoutes(router *gin.Engine) *gin.Engine {
 
 			// Feature Deal (In Carousel) Handler
 			version1.GET("users/:guid/featured_deals", eventHandler.ViewAll)
+
+			// Deal Cashback Handler
+			version1.POST("users/:guid/deal_cashbacks", dealCashbackHandler.Create)
+			version1.GET("users/:guid/deal_cashbacks/shopping_lists/:shopping_list_guid", dealCashbackHandler.ViewByShoppingList)
 		}
 	}
 

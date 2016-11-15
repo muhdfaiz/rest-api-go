@@ -15,4 +15,8 @@ type DealCashback struct {
 
 	// Has One Deal Cashback Transaction
 	DealCashbackTransaction []*DealCashbackTransaction `json:"deal_cashback_transaction,omitempty" gorm:"ForeignKey:GUID;AssociationForeignKey:DealCashbackTransactionGUID"`
+
+	Deals         *Deal         `json:"deals,omitempty" gorm:"ForeignKey:GUID;AssociationForeignKey:DealGUID"`
+	Users         *User         `json:"users,omitempty" gorm:"ForeignKey:GUID;AssociationForeignKey:UserGUID"`
+	Shoppinglists *ShoppingList `json:"shopping_lists,omitempty" gorm:"ForeignKey:GUID;AssociationForeignKey:ShoppingListGUID"`
 }

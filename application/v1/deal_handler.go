@@ -41,13 +41,15 @@ func (dh *DealHandler) View(c *gin.Context) {
 	}
 
 	// Check If deal quota still available for the user.
-	total := dh.DealCashbackService.CountTotalNumberUserAlreadyAddDealToList(user.GUID, deal.GUID)
+	total := dh.DealCashbackService.CountTotalNumberOfDealUserAddToList(user.GUID, deal.GUID)
 
 	deal.CanAddTolist = 1
 
 	if total >= deal.Perlimit {
 		deal.CanAddTolist = 0
 	}
+
+	deal.RemainingAddToList = deal.Perlimit - total
 
 	c.JSON(http.StatusOK, gin.H{"data": deal})
 }

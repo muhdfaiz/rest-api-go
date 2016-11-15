@@ -6,6 +6,8 @@ type DealCashbackRepositoryInterface interface {
 	GetByDealGUIDAndUserGUID(dealGUID string, userGUID string) *DealCashback
 	CountByDealGUIDAndUserGUID(dealGUID string, userGUID string) int
 	CountByDealGUID(dealGUID string) int
+	GetByUserGUIDShoppingListGUIDAndTransactionGUIDEmpty(userGUID string, shoppingListGUID string, pageNumber string,
+		pageLimit string, relations string) ([]*DealCashback, int)
 }
 
 type DealCashbackRepository struct {
@@ -34,4 +36,26 @@ func (dcr *DealCashbackRepository) CountByDealGUID(dealGUID string) int {
 	dcr.DB.Model(&DealCashback{}).Where(&DealCashback{DealGUID: dealGUID}).Count(&totalDealCashback)
 
 	return totalDealCashback
+}
+
+func (dcr *DealCashbackRepository) GetByUserGUIDShoppingListGUIDAndTransactionGUIDEmpty(userGUID string, shoppingListGUID string, pageNumber string,
+	pageLimit string, relations string) ([]*DealCashback, int) {
+
+	dealCashbacks := []*DealCashback{}
+
+	offset := SetOffsetValue(pageNumber, pageLimit)
+
+	DB := dcr.DB.Model(&DealCashback{})
+
+	if relations != "" {
+		DB = LoadRelations(DB, relations)
+	}
+
+	DB.Where(DealCashback{UserGUID: userGUID, ShoppingListGUID: shoppingListGUID}).Where("deal_cashback_transaction_guid IS NULL").Offset(offset).Limit(pageLimit).Find(&dealCashbacks)
+
+	var totalDealCashback *int
+
+	dcr.DB.Model(&DealCashback{}).Where(DealCashback{UserGUID: userGUID, ShoppingListGUID: shoppingListGUID}).Where("deal_cashback_transaction_guid IS NULL").Count(&totalDealCashback)
+
+	return dealCashbacks, *totalDealCashback
 }

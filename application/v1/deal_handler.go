@@ -7,11 +7,12 @@ import (
 )
 
 type DealHandler struct {
-	DealService         DealServiceInterface
-	DealTransformer     DealTransformerInterface
-	ItemCategoryService ItemCategoryServiceInterface
-	DealCashbackService DealCashbackServiceInterface
-	UserRepository      UserRepositoryInterface
+	DealService               DealServiceInterface
+	DealTransformer           DealTransformerInterface
+	ItemCategoryService       ItemCategoryServiceInterface
+	DealCashbackService       DealCashbackServiceInterface
+	UserRepository            UserRepositoryInterface
+	ItemSubCategoryRepository ItemSubCategoryRepositoryInterface
 }
 
 // View function used to view deal details
@@ -138,8 +139,8 @@ func (dh *DealHandler) ViewAllForGuestUser(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": result})
 }
 
-// ViewAllGroupByCategory function used to retrieve all deals group by category
-func (dh *DealHandler) ViewAllGroupByCategory(c *gin.Context) {
+// ViewAndGroupByCategory function used to retrieve all deals group by category
+func (dh *DealHandler) ViewAndGroupByCategory(c *gin.Context) {
 	tokenData := c.MustGet("Token").(map[string]string)
 
 	// Retrieve user guid in url
@@ -178,8 +179,49 @@ func (dh *DealHandler) ViewAllGroupByCategory(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": dealCategories})
 }
 
-// ViewAllByCategory function used to retrieve all deals group by category
-func (dh *DealHandler) ViewAllByCategory(c *gin.Context) {
+// ViewByCategoryAndGroupBySubCategory function used to retrieve all deals by category and group by subcategory
+func (dh *DealHandler) ViewByCategoryAndGroupBySubCategory(c *gin.Context) {
+	tokenData := c.MustGet("Token").(map[string]string)
+
+	// Retrieve user guid in url
+	userGUID := c.Param("guid")
+
+	// If user GUID not match user GUID inside the token return error message
+	if tokenData["user_guid"] != userGUID {
+		c.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("view deals by category"))
+		return
+	}
+
+	// Validation Rules for query string parameters
+	queryStringValidationRules := map[string]string{
+		"latitude":  "required,latitude",
+		"longitude": "required,longitude",
+	}
+
+	// Validate query string
+	err := Validation.Validate(c.Request.URL.Query(), queryStringValidationRules)
+
+	// If validation error return error message
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, err)
+		return
+	}
+
+	// Retrieve user guid in url
+	categoryGUID := c.Param("category_guid")
+
+	// Retrieve query string parameters for latitude and longitude
+	latitude := c.Query("latitude")
+	longitude := c.Query("longitude")
+
+	// Retrieve deals group by category
+	dealsGroupBySubCategory := dh.DealService.GetAvailableDealsByCategoryGroupBySubCategoryForRegisteredUser(userGUID, categoryGUID, latitude, longitude, "", "", "")
+
+	c.JSON(http.StatusOK, gin.H{"data": dealsGroupBySubCategory})
+}
+
+// ViewByCategory function used to retrieve all deals for specific category
+func (dh *DealHandler) ViewByCategory(c *gin.Context) {
 	// Validation Rules for query string parameters
 	queryStringValidationRules := map[string]string{
 		"page_number": "numeric",
@@ -211,14 +253,14 @@ func (dh *DealHandler) ViewAllByCategory(c *gin.Context) {
 
 	// If user GUID not match user GUID inside the token return error message
 	if tokenData["user_guid"] != userGUID {
-		c.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("view deals by category"))
+		c.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("view all deals by category"))
 		return
 	}
 
 	// Retrieve category guid in url
 	categoryGUID := c.Param("category_guid")
 
-	dealCategory := dh.ItemCategoryService.GetItemCategoByGUID(categoryGUID)
+	dealCategory := dh.ItemCategoryService.GetItemCategoryByGUID(categoryGUID)
 
 	// If user GUID not match user GUID inside the token return error message
 	if dealCategory.GUID == "" {
@@ -228,6 +270,63 @@ func (dh *DealHandler) ViewAllByCategory(c *gin.Context) {
 
 	// Retrieve deals group by category
 	deals, totalDeal := dh.DealService.GetAvailableDealsByCategoryForRegisteredUser(userGUID, dealCategory.Name, latitude,
+		longitude, pageNumber, pageLimit, "")
+
+	result := dh.DealTransformer.transformCollection(c.Request, deals, totalDeal, pageLimit)
+
+	c.JSON(http.StatusOK, gin.H{"data": result})
+}
+
+// ViewAllBySubCategory function used to retrieve all deals group by subcategory
+func (dh *DealHandler) ViewBySubCategory(c *gin.Context) {
+	// Validation Rules for query string parameters
+	queryStringValidationRules := map[string]string{
+		"page_number": "numeric",
+		"page_limit":  "numeric",
+		"latitude":    "required,latitude",
+		"longitude":   "required,longitude",
+	}
+
+	// Validate query string
+	err := Validation.Validate(c.Request.URL.Query(), queryStringValidationRules)
+
+	// If validation error return error message
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, err)
+		return
+	}
+
+	// Retrieve query string parameters for latitude and longitude
+	latitude := c.Query("latitude")
+	longitude := c.Query("longitude")
+
+	pageNumber := c.DefaultQuery("page_number", "1")
+	pageLimit := c.DefaultQuery("page_limit", "-1")
+
+	tokenData := c.MustGet("Token").(map[string]string)
+
+	// Retrieve user guid in url
+	userGUID := c.Param("guid")
+
+	// If user GUID not match user GUID inside the token return error message
+	if tokenData["user_guid"] != userGUID {
+		c.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("view all deals by subcategory"))
+		return
+	}
+
+	// Retrieve sub category guid in url
+	subCategoryGUID := c.Param("subcategory_guid")
+
+	dealSubCategory := dh.ItemSubCategoryRepository.GetByGUID(subCategoryGUID)
+
+	// If user GUID not match user GUID inside the token return error message
+	if dealSubCategory.GUID == "" {
+		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("Deal Subcategory", "guid", subCategoryGUID))
+		return
+	}
+
+	// Retrieve deals group by category
+	deals, totalDeal := dh.DealService.GetAvailableDealsForSubCategoryForRegisteredUser(userGUID, subCategoryGUID, latitude,
 		longitude, pageNumber, pageLimit, "")
 
 	result := dh.DealTransformer.transformCollection(c.Request, deals, totalDeal, pageLimit)

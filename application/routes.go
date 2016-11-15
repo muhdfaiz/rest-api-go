@@ -109,7 +109,7 @@ func InitializeObjectAndSetRoutes(router *gin.Engine) *gin.Engine {
 	// Deal Service
 	dealService := &v1.DealService{DealRepository: dealRepository, LocationService: locationService, DealCashbackFactory: dealCashbackFactory,
 		ShoppingListItemFactory: shoppingListItemFactory, DealCashbackRepository: dealCashbackRepository, ItemRepository: itemRepository,
-		ItemCategoryService: itemCategoryService}
+		ItemCategoryService: itemCategoryService, ItemSubCategoryRepository: itemSubCategoryRepository}
 
 	// Deal Transformer
 	dealTransformer := &v1.DealTransformer{}
@@ -172,7 +172,7 @@ func InitializeObjectAndSetRoutes(router *gin.Engine) *gin.Engine {
 
 	// Deal Handler
 	dealHandler := v1.DealHandler{DealService: dealService, DealTransformer: dealTransformer, ItemCategoryService: itemCategoryService,
-		DealCashbackService: dealCashbackService, UserRepository: userRepository}
+		DealCashbackService: dealCashbackService, UserRepository: userRepository, ItemSubCategoryRepository: itemSubCategoryRepository}
 
 	// Grocer Handler
 	grocerHandler := v1.GrocerHandler{GrocerRepository: grocerRepository, GrocerTransformer: grocerTransformer}
@@ -254,8 +254,10 @@ func InitializeObjectAndSetRoutes(router *gin.Engine) *gin.Engine {
 			// Deal Handler
 			version1.GET("users/:guid/deals", dealHandler.ViewAllForRegisteredUser)
 			version1.GET("deals/:deal_guid", dealHandler.View)
-			version1.GET("users/:guid/deals/categories", dealHandler.ViewAllGroupByCategory)
-			version1.GET("users/:guid/deals/categories/:category_guid", dealHandler.ViewAllByCategory)
+			version1.GET("users/:guid/deals/categories", dealHandler.ViewAndGroupByCategory)
+			version1.GET("users/:guid/deals/categories/:category_guid", dealHandler.ViewByCategory)
+			version1.GET("users/:guid/deals/categories/:category_guid/subcategories", dealHandler.ViewByCategoryAndGroupBySubCategory)
+			version1.GET("users/:guid/deals/subcategories/:subcategory_guid", dealHandler.ViewBySubCategory)
 
 			// Feature Deal (In Carousel) Handler
 			version1.GET("users/:guid/featured_deals", eventHandler.ViewAll)

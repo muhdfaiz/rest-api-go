@@ -7,6 +7,7 @@ import (
 
 type DealCashbackFactoryInterface interface {
 	Create(userGUID string, data CreateDealCashback) (*DealCashback, *systems.ErrorData)
+	SetDealCashbackTransactionGUID(dealCashbackGUIDs []string, dealCashbackTransactionGUID string) *systems.ErrorData
 	DeleteByUserGUIDAndDealGUID(userGUID string, dealGUID string) *systems.ErrorData
 	DeleteByUserGUIDShoppingListGUIDAndDealGUID(userGUID string, shoppingListGUID string, dealGUID string) *systems.ErrorData
 }
@@ -32,6 +33,17 @@ func (dcf *DealCashbackFactory) Create(userGUID string, data CreateDealCashback)
 	}
 
 	return result.Value.(*DealCashback), nil
+}
+
+func (dcf *DealCashbackFactory) SetDealCashbackTransactionGUID(dealCashbackGUIDs []string, dealCashbackTransactionGUID string) *systems.ErrorData {
+	result := dcf.DB.Model(&DealCashback{}).Where("guid IN (?)", dealCashbackGUIDs).
+		Updates(map[string]interface{}{"deal_cashback_transaction_guid": dealCashbackTransactionGUID})
+
+	if result.Error != nil {
+		return Error.InternalServerError(result.Error, systems.DatabaseError)
+	}
+
+	return nil
 }
 
 func (dcf *DealCashbackFactory) DeleteByUserGUIDAndDealGUID(userGUID string, dealGUID string) *systems.ErrorData {

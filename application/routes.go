@@ -128,6 +128,14 @@ func InitializeObjectAndSetRoutes(router *gin.Engine) *gin.Engine {
 	dealCashbackService := &v1.DealCashbackService{DealCashbackRepository: dealCashbackRepository, DealRepository: dealRepository,
 		DealCashbackFactory: dealCashbackFactory, ShoppingListItemFactory: shoppingListItemFactory, DealService: dealService}
 
+	// Deal Cashback Transaction Status
+	dealCashbackTransactionStatusRepository := &v1.DealCashbackTransactionStatusRepository{DB: DB}
+
+	// Deal Cashback Transaction
+	//dealCashbackTransactionRepository := &v1.DealCashbackTransactionRepository{DB: DB}
+	dealCashbackTransactionService := &v1.DealCashbackTransactionService{AmazonS3FileSystem: amazonS3FileSystem}
+	dealCashbackTransactionFactory := &v1.DealCashbackTransactionFactory{DB: DB, DealCashbackTransactionStatusRepository: dealCashbackTransactionStatusRepository}
+
 	// Event Objects
 	eventRepository := &v1.EventRepository{DB: DB}
 	eventService := &v1.EventService{EventRepository: eventRepository, DealCashbackRepository: dealCashbackRepository}
@@ -183,6 +191,10 @@ func InitializeObjectAndSetRoutes(router *gin.Engine) *gin.Engine {
 
 	// Event Handler
 	eventHandler := v1.EventHandler{EventService: eventService}
+
+	// Deal Cashback Transaction Handler
+	dealCashbackTransactionHandler := v1.DealCashbackTransactionHandler{DealCashbackTransactionService: dealCashbackTransactionService,
+		DealCashbackTransactionFactory: dealCashbackTransactionFactory, DealCashbackFactory: dealCashbackFactory}
 
 	// V1 Routes
 	version1 := router.Group("/v1")
@@ -266,6 +278,9 @@ func InitializeObjectAndSetRoutes(router *gin.Engine) *gin.Engine {
 			// Deal Cashback Handler
 			version1.POST("users/:guid/deal_cashbacks", dealCashbackHandler.Create)
 			version1.GET("users/:guid/deal_cashbacks/shopping_lists/:shopping_list_guid", dealCashbackHandler.ViewByShoppingList)
+
+			// Deal Cashback Transaction
+			version1.POST("users/:guid/deal_cashbacks/:deal_cashback_guids/transactions", dealCashbackTransactionHandler.Create)
 		}
 	}
 

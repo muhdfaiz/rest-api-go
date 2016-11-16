@@ -13,6 +13,8 @@ type ShoppingListItemFactoryInterface interface {
 		data map[string]interface{}) *systems.ErrorData
 	UpdateByUserGUIDAndShoppingListGUID(userGUID string, shoppingListGUID string, data map[string]interface{}) *systems.ErrorData
 	UpdateByUserGUIDAndDealGUID(userGUID string, dealGUID string, data map[string]interface{}) *systems.ErrorData
+	UpdateByUserGUIDShoppingListGUIDAndDealGUID(userGUID string, shoppingListGUID string, dealGUID string,
+		data map[string]interface{}) *systems.ErrorData
 	DeleteByGUID(guid string) *systems.ErrorData
 	DeleteByShoppingListGUID(shoppingListGUID string) *systems.ErrorData
 	DeleteByUserGUID(userGUID string) *systems.ErrorData
@@ -165,6 +167,32 @@ func (slif *ShoppingListItemFactory) UpdateByUserGUIDAndDealGUID(userGUID string
 	}
 
 	result := slif.DB.Model(&ShoppingListItem{}).Where(&ShoppingListItem{UserGUID: userGUID, DealGUID: &dealGUID}).
+		Updates(updateData)
+
+	if result.Error != nil {
+		return Error.InternalServerError(result.Error, systems.DatabaseError)
+	}
+
+	return nil
+}
+
+// UpdateByUserGUIDShoppingListGUIDAndDealGUID function used to update user shopping list item by user GUID and deal GUID
+func (slif *ShoppingListItemFactory) UpdateByUserGUIDShoppingListGUIDAndDealGUID(userGUID string, shoppingListGUID string, dealGUID string,
+	data map[string]interface{}) *systems.ErrorData {
+
+	updateData := map[string]interface{}{}
+
+	for key, value := range data {
+		if data, ok := value.(string); ok && value.(string) != "" {
+			updateData[snaker.CamelToSnake(key)] = data
+		}
+
+		if data, ok := value.(int); ok {
+			updateData[snaker.CamelToSnake(key)] = data
+		}
+	}
+
+	result := slif.DB.Model(&ShoppingListItem{}).Where(&ShoppingListItem{UserGUID: userGUID, ShoppingListGUID: shoppingListGUID, DealGUID: &dealGUID}).
 		Updates(updateData)
 
 	if result.Error != nil {

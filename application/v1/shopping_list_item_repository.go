@@ -126,7 +126,7 @@ func (slir *ShoppingListItemRepository) GetUserShoppingListItem(userGUID string,
 
 			// If user shopping list item was added from deal and not added to cart, check deal expired or not
 			if userShopppingListItem.AddedFromDeal == 1 && userShopppingListItem.AddedToCart == 0 {
-				slir.DealService.RemoveDealCashbackAndSetItemDealExpired(userGUID, *userShopppingListItem.DealGUID)
+				slir.DealService.RemoveDealCashbackAndSetItemDealExpired(userGUID, shoppingListGUID, *userShopppingListItem.DealGUID)
 			}
 		}
 
@@ -204,7 +204,7 @@ func (slir *ShoppingListItemRepository) GetUserShoppingListItemNotAddedToCart(us
 
 			// If user shopping list item was added from deal and not added to cart, check deal expired or not
 			if userShopppingListItem.AddedFromDeal == 1 && userShopppingListItem.AddedToCart == 0 {
-				slir.DealService.RemoveDealCashbackAndSetItemDealExpired(userGUID, *userShopppingListItem.DealGUID)
+				slir.DealService.RemoveDealCashbackAndSetItemDealExpired(userGUID, shoppingListGUID, *userShopppingListItem.DealGUID)
 			}
 		}
 

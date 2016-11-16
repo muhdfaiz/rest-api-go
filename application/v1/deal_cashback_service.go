@@ -1,6 +1,11 @@
 package v1
 
-import "bitbucket.org/cliqers/shoppermate-api/systems"
+import (
+	"fmt"
+	"time"
+
+	"bitbucket.org/cliqers/shoppermate-api/systems"
+)
 
 type DealCashbackServiceInterface interface {
 	CountTotalNumberOfDealUserAddToList(userGUID string, dealGUID string) int
@@ -14,6 +19,7 @@ type DealCashbackService struct {
 	ShoppingListItemFactory ShoppingListItemFactoryInterface
 	DealCashbackRepository  DealCashbackRepositoryInterface
 	DealCashbackFactory     DealCashbackFactoryInterface
+	DealService             DealServiceInterface
 }
 
 // CreateDealCashbackAndShoppingListItem function used to create deal cashback and store new shopping list item based on deal item
@@ -55,7 +61,32 @@ func (dcs *DealCashbackService) CountTotalNumberOfDealUserAddToList(userGUID str
 func (dcs *DealCashbackService) GetUserDealCashbackForUserShoppingList(userGUID string, shoppingListGUID string, pageNumber string,
 	pageLimit string, relations string) ([]*DealCashback, int) {
 
-	userDealCashbacks, totalUserDealCashbacks := dcs.DealCashbackRepository.GetByUserGUIDShoppingListGUIDAndTransactionGUIDEmpty(userGUID, shoppingListGUID, pageNumber, pageLimit, relations)
+	userDealCashbacks, totalUserDealCashbacks := dcs.DealCashbackRepository.GetByUserGUIDShoppingListGUIDAndTransactionGUIDEmpty(userGUID, shoppingListGUID, pageNumber, pageLimit, "deals")
+
+	currentDateInGMT8 := time.Now().UTC().Add(time.Hour * 8)
+
+	for _, userDealCashback := range userDealCashbacks {
+		diffInDays := currentDateInGMT8.Sub(userDealCashback.Deals.EndDate).Hours() / 24
+		fmt.Println(diffInDays)
+
+		// When the deal already expired more than 7 days
+		if diffInDays > 7 {
+			dcs.DealService.RemoveDealCashbackAndSetItemDealExpired(userGUID, shoppingListGUID, userDealCashback.Deals.GUID)
+		}
+
+	}
+	relations = relations + ",deals"
+
+	userDealCashbacks, totalUserDealCashbacks = dcs.DealCashbackRepository.GetByUserGUIDShoppingListGUIDAndTransactionGUIDEmpty(userGUID, shoppingListGUID, pageNumber, pageLimit, relations)
+
+	for key, userDealCashback := range userDealCashbacks {
+		diffInDays := currentDateInGMT8.Sub(userDealCashback.Deals.EndDate).Hours() / 24
+
+		// When the deal already expired not more than 7 days
+		if diffInDays > 0 && diffInDays < 7 {
+			userDealCashbacks[key].Expired = 1
+		}
+	}
 
 	return userDealCashbacks, totalUserDealCashbacks
 }

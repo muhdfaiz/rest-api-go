@@ -3,7 +3,7 @@ package v1
 import "time"
 
 type EventServiceInterface interface {
-	GetAllIncludingValidDeals(userGUID string) []*Event
+	GetAllIncludingDeals(userGUID string) []*Event
 }
 
 type EventService struct {
@@ -11,7 +11,7 @@ type EventService struct {
 	DealCashbackRepository DealCashbackRepositoryInterface
 }
 
-func (es *EventService) GetAllIncludingValidDeals(userGUID string) []*Event {
+func (es *EventService) GetAllIncludingDeals(userGUID string) []*Event {
 	currentDateInGMT8 := time.Now().UTC().Add(time.Hour * 8).Format("2006-01-02")
 
 	events := es.EventRepository.GetAllIncludingRelations(currentDateInGMT8)
@@ -38,6 +38,14 @@ func (es *EventService) GetAllIncludingValidDeals(userGUID string) []*Event {
 			totalNumberOfUserCashback := es.DealCashbackRepository.CountByDealGUIDAndUserGUID(deal.GUID, userGUID)
 
 			if totalNumberOfUserCashback < deal.Perlimit {
+				deal.CanAddTolist = 1
+
+				if totalNumberOfUserCashback >= deal.Perlimit {
+					deal.CanAddTolist = 0
+				}
+
+				deal.NumberOfDealAddedToList = totalNumberOfUserCashback
+				deal.RemainingAddToList = deal.Perlimit - totalNumberOfUserCashback
 				filteredDealsUserLimit = append(filteredDealsUserLimit, deal)
 			}
 		}

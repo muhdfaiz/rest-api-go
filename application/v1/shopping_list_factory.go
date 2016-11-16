@@ -36,7 +36,7 @@ func (slf *ShoppingListFactory) Create(userGUID string, data CreateShoppingList)
 // Update function used to update shopping list
 // Require device uuid. Must provide in url
 func (slf *ShoppingListFactory) Update(userGUID string, shoppingListGUID string, data UpdateShoppingList) *systems.ErrorData {
-	updateData := map[string]string{}	
+	updateData := map[string]string{}
 
 	for key, value := range structs.Map(data) {
 		if value != "" {

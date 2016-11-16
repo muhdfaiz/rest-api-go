@@ -9,6 +9,7 @@ type DealCashback struct {
 	ShoppingListGUID            string     `json:"shopping_list_guid"`
 	DealGUID                    string     `json:"deal_guid"`
 	DealCashbackTransactionGUID *string    `json:"deal_cashback_transaction_guid"`
+	Expired                     int        `json:"expired"`
 	CreatedAt                   time.Time  `json:"created_at"`
 	UpdatedAt                   time.Time  `json:"updated_at"`
 	DeletedAt                   *time.Time `json:"deleted_at"`

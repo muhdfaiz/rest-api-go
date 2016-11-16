@@ -22,7 +22,7 @@ func (eh *EventHandler) ViewAll(c *gin.Context) {
 		return
 	}
 
-	events := eh.EventService.GetAllIncludingValidDeals(userGUID)
+	events := eh.EventService.GetAllIncludingDeals(userGUID)
 
 	c.JSON(http.StatusOK, gin.H{"data": events})
 }

@@ -27,7 +27,8 @@ type Deal struct {
 	Status                    string     `json:"status"`
 	GrocerExclusive           int        `json:"grocer_exclusive"`
 	Terms                     string     `json:"terms"`
-	AddedToList               int        `json:"added_to_list"`
+	NumberOfDealAddedToList   int        `json:"number_of_deal_added_to_list"`
+	CanAddTolist              int        `json:"can_add_to_list"`
 	RemainingAddToList        int        `json:"remaining_add_to_list"`
 	NearestGrocerDistanceInKm float64    `json:"nearest_grocer_distance_in_km,omitempty"`
 	NearestGrocerName         string     `json:"nearest_grocer_name,omitempty"`
@@ -82,6 +83,7 @@ type Ads struct {
 	Status                    string     `json:"status"`
 	GrocerExclusive           int        `json:"grocer_exclusive"`
 	Terms                     string     `json:"terms"`
+	NumberOfDealAddedToList   int        `json:"number_of_deal_added_to_list"`
 	CanAddTolist              int        `json:"can_add_to_list"`
 	RemainingAddToList        int        `json:"remaining_add_to_list"`
 	NearestGrocerDistanceInKm float64    `json:"nearest_grocer_distance_in_km,omitempty"`

@@ -8,6 +8,7 @@ import (
 type DealCashbackFactoryInterface interface {
 	Create(userGUID string, data CreateDealCashback) (*DealCashback, *systems.ErrorData)
 	DeleteByUserGUIDAndDealGUID(userGUID string, dealGUID string) *systems.ErrorData
+	DeleteByUserGUIDShoppingListGUIDAndDealGUID(userGUID string, shoppingListGUID string, dealGUID string) *systems.ErrorData
 }
 
 // DealCashbackFactory will handle all task related to create, update and delete user deal cashback
@@ -34,7 +35,17 @@ func (dcf *DealCashbackFactory) Create(userGUID string, data CreateDealCashback)
 }
 
 func (dcf *DealCashbackFactory) DeleteByUserGUIDAndDealGUID(userGUID string, dealGUID string) *systems.ErrorData {
-	result := dcf.DB.Where("user_guid = ? AND deal_guid = ?", userGUID, dealGUID).Delete(&DealCashback{})
+	result := dcf.DB.Model(&DealCashback{}).Where(&DealCashback{UserGUID: userGUID, DealGUID: dealGUID}).Delete(&DealCashback{})
+
+	if result.Error != nil {
+		return Error.InternalServerError(result.Error, systems.DatabaseError)
+	}
+
+	return nil
+}
+
+func (dcf *DealCashbackFactory) DeleteByUserGUIDShoppingListGUIDAndDealGUID(userGUID string, shoppingListGUID string, dealGUID string) *systems.ErrorData {
+	result := dcf.DB.Model(&DealCashback{}).Where(&DealCashback{UserGUID: userGUID, ShoppingListGUID: shoppingListGUID, DealGUID: dealGUID}).Delete(&DealCashback{})
 
 	if result.Error != nil {
 		return Error.InternalServerError(result.Error, systems.DatabaseError)

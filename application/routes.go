@@ -126,7 +126,7 @@ func InitializeObjectAndSetRoutes(router *gin.Engine) *gin.Engine {
 
 	// Deal Cashback Service
 	dealCashbackService := &v1.DealCashbackService{DealCashbackRepository: dealCashbackRepository, DealRepository: dealRepository,
-		DealCashbackFactory: dealCashbackFactory, ShoppingListItemFactory: shoppingListItemFactory}
+		DealCashbackFactory: dealCashbackFactory, ShoppingListItemFactory: shoppingListItemFactory, DealService: dealService}
 
 	// Event Objects
 	eventRepository := &v1.EventRepository{DB: DB}

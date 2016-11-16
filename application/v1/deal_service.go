@@ -12,7 +12,7 @@ import (
 type DealServiceInterface interface {
 	GetDealsBasedOnUserShoppingListItem(userGUID string, shopppingListItems *ShoppingListItem, latitude string,
 		longitude string, dealsCollection []*Deal) []*Deal
-	RemoveDealCashbackAndSetItemDealExpired(userGUID string, dealGUID string) *systems.ErrorData
+	RemoveDealCashbackAndSetItemDealExpired(userGUID string, shoppingListGUID string, dealGUID string) *systems.ErrorData
 	ViewDealDetails(dealGUID string, relations string) *Ads
 	GetAvailableDealsForGuestUser(latitude string, longitude string, pageNumber string, pageLimit string, relations string) ([]*Deal, int)
 	GetAvailableDealsForRegisteredUser(userGUID string, latitude string, longitude string, pageNumber string, pageLimit string,
@@ -36,6 +36,7 @@ type DealService struct {
 	ItemCategoryService       ItemCategoryServiceInterface
 	ItemSubCategoryRepository ItemSubCategoryRepositoryInterface
 	GrocerRepository          GrocerRepositoryInterface
+	DealCashbackService       DealCashbackServiceInterface
 }
 
 func (ds *DealService) GetDealsBasedOnUserShoppingListItem(userGUID string, shoppingListItem *ShoppingListItem,
@@ -159,7 +160,7 @@ func (ds *DealService) GetDealsBasedOnUserShoppingListItem(userGUID string, shop
 	return filteredDealsByNegativeTags
 }
 
-func (ds *DealService) RemoveDealCashbackAndSetItemDealExpired(userGUID string, dealGUID string) *systems.ErrorData {
+func (ds *DealService) RemoveDealCashbackAndSetItemDealExpired(userGUID string, shoppingListGUID string, dealGUID string) *systems.ErrorData {
 	currentDateInGMT8 := time.Now().UTC().Add(time.Hour * 8).Format("2006-01-02")
 
 	deal := ds.DealRepository.GetDealByGUIDAndValidStartEndDate(dealGUID, currentDateInGMT8)
@@ -167,7 +168,7 @@ func (ds *DealService) RemoveDealCashbackAndSetItemDealExpired(userGUID string, 
 	// If deal already expired
 	if deal.GUID == "" {
 		// Delete user deal cashback
-		err := ds.DealCashbackFactory.DeleteByUserGUIDAndDealGUID(userGUID, dealGUID)
+		err := ds.DealCashbackFactory.DeleteByUserGUIDShoppingListGUIDAndDealGUID(userGUID, shoppingListGUID, dealGUID)
 
 		if err != nil {
 			return err
@@ -177,7 +178,7 @@ func (ds *DealService) RemoveDealCashbackAndSetItemDealExpired(userGUID string, 
 		data := map[string]interface{}{"deal_expired": 1}
 
 		// Set user shopping list item deal expired to 1(true)
-		err = ds.ShoppingListItemFactory.UpdateByUserGUIDAndDealGUID(userGUID, dealGUID, data)
+		err = ds.ShoppingListItemFactory.UpdateByUserGUIDShoppingListGUIDAndDealGUID(userGUID, shoppingListGUID, dealGUID, data)
 
 		if err != nil {
 			return err
@@ -232,6 +233,17 @@ func (ds *DealService) GetAvailableDealsForRegisteredUser(userGUID string, latit
 		currentDateInGMT8, pageNumber, pageLimit, relations)
 
 	for key, deal := range deals {
+		deals[key].CanAddTolist = 1
+
+		// Check If deal quota still available for the user.
+		total := ds.DealCashbackRepository.CountByDealGUIDAndUserGUID(deal.GUID, userGUID)
+
+		if total >= deals[key].Perlimit {
+			deals[key].CanAddTolist = 0
+		}
+
+		deals[key].NumberOfDealAddedToList = total
+		deals[key].RemainingAddToList = deal.Perlimit - total
 		deals[key].Items = ds.ItemRepository.GetByID(deal.ItemID, "Categories,Subcategories")
 		deals[key].Grocerexclusives = ds.GrocerRepository.GetByID(deal.GrocerExclusive, "")
 	}
@@ -251,16 +263,27 @@ func (ds *DealService) GetAvailableDealsGroupByCategoryForRegisteredUser(userGUI
 	uniqueDealCategories, _ := ds.ItemCategoryService.GetItemCategories()
 
 	for key, uniqueDealCategory := range uniqueDealCategories {
-		validDeals, totalDeal := ds.DealRepository.GetAllDealsForCategoryWithinValidRangeStartDateEndDateUserLimitAndQuota(userGUID, uniqueDealCategory.Name, latitude1InFLoat64, longitude1InFLoat64,
+		deals, totalDeal := ds.DealRepository.GetAllDealsForCategoryWithinValidRangeStartDateEndDateUserLimitAndQuota(userGUID, uniqueDealCategory.Name, latitude1InFLoat64, longitude1InFLoat64,
 			currentDateInGMT8, "1", dealLimitPerCategory, relations)
 
-		if len(validDeals) > 0 {
-			uniqueDealCategories[key].Deals = validDeals
+		if len(deals) > 0 {
+			uniqueDealCategories[key].Deals = deals
 			uniqueDealCategories[key].TotalDeals = totalDeal
 		}
 
-		for key, validDeal := range validDeals {
-			validDeals[key].Items = ds.ItemRepository.GetByID(validDeal.ItemID, "Categories,Subcategories")
+		for key, deal := range deals {
+			deals[key].CanAddTolist = 1
+
+			// Check If deal quota still available for the user.
+			total := ds.DealCashbackRepository.CountByDealGUIDAndUserGUID(deal.GUID, userGUID)
+
+			if total >= deals[key].Perlimit {
+				deals[key].CanAddTolist = 0
+			}
+
+			deals[key].NumberOfDealAddedToList = total
+			deals[key].RemainingAddToList = deal.Perlimit - total
+			deals[key].Items = ds.ItemRepository.GetByID(deal.ItemID, "Categories,Subcategories")
 		}
 	}
 
@@ -290,6 +313,17 @@ func (ds *DealService) GetAvailableDealsByCategoryGroupBySubCategoryForRegistere
 		}
 
 		for key, deal := range deals {
+			deals[key].CanAddTolist = 1
+
+			// Check If deal quota still available for the user.
+			total := ds.DealCashbackRepository.CountByDealGUIDAndUserGUID(deal.GUID, userGUID)
+
+			if total >= deals[key].Perlimit {
+				deals[key].CanAddTolist = 0
+			}
+
+			deals[key].NumberOfDealAddedToList = total
+			deals[key].RemainingAddToList = deal.Perlimit - total
 			deals[key].Items = ds.ItemRepository.GetByID(deal.ItemID, "Categories,Subcategories")
 		}
 	}
@@ -311,6 +345,17 @@ func (ds *DealService) GetAvailableDealsByCategoryForRegisteredUser(userGUID str
 		currentDateInGMT8, pageNumber, pageLimit, relations)
 
 	for key, deal := range deals {
+		deals[key].CanAddTolist = 1
+
+		// Check If deal quota still available for the user.
+		total := ds.DealCashbackRepository.CountByDealGUIDAndUserGUID(deal.GUID, userGUID)
+
+		if total >= deals[key].Perlimit {
+			deals[key].CanAddTolist = 0
+		}
+
+		deals[key].NumberOfDealAddedToList = total
+		deals[key].RemainingAddToList = deal.Perlimit - total
 		deals[key].Items = ds.ItemRepository.GetByID(deal.ItemID, "Categories,Subcategories")
 	}
 
@@ -331,6 +376,17 @@ func (ds *DealService) GetAvailableDealsForSubCategoryForRegisteredUser(userGUID
 		currentDateInGMT8, pageNumber, pageLimit, relations)
 
 	for key, deal := range deals {
+		deals[key].CanAddTolist = 1
+
+		// Check If deal quota still available for the user.
+		total := ds.DealCashbackRepository.CountByDealGUIDAndUserGUID(deal.GUID, userGUID)
+
+		if total >= deals[key].Perlimit {
+			deals[key].CanAddTolist = 0
+		}
+
+		deals[key].NumberOfDealAddedToList = total
+		deals[key].RemainingAddToList = deal.Perlimit - total
 		deals[key].Items = ds.ItemRepository.GetByID(deal.ItemID, "Categories,Subcategories")
 	}
 

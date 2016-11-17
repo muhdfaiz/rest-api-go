@@ -69,6 +69,17 @@ func (ds *DealService) GetDealsBasedOnUserShoppingListItem(userGUID string, shop
 		}
 
 		if dealAlreadyExistInOtherItem == false {
+			deal.CanAddTolist = 1
+
+			// Check If deal quota still available for the user.
+			total := ds.DealCashbackRepository.CountByDealGUIDAndUserGUID(deal.GUID, userGUID)
+
+			if total >= deal.Perlimit {
+				deal.CanAddTolist = 0
+			}
+
+			deal.NumberOfDealAddedToList = total
+			deal.RemainingAddToList = deal.Perlimit - total
 			filteredDealsUniqueForEachShoppingList = append(filteredDealsUniqueForEachShoppingList, deal)
 		}
 	}

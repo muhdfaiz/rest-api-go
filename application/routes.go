@@ -128,13 +128,23 @@ func InitializeObjectAndSetRoutes(router *gin.Engine) *gin.Engine {
 	dealCashbackService := &v1.DealCashbackService{DealCashbackRepository: dealCashbackRepository, DealRepository: dealRepository,
 		DealCashbackFactory: dealCashbackFactory, ShoppingListItemFactory: shoppingListItemFactory, DealService: dealService}
 
-	// Deal Cashback Transaction Status
-	dealCashbackTransactionStatusRepository := &v1.DealCashbackTransactionStatusRepository{DB: DB}
+	// Transaction Status
+	transactionStatusRepository := &v1.TransactionStatusRepository{DB: DB}
+
+	// Transaction Type
+	transactionTypeRepository := &v1.TransactionTypeRepository{DB: DB}
+
+	// Transaction
+	transactionRepository := &v1.TransactionRepository{DB: DB}
+	transactionFactory := &v1.TransactionFactory{DB: DB, TransactionStatusRepository: transactionStatusRepository}
 
 	// Deal Cashback Transaction
 	//dealCashbackTransactionRepository := &v1.DealCashbackTransactionRepository{DB: DB}
-	dealCashbackTransactionService := &v1.DealCashbackTransactionService{AmazonS3FileSystem: amazonS3FileSystem}
-	dealCashbackTransactionFactory := &v1.DealCashbackTransactionFactory{DB: DB, DealCashbackTransactionStatusRepository: dealCashbackTransactionStatusRepository}
+	dealCashbackTransactionFactory := &v1.DealCashbackTransactionFactory{DB: DB}
+	dealCashbackTransactionService := &v1.DealCashbackTransactionService{AmazonS3FileSystem: amazonS3FileSystem,
+		DealCashbackFactory: dealCashbackFactory, DealCashbackRepository: dealCashbackRepository, TransactionFactory: transactionFactory,
+		DealCashbackTransactionFactory: dealCashbackTransactionFactory, DealRepository: dealRepository,
+		TransactionTypeRepository: transactionTypeRepository, TransactionRepository: transactionRepository}
 
 	// Event Objects
 	eventRepository := &v1.EventRepository{DB: DB}
@@ -194,7 +204,7 @@ func InitializeObjectAndSetRoutes(router *gin.Engine) *gin.Engine {
 
 	// Deal Cashback Transaction Handler
 	dealCashbackTransactionHandler := v1.DealCashbackTransactionHandler{DealCashbackTransactionService: dealCashbackTransactionService,
-		DealCashbackTransactionFactory: dealCashbackTransactionFactory, DealCashbackFactory: dealCashbackFactory}
+		DealCashbackFactory: dealCashbackFactory, DealCashbackRepository: dealCashbackRepository}
 
 	// V1 Routes
 	version1 := router.Group("/v1")

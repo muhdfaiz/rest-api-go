@@ -3,6 +3,7 @@ package v1
 import "github.com/jinzhu/gorm"
 
 type DealCashbackRepositoryInterface interface {
+	GetByGUID(GUID string) *DealCashback
 	GetByDealGUIDAndUserGUID(dealGUID string, userGUID string) *DealCashback
 	CountByDealGUIDAndUserGUID(dealGUID string, userGUID string) int
 	CountByDealGUID(dealGUID string) int
@@ -12,6 +13,14 @@ type DealCashbackRepositoryInterface interface {
 
 type DealCashbackRepository struct {
 	DB *gorm.DB
+}
+
+func (dcr *DealCashbackRepository) GetByGUID(GUID string) *DealCashback {
+	dealCashback := &DealCashback{}
+
+	dcr.DB.Model(&DealCashback{}).Where(DealCashback{GUID: GUID}).Find(&dealCashback)
+
+	return dealCashback
 }
 
 func (dcr *DealCashbackRepository) GetByDealGUIDAndUserGUID(dealGUID string, userGUID string) *DealCashback {

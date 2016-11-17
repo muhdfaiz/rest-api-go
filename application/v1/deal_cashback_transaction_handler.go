@@ -3,7 +3,6 @@ package v1
 import (
 	"net/http"
 	"strconv"
-	"strings"
 
 	"bitbucket.org/cliqers/shoppermate-api/systems"
 
@@ -12,8 +11,8 @@ import (
 
 type DealCashbackTransactionHandler struct {
 	DealCashbackTransactionService DealCashbackTransactionServiceInterface
-	DealCashbackTransactionFactory DealCashbackTransactionFactoryInterface
 	DealCashbackFactory            DealCashbackFactoryInterface
+	DealCashbackRepository         DealCashbackRepositoryInterface
 }
 
 func (dcth *DealCashbackTransactionHandler) Create(c *gin.Context) {
@@ -46,35 +45,16 @@ func (dcth *DealCashbackTransactionHandler) Create(c *gin.Context) {
 		return
 	}
 
-	// Upload shopping list item images
-	uploadedReceipt, err := dcth.DealCashbackTransactionService.UploadReceipt(receipt[0])
+	// Retrieve shopping list item image guid in url
+	dealCashbackGUIDs := c.Param("deal_cashback_guids")
+
+	relations := "transactiontypes,transactionstatuses,dealcashbacktransactions,dealcashbacktransactions.dealcashbacks,dealcashbacktransactions.dealcashbacks.deals"
+
+	result, err := dcth.DealCashbackTransactionService.CreateTransaction(receipt[0], userGUID, dealCashbackGUIDs, relations)
 
 	if err != nil {
 		errorCode, _ := strconv.Atoi(err.Error.Status)
 		c.JSON(errorCode, err)
-		return
-	}
-
-	// Store uploaded shopping list item image into database
-	result, err := dcth.DealCashbackTransactionFactory.Create(userGUID, uploadedReceipt)
-
-	//Return error message if failed to store uploaded shopping list item image into database
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, err)
-		return
-	}
-
-	// Retrieve shopping list item image guid in url
-	dealCashbackGUIDs := c.Param("deal_cashback_guids")
-
-	// Split on comma.
-	splitDealCashbackGUID := strings.Split(dealCashbackGUIDs, ",")
-
-	err = dcth.DealCashbackFactory.SetDealCashbackTransactionGUID(splitDealCashbackGUID, result.GUID)
-
-	//Return error message if failed to store uploaded shopping list item image into database
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, err)
 		return
 	}
 

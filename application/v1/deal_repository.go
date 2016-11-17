@@ -3,6 +3,7 @@ package v1
 import "github.com/jinzhu/gorm"
 
 type DealRepositoryInterface interface {
+	SumCashbackAmount(dealGUIDs []string) float32
 	GetDealsByCategoryAndValidStartEndDate(todayDateInGMT8 string, shoppingListItem *ShoppingListItem) []*Deal
 	GetDealsByValidStartEndDate(todayDateInGMT8 string) []*Deal
 	GetDealByGUID(dealGUID string) *Deal
@@ -23,6 +24,18 @@ type DealRepositoryInterface interface {
 type DealRepository struct {
 	DB                    *gorm.DB
 	GrocerLocationService GrocerLocationServiceInterface
+}
+
+func (dr *DealRepository) SumCashbackAmount(dealGUIDs []string) float32 {
+	type Ads struct {
+		TotalCashbackAmount float32 `json:"total_cashback_amount"`
+	}
+
+	deal := &Ads{}
+
+	dr.DB.Model(&Ads{}).Select("sum(cashback_amount) as total_cashback_amount").Where("guid in (?)", dealGUIDs).Find(&deal)
+
+	return deal.TotalCashbackAmount
 }
 
 // GetDealsByCategoryAndValidStartEndDate used to retrieve deals by category and between start date & end date

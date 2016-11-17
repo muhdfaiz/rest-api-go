@@ -6,8 +6,8 @@ import (
 	"os"
 
 	"github.com/elgs/gostrgen"
+	"github.com/rs/xid"
 	uuid "github.com/satori/go.uuid"
-	"github.com/ventu-io/go-shortid"
 )
 
 // Helpers Struct
@@ -33,9 +33,7 @@ func (h *Helpers) GenerateUUID() string {
 }
 
 func (h *Helpers) GenerateUniqueShortID() string {
-	sid, _ := shortid.New(1, shortid.DefaultABC, 2342)
-
-	uniqueShortID, _ := sid.Generate()
+	uniqueShortID := xid.New().String()
 
 	return uniqueShortID
 }

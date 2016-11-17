@@ -20,6 +20,7 @@ func Up_20161005104852(txn *sql.Tx) {
         added_from_deal int(1) NOT NULL DEFAULT 0,
         deal_guid varchar(40) DEFAULT NULL,
         cashback_amount decimal(4,2) DEFAULT NULL,
+        deal_expired int(1) DEFAULT 0,
         add_to_cart int(1) DEFAULT 0 NOT NULL,
         created_at timestamp NULL DEFAULT NULL,
         updated_at timestamp NULL DEFAULT NULL,

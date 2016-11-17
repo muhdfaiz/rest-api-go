@@ -6,25 +6,22 @@ import (
 )
 
 type DealCashbackTransactionFactoryInterface interface {
-	Create(userGUID string, images map[string]string) (*DealCashbackTransaction, *systems.ErrorData)
+	Create(userGUID string, transactionGUID, receiptURL string) (*DealCashbackTransaction, *systems.ErrorData)
 }
 
 type DealCashbackTransactionFactory struct {
-	DB                                      *gorm.DB
-	DealCashbackTransactionStatusRepository DealCashbackTransactionStatusRepositoryInterface
+	DB *gorm.DB
 }
 
-func (dctf *DealCashbackTransactionFactory) Create(userGUID string, image map[string]string) (*DealCashbackTransaction, *systems.ErrorData) {
-	dealCashbackTransactionStatus := dctf.DealCashbackTransactionStatusRepository.GetBySlug("pending")
-
+func (dctf *DealCashbackTransactionFactory) Create(userGUID string, transactionGUID, receiptURL string) (*DealCashbackTransaction, *systems.ErrorData) {
 	createdDealCashbackTransaction := &DealCashbackTransaction{}
 
 	dealCashbackTransaction := &DealCashbackTransaction{
-		GUID:                              Helper.GenerateUUID(),
-		UserGUID:                          userGUID,
-		ReceiptID:                         Helper.GenerateUniqueShortID(),
-		ReceiptImage:                      image["path"],
-		DealCashbackTransactionStatusGUID: dealCashbackTransactionStatus.GUID,
+		GUID:            Helper.GenerateUUID(),
+		UserGUID:        userGUID,
+		TransactionGUID: transactionGUID,
+		ReferenceID:     Helper.GenerateUniqueShortID(),
+		ReceiptURL:      receiptURL,
 	}
 
 	result := dctf.DB.Create(dealCashbackTransaction)

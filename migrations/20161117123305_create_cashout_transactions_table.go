@@ -6,16 +6,16 @@ import (
 )
 
 // Up is executed when this migration is applied
-func Up_20161103114727(txn *sql.Tx) {
-	_, err := txn.Query(`CREATE TABLE deal_cashback_transactions (
+func Up_20161117123305(txn *sql.Tx) {
+	_, err := txn.Query(`CREATE TABLE cashout_transactions (
         id int(10) unsigned NOT NULL AUTO_INCREMENT,
         guid varchar(40) NOT NULL,
-        user_guid varchar(40) NOT NULL,
+		user_guid varchar(40) NOT NULL,
         transaction_guid varchar(40) NOT NULL,
-		receipt_id varchar(40) NOT NULL,
-		receipt_image varchar(255) NOT NULL,
-		verification_date timestamp NULL DEFAULT NULL,
-		remark text DEFAULT NULL,
+        bank_account_holder_name varchar(100) NULL DEFAULT NULL,
+        bank_account_number varchar(50) NULL DEFAULT NULL,
+        bank_name varchar(50) NULL DEFAULT NULL,
+        bank_country varchar(50) NULL DEFAULT NULL,
         created_at timestamp NULL DEFAULT NULL,
         updated_at timestamp NULL DEFAULT NULL,
         deleted_at timestamp NULL DEFAULT NULL,
@@ -30,8 +30,8 @@ func Up_20161103114727(txn *sql.Tx) {
 }
 
 // Down is executed when this migration is rolled back
-func Down_20161103114727(txn *sql.Tx) {
-	_, err := txn.Query(`DROP TABLE deal_cashback_transactions;`)
+func Down_20161117123305(txn *sql.Tx) {
+	_, err := txn.Query(`DROP TABLE cashout_transactions;`)
 
 	if err != nil {
 		fmt.Print(err)

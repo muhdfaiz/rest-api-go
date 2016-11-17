@@ -1,7 +1,6 @@
 package v1
 
 import (
-	"fmt"
 	"time"
 
 	"bitbucket.org/cliqers/shoppermate-api/systems"
@@ -67,7 +66,6 @@ func (dcs *DealCashbackService) GetUserDealCashbackForUserShoppingList(userGUID 
 
 	for _, userDealCashback := range userDealCashbacks {
 		diffInDays := currentDateInGMT8.Sub(userDealCashback.Deals.EndDate).Hours() / 24
-		fmt.Println(diffInDays)
 
 		// When the deal already expired more than 7 days
 		if diffInDays > 7 {

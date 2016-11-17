@@ -6,7 +6,7 @@ import (
 )
 
 type DealCashbackFactoryInterface interface {
-	Create(userGUID string, data CreateDealCashback) (*DealCashback, *systems.ErrorData)
+	Create(userGUID string, data CreateDealCashback) (*DealCashbackWithoutExpired, *systems.ErrorData)
 	SetDealCashbackTransactionGUID(dealCashbackGUIDs []string, dealCashbackTransactionGUID string) *systems.ErrorData
 	DeleteByUserGUIDAndDealGUID(userGUID string, dealGUID string) *systems.ErrorData
 	DeleteByUserGUIDShoppingListGUIDAndDealGUID(userGUID string, shoppingListGUID string, dealGUID string) *systems.ErrorData
@@ -18,8 +18,8 @@ type DealCashbackFactory struct {
 }
 
 // Create function used to create deal cashback for user
-func (dcf *DealCashbackFactory) Create(userGUID string, data CreateDealCashback) (*DealCashback, *systems.ErrorData) {
-	dealCashback := &DealCashback{
+func (dcf *DealCashbackFactory) Create(userGUID string, data CreateDealCashback) (*DealCashbackWithoutExpired, *systems.ErrorData) {
+	dealCashback := &DealCashbackWithoutExpired{
 		GUID:             Helper.GenerateUUID(),
 		UserGUID:         userGUID,
 		ShoppingListGUID: data.ShoppingListGUID,
@@ -32,7 +32,7 @@ func (dcf *DealCashbackFactory) Create(userGUID string, data CreateDealCashback)
 		return nil, Error.InternalServerError(result.Error, systems.DatabaseError)
 	}
 
-	return result.Value.(*DealCashback), nil
+	return result.Value.(*DealCashbackWithoutExpired), nil
 }
 
 func (dcf *DealCashbackFactory) SetDealCashbackTransactionGUID(dealCashbackGUIDs []string, dealCashbackTransactionGUID string) *systems.ErrorData {

@@ -15,7 +15,7 @@ type DealCashback struct {
 	DeletedAt                   *time.Time `json:"deleted_at"`
 
 	// Has One Deal Cashback Transaction
-	DealCashbackTransactions *DealCashbackTransaction `json:"deal_cashback_transaction,omitempty" gorm:"ForeignKey:GUID;AssociationForeignKey:DealCashbackTransactionGUID"`
+	Dealcashbacktransactions *DealCashbackTransaction `json:"deal_cashback_transaction,omitempty" gorm:"ForeignKey:GUID;AssociationForeignKey:DealCashbackTransactionGUID"`
 
 	Deals         *Deal         `json:"deal,omitempty" gorm:"ForeignKey:GUID;AssociationForeignKey:DealGUID"`
 	Users         *User         `json:"user,omitempty" gorm:"ForeignKey:GUID;AssociationForeignKey:UserGUID"`
@@ -34,7 +34,7 @@ type DealCashbackWithoutExpired struct {
 	DeletedAt                   *time.Time `json:"deleted_at"`
 
 	// Has One Deal Cashback Transaction
-	DealCashbackTransactions *DealCashbackTransaction `json:"deal_cashback_transaction,omitempty" gorm:"ForeignKey:GUID;AssociationForeignKey:DealCashbackTransactionGUID"`
+	Dealcashbacktransactions *DealCashbackTransaction `json:"deal_cashback_transaction,omitempty" gorm:"ForeignKey:GUID;AssociationForeignKey:DealCashbackTransactionGUID"`
 
 	Deals         *Deal         `json:"deal,omitempty" gorm:"ForeignKey:GUID;AssociationForeignKey:DealGUID"`
 	Users         *User         `json:"user,omitempty" gorm:"ForeignKey:GUID;AssociationForeignKey:UserGUID"`

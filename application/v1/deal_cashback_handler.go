@@ -112,7 +112,10 @@ func (dch *DealCashbackHandler) ViewByShoppingList(c *gin.Context) {
 	// Retrieve query string for relations
 	relations := c.Query("include")
 
-	userDealCashbacks, totalUserDealCashback := dch.DealCashbackService.GetUserDealCashbackForUserShoppingList(userGUID, shoppingListGUID, pageNumber, pageLimit, relations)
+	transactionStatus := c.Query("transaction_status")
+
+	userDealCashbacks, totalUserDealCashback := dch.DealCashbackService.GetUserDealCashbackForUserShoppingList(userGUID, shoppingListGUID,
+		transactionStatus, pageNumber, pageLimit, relations)
 
 	dealCashbackResponse := dch.DealCashbackTransformer.transformCollection(c.Request, userDealCashbacks, totalUserDealCashback, pageLimit)
 

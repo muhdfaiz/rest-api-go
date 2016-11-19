@@ -7,7 +7,7 @@ type DealCashbackRepositoryInterface interface {
 	GetByDealGUIDAndUserGUID(dealGUID string, userGUID string) *DealCashback
 	CountByDealGUIDAndUserGUID(dealGUID string, userGUID string) int
 	CountByDealGUID(dealGUID string) int
-	GetByUserGUIDShoppingListGUIDAndTransactionGUIDEmpty(userGUID string, shoppingListGUID string, pageNumber string,
+	GetByUserGUIDShoppingListGUIDAndTransactionStatus(userGUID string, shoppingListGUID string, transactionStatus string, pageNumber string,
 		pageLimit string, relations string) ([]*DealCashback, int)
 }
 
@@ -47,8 +47,8 @@ func (dcr *DealCashbackRepository) CountByDealGUID(dealGUID string) int {
 	return totalDealCashback
 }
 
-func (dcr *DealCashbackRepository) GetByUserGUIDShoppingListGUIDAndTransactionGUIDEmpty(userGUID string, shoppingListGUID string, pageNumber string,
-	pageLimit string, relations string) ([]*DealCashback, int) {
+func (dcr *DealCashbackRepository) GetByUserGUIDShoppingListGUIDAndTransactionStatus(userGUID string, shoppingListGUID string,
+	transactionStatus string, pageNumber string, pageLimit string, relations string) ([]*DealCashback, int) {
 
 	dealCashbacks := []*DealCashback{}
 
@@ -60,11 +60,24 @@ func (dcr *DealCashbackRepository) GetByUserGUIDShoppingListGUIDAndTransactionGU
 		DB = LoadRelations(DB, relations)
 	}
 
-	DB.Where(DealCashback{UserGUID: userGUID, ShoppingListGUID: shoppingListGUID}).Where("deal_cashback_transaction_guid IS NULL").Offset(offset).Limit(pageLimit).Find(&dealCashbacks)
+	DB = DB.Where(DealCashback{UserGUID: userGUID, ShoppingListGUID: shoppingListGUID})
+
+	if transactionStatus == "pending" || transactionStatus == "approved" || transactionStatus == "reject" || transactionStatus == "partial_success" {
+		DB = DB.Joins("LEFT JOIN deal_cashback_transactions ON deal_cashback_transactions.guid = deal_cashback_transaction_guid").
+			Joins("LEFT JOIN transactions ON transactions.GUID = deal_cashback_transactions.transaction_guid").
+			Joins("LEFT JOIN transaction_statuses ON transaction_statuses.guid = transactions.transaction_status_guid").
+			Where("transaction_statuses.slug = ?", transactionStatus)
+	} else if transactionStatus == "notempty" {
+		DB = DB.Where("deal_cashback_transaction_guid IS NOT NULL")
+	} else if transactionStatus == "empty" {
+		DB = DB.Where("deal_cashback_transaction_guid IS NULL")
+	}
 
 	var totalDealCashback *int
 
-	dcr.DB.Model(&DealCashback{}).Where(DealCashback{UserGUID: userGUID, ShoppingListGUID: shoppingListGUID}).Where("deal_cashback_transaction_guid IS NULL").Count(&totalDealCashback)
+	DB.Offset(offset).Limit(pageLimit).Find(&dealCashbacks)
+
+	DB.Count(&totalDealCashback)
 
 	return dealCashbacks, *totalDealCashback
 }

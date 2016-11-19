@@ -9,8 +9,8 @@ import (
 type DealCashbackServiceInterface interface {
 	CountTotalNumberOfDealUserAddToList(userGUID string, dealGUID string) int
 	CreateDealCashbackAndShoppingListItem(userGUID string, dealCashbackData CreateDealCashback) *systems.ErrorData
-	GetUserDealCashbackForUserShoppingList(userGUID string, shoppingListGUID string, pageNumber string,
-		pageLimit string, relations string) ([]*DealCashback, int)
+	GetUserDealCashbackForUserShoppingList(userGUID string, shoppingListGUID string, transactionStatus string,
+		pageNumber string, pageLimit string, relations string) ([]*DealCashback, int)
 }
 
 type DealCashbackService struct {
@@ -57,10 +57,11 @@ func (dcs *DealCashbackService) CountTotalNumberOfDealUserAddToList(userGUID str
 	return total
 }
 
-func (dcs *DealCashbackService) GetUserDealCashbackForUserShoppingList(userGUID string, shoppingListGUID string, pageNumber string,
+func (dcs *DealCashbackService) GetUserDealCashbackForUserShoppingList(userGUID string, shoppingListGUID string, transactionStatus string, pageNumber string,
 	pageLimit string, relations string) ([]*DealCashback, int) {
 
-	userDealCashbacks, totalUserDealCashbacks := dcs.DealCashbackRepository.GetByUserGUIDShoppingListGUIDAndTransactionGUIDEmpty(userGUID, shoppingListGUID, pageNumber, pageLimit, "deals")
+	userDealCashbacks, totalUserDealCashbacks := dcs.DealCashbackRepository.GetByUserGUIDShoppingListGUIDAndTransactionStatus(userGUID, shoppingListGUID,
+		transactionStatus, pageNumber, pageLimit, "deals")
 
 	currentDateInGMT8 := time.Now().UTC().Add(time.Hour * 8)
 
@@ -75,7 +76,8 @@ func (dcs *DealCashbackService) GetUserDealCashbackForUserShoppingList(userGUID 
 	}
 	relations = relations + ",deals"
 
-	userDealCashbacks, totalUserDealCashbacks = dcs.DealCashbackRepository.GetByUserGUIDShoppingListGUIDAndTransactionGUIDEmpty(userGUID, shoppingListGUID, pageNumber, pageLimit, relations)
+	userDealCashbacks, totalUserDealCashbacks = dcs.DealCashbackRepository.GetByUserGUIDShoppingListGUIDAndTransactionStatus(userGUID, shoppingListGUID,
+		transactionStatus, pageNumber, pageLimit, relations)
 
 	for key, userDealCashback := range userDealCashbacks {
 		diffInDays := currentDateInGMT8.Sub(userDealCashback.Deals.EndDate).Hours() / 24

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"bitbucket.org/cliqers/shoppermate-api/systems"
 
@@ -45,10 +46,30 @@ func (sh *SmsHandler) Send(c *gin.Context) {
 		return
 	}
 
+	debug := c.Query("debug")
+
+	if debug == "1" {
+		DB.Commit().Close()
+
+		smsHistory := &SmsHistory{
+			GUID:             Helper.GenerateUUID(),
+			UserGUID:         smsData.UserGUID,
+			Provider:         "moceansms",
+			Text:             "Your verification code is debug - Shoppermate",
+			SmsID:            "shoppermate_debug",
+			RecipientNo:      smsData.RecipientNo,
+			VerificationCode: "9999",
+			Status:           "0",
+			CreatedAt:        time.Now(),
+			UpdatedAt:        time.Now(),
+		}
+		c.JSON(http.StatusOK, gin.H{"data": smsHistory})
+		return
+	}
 	// Retrieve sms history by recipient_nos
 	smsHistory := sh.SmsHistoryRepository.GetByRecipientNo(smsData.RecipientNo)
 
-	// If recipient_no not empty
+	// // If recipient_no not empty
 	if smsHistory.GUID != "" {
 		// Calculate time interval in second between current time and last sms sent time
 		interval := sh.SmsHistoryRepository.CalculateIntervalBetweenCurrentTimeAndLastSmsSentTime(smsHistory.CreatedAt)
@@ -129,6 +150,28 @@ func (sh *SmsHandler) Verify(c *gin.Context) {
 
 	DB.Commit()
 	DB = c.MustGet("DB").(*gorm.DB).Begin()
+
+	debug := c.Query("debug")
+
+	if debug == "1" {
+		// Retrieve user by phone no
+		user = sh.UserRepository.GetByPhoneNo(smsData.PhoneNo, "")
+
+		jwt := &systems.Jwt{}
+		jwtToken, err := jwt.GenerateToken(user.GUID, smsData.PhoneNo, smsData.DeviceUUID)
+
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, err)
+		}
+
+		response := make(map[string]interface{})
+		response["user"] = user
+		response["access_token"] = jwtToken
+
+		DB.Close()
+		c.JSON(http.StatusOK, gin.H{"data": response})
+		return
+	}
 
 	// Verify Sms verification code
 	smsHistory := sh.SmsHistoryRepository.VerifyVerificationCode(smsData.PhoneNo, strings.ToLower(smsData.VerificationCode))

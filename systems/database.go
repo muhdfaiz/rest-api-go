@@ -69,9 +69,10 @@ func (database *Database) Connect(environment string) *gorm.DB {
 		db.SetLogger(gorm.Logger{revel.TRACE})
 		db.SetLogger(log.New(os.Stdout, "\r\n", 0))
 		db.LogMode(true)
-		db.DB().SetMaxIdleConns(0)
-		db.DB().SetMaxOpenConns(300)
 	}
+
+	db.DB().SetMaxIdleConns(0)
+	db.DB().SetMaxOpenConns(300)
 
 	return db
 }

@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/gorm"
 )
 
 type ItemHandler struct {
@@ -14,14 +13,11 @@ type ItemHandler struct {
 
 // Index function used to retrieve items list from database
 func (ih *ItemHandler) Index(c *gin.Context) {
-	DB := c.MustGet("DB").(*gorm.DB)
-
 	// Validate query string
 	err := Validation.Validate(c.Request.URL.Query(), map[string]string{"last_sync_date": "time", "page_number": "numeric", "page_limit": "numeric"})
 
 	// If validation error return error message
 	if err != nil {
-		DB.Close()
 		c.JSON(http.StatusUnprocessableEntity, err)
 		return
 	}
@@ -36,7 +32,6 @@ func (ih *ItemHandler) Index(c *gin.Context) {
 		items, totalItems := ih.ItemRepository.GetLatestUpdate(lastSyncDate, offset, limit, relations)
 		result := ih.ItemTransformer.transformCollection(c.Request, items, totalItems, limit)
 
-		DB.Close()
 		c.JSON(http.StatusOK, result)
 		return
 	}
@@ -44,18 +39,13 @@ func (ih *ItemHandler) Index(c *gin.Context) {
 	items, totalItems := ih.ItemRepository.GetAll(offset, limit, relations)
 
 	result := ih.ItemTransformer.transformCollection(c.Request, items, totalItems, limit)
-	DB.Close()
 
 	c.JSON(http.StatusOK, result)
 }
 
 // GetCategories function used to retrieve unique item categories list from database
 func (ih *ItemHandler) GetCategories(c *gin.Context) {
-	DB := c.MustGet("DB").(*gorm.DB)
-
 	itemCategories, totalItemCategories := ih.ItemRepository.GetUniqueCategories("")
-
-	DB.Close()
 
 	c.JSON(http.StatusOK, gin.H{"total_data": totalItemCategories, "data": itemCategories})
 }

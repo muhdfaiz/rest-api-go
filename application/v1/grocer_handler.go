@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/gorm"
 )
 
 // GrocerHandler used to handle all request related to grocers
@@ -15,14 +14,11 @@ type GrocerHandler struct {
 
 // Index function used to retrieve all grocers
 func (gh *GrocerHandler) Index(c *gin.Context) {
-	DB := c.MustGet("DB").(*gorm.DB)
-
 	// Validate query string
 	err := Validation.Validate(c.Request.URL.Query(), map[string]string{"latitude": "required,latitude", "longitude": "required,longitude"})
 
 	// If validation error return error message
 	if err != nil {
-		DB.Close()
 		c.JSON(http.StatusUnprocessableEntity, err)
 		return
 	}
@@ -37,7 +33,6 @@ func (gh *GrocerHandler) Index(c *gin.Context) {
 	grocers, totalGrocers := gh.GrocerRepository.GetAll(offset, limit, relations)
 
 	result := gh.GrocerTransformer.transformCollection(c.Request, grocers, totalGrocers, limit)
-	DB.Close()
 
 	c.JSON(http.StatusOK, result)
 }

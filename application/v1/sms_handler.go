@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/gorm"
 )
 
 // SmsHandler Struct
@@ -26,12 +25,10 @@ type SmsHandler struct {
 
 // Send function used to send sms to the user during login & registration
 func (sh *SmsHandler) Send(c *gin.Context) {
-	DB := c.MustGet("DB").(*gorm.DB).Begin()
 	smsData := &SmsSend{}
 
 	// Bind request based on content type and validate request data
 	if err := Binding.Bind(smsData, c); err != nil {
-		DB.Close()
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
@@ -41,7 +38,6 @@ func (sh *SmsHandler) Send(c *gin.Context) {
 
 	// If user GUID empty return error message
 	if user.GUID == "" {
-		DB.Close()
 		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("User", "guid", smsData.UserGUID))
 		return
 	}
@@ -49,8 +45,6 @@ func (sh *SmsHandler) Send(c *gin.Context) {
 	debug := c.Query("debug")
 
 	if debug == "1" {
-		DB.Commit().Close()
-
 		smsHistory := &SmsHistory{
 			GUID:             Helper.GenerateUUID(),
 			UserGUID:         smsData.UserGUID,
@@ -63,6 +57,7 @@ func (sh *SmsHandler) Send(c *gin.Context) {
 			CreatedAt:        time.Now(),
 			UpdatedAt:        time.Now(),
 		}
+
 		c.JSON(http.StatusOK, gin.H{"data": smsHistory})
 		return
 	}
@@ -76,7 +71,6 @@ func (sh *SmsHandler) Send(c *gin.Context) {
 
 		// If time interval in second below 250 return error message
 		if interval < 250 {
-			DB.Close()
 			durationUserMustWait := 250 - interval
 			errorMesg := Error.GenericError("500", systems.FailedToSendSMS, systems.TitleSentSmsError,
 				"", fmt.Sprintf(systems.ErrorSentSms, strconv.Itoa(durationUserMustWait)))
@@ -100,26 +94,21 @@ func (sh *SmsHandler) Send(c *gin.Context) {
 	sentSmsData, err := sh.SmsService.SendVerificationCode(smsData.RecipientNo, smsData.UserGUID)
 
 	if err != nil {
-		DB.Rollback().Close()
 		statusCode, _ := strconv.Atoi(err.Error.Status)
 		c.JSON(statusCode, err)
 		return
 	}
 
-	DB.Commit().Close()
 	c.JSON(http.StatusOK, gin.H{"data": sentSmsData.(*SmsHistory)})
 }
 
 // Verify function used to verify sms verification code during login & registration
 // Return JWT Token if sms verification code valid
 func (sh *SmsHandler) Verify(c *gin.Context) {
-	DB := c.MustGet("DB").(*gorm.DB).Begin()
-
 	smsData := SmsVerification{}
 
 	// Bind request based on content type and validate request data
 	if err := Binding.Bind(&smsData, c); err != nil {
-		DB.Close()
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
@@ -129,7 +118,6 @@ func (sh *SmsHandler) Verify(c *gin.Context) {
 
 	// If user phone_no empty return error message
 	if user.PhoneNo == "" {
-		DB.Close()
 		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("User", "phone_no", smsData.PhoneNo))
 		return
 	}
@@ -142,14 +130,10 @@ func (sh *SmsHandler) Verify(c *gin.Context) {
 		err := sh.DeviceFactory.Update(smsData.DeviceUUID, UpdateDevice{UserGUID: user.GUID})
 
 		if err != nil {
-			DB.Rollback().Close()
 			c.JSON(http.StatusInternalServerError, err)
 			return
 		}
 	}
-
-	DB.Commit()
-	DB = c.MustGet("DB").(*gorm.DB).Begin()
 
 	debug := c.Query("debug")
 
@@ -168,7 +152,6 @@ func (sh *SmsHandler) Verify(c *gin.Context) {
 		response["user"] = user
 		response["access_token"] = jwtToken
 
-		DB.Close()
 		c.JSON(http.StatusOK, gin.H{"data": response})
 		return
 	}
@@ -178,7 +161,6 @@ func (sh *SmsHandler) Verify(c *gin.Context) {
 
 	// If sms history record not found return error message
 	if smsHistory == nil {
-		DB.Close()
 		errorMesg := Error.GenericError(strconv.Itoa(http.StatusBadRequest), systems.VerificationCodeInvalid,
 			systems.TitleVerificationCodeInvalid, "", fmt.Sprintf(systems.ErrorVerificationCodeInvalid, smsData.VerificationCode))
 		c.JSON(http.StatusBadRequest, errorMesg)
@@ -189,17 +171,15 @@ func (sh *SmsHandler) Verify(c *gin.Context) {
 	err := sh.UserFactory.Update(smsHistory.UserGUID, map[string]interface{}{"verified": 1})
 
 	if err != nil {
-		DB.Rollback().Close()
 		c.JSON(http.StatusInternalServerError, err)
 		return
 	}
 
 	// Set deleted_at column in devices table to null
-	result := DB.Unscoped().Model(&Device{}).Update("deleted_at", nil)
+	err = sh.DeviceFactory.SetDeletedAtToNull(device.GUID)
 
-	if result.Error != nil {
-		DB.Rollback().Close()
-		c.JSON(http.StatusInternalServerError, Error.InternalServerError(result.Error, systems.DatabaseError))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err)
 		return
 	}
 
@@ -210,8 +190,6 @@ func (sh *SmsHandler) Verify(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, err)
 	}
 
-	DB.Commit()
-
 	// Retrieve user by phone no
 	user = sh.UserRepository.GetByPhoneNo(smsData.PhoneNo, "")
 
@@ -219,6 +197,5 @@ func (sh *SmsHandler) Verify(c *gin.Context) {
 	response["user"] = user
 	response["access_token"] = jwtToken
 
-	DB.Close()
 	c.JSON(http.StatusOK, gin.H{"data": response})
 }

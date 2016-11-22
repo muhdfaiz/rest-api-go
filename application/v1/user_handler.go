@@ -10,7 +10,6 @@ import (
 
 	"github.com/fatih/structs"
 	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/gorm"
 )
 
 // UserHandler will handle all request related to User
@@ -26,8 +25,6 @@ type UserHandler struct {
 
 // View function used to view user detail
 func (uh *UserHandler) View(c *gin.Context) {
-	DB := c.MustGet("DB").(*gorm.DB)
-
 	// Retrieve user guid in url
 	userGUID := c.Param("guid")
 
@@ -39,25 +36,20 @@ func (uh *UserHandler) View(c *gin.Context) {
 
 	// If user GUID empty return error message
 	if user.GUID == "" {
-		DB.Close()
 		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("User", "guid", userGUID))
 		return
 	}
 
-	DB.Close()
 	c.JSON(http.StatusOK, gin.H{"data": user})
 
 }
 
 // Create function will create new user
 func (uh *UserHandler) Create(c *gin.Context) {
-	DB := c.MustGet("DB").(*gorm.DB).Begin()
-
 	userData := CreateUser{}
 
 	// Bind request based on content type and validate request data
 	if err := Binding.Bind(&userData, c); err != nil {
-		DB.Close()
 		c.JSON(http.StatusUnprocessableEntity, err)
 		return
 	}
@@ -67,7 +59,6 @@ func (uh *UserHandler) Create(c *gin.Context) {
 
 	// If user phone_no not empty return error message
 	if user.PhoneNo != "" {
-		DB.Close()
 		c.JSON(http.StatusConflict, Error.DuplicateValueErrors("User", "phone_no", userData.PhoneNo))
 		return
 	}
@@ -79,7 +70,6 @@ func (uh *UserHandler) Create(c *gin.Context) {
 
 		// If facebook_id not valid return error message
 		if !fbIDValid {
-			DB.Close()
 			mesg := fmt.Sprintf(systems.ErrorFacebookIDNotValid, userData.FacebookID)
 			c.JSON(http.StatusBadRequest, Error.GenericError(strconv.Itoa(http.StatusBadRequest),
 				systems.FacebookIDNotValid, systems.TitleFacebookIDNotValidError, "facebook_id", mesg))
@@ -95,7 +85,6 @@ func (uh *UserHandler) Create(c *gin.Context) {
 
 		// If referral code not found return error message
 		if user.ReferralCode == "" {
-			DB.Close()
 			c.JSON(http.StatusBadRequest, Error.GenericError(strconv.Itoa(http.StatusBadRequest),
 				systems.ReferralCodeNotExist, systems.TitleReferralCodeNotExist, "referral_code", systems.ErrorReferralCodeNotExist))
 			return
@@ -106,7 +95,6 @@ func (uh *UserHandler) Create(c *gin.Context) {
 
 		// If total referral more than 3 return error message
 		if totalPreviousReferral > 3 {
-			DB.Close()
 			c.JSON(http.StatusBadRequest, Error.GenericError(strconv.Itoa(http.StatusBadRequest),
 				systems.ReferralCodeExceedLimit, systems.TitleReferralCodeExceedLimit, "referral_code", systems.ErrorReferralCodeExceedLimit))
 			return
@@ -126,7 +114,6 @@ func (uh *UserHandler) Create(c *gin.Context) {
 		profileImage, err = uh.UserService.UploadProfileImage(file)
 
 		if err != nil {
-			DB.Close()
 			errorCode, _ := strconv.Atoi(err.Error.Status)
 			c.JSON(errorCode, err)
 			return
@@ -142,7 +129,6 @@ func (uh *UserHandler) Create(c *gin.Context) {
 	result, err := uh.UserFactory.Create(userData)
 
 	if err != nil {
-		DB.Rollback().Close()
 		errorCode, _ := strconv.Atoi(err.Error.Status)
 		c.JSON(errorCode, err)
 		return
@@ -159,7 +145,6 @@ func (uh *UserHandler) Create(c *gin.Context) {
 	_, err = uh.SmsService.SendVerificationCode(createdUser.PhoneNo, createdUser.GUID)
 
 	if err != nil {
-		DB.Rollback().Close()
 		errorCode, _ := strconv.Atoi(err.Error.Status)
 		c.JSON(errorCode, err)
 		return
@@ -171,7 +156,6 @@ func (uh *UserHandler) Create(c *gin.Context) {
 		_, err := uh.UserService.GiveReferralCashback(createdUser.GUID, referentUserGUID)
 
 		if err != nil {
-			DB.Rollback().Close()
 			errorCode, _ := strconv.Atoi(err.Error.Status)
 			c.JSON(errorCode, err)
 			return
@@ -181,14 +165,11 @@ func (uh *UserHandler) Create(c *gin.Context) {
 	// userTransformer := UserTransformer{}
 	// userTransformer.TransformCreateData(createdUser)
 
-	DB.Commit().Close()
 	c.JSON(http.StatusOK, gin.H{"data": createdUser})
 }
 
 // Update function used to update user data
 func (uh *UserHandler) Update(c *gin.Context) {
-	DB := c.MustGet("DB").(*gorm.DB).Begin()
-
 	// Retrieve user guid in url
 	userGUID := c.Param("guid")
 
@@ -196,7 +177,6 @@ func (uh *UserHandler) Update(c *gin.Context) {
 	userToken := c.MustGet("Token").(map[string]string)
 
 	if userToken["user_guid"] != userGUID {
-		DB.Close()
 		c.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("Update User"))
 		return
 	}
@@ -206,7 +186,6 @@ func (uh *UserHandler) Update(c *gin.Context) {
 
 	// If user guid empty return error message
 	if user.GUID == "" {
-		DB.Close()
 		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("User", "guid", userGUID))
 		return
 	}
@@ -215,7 +194,6 @@ func (uh *UserHandler) Update(c *gin.Context) {
 
 	// Bind request based on content type and validate request data
 	if err := Binding.Bind(&userData, c); err != nil {
-		DB.Close()
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
@@ -229,7 +207,6 @@ func (uh *UserHandler) Update(c *gin.Context) {
 		profileImage, err = uh.UserService.UploadProfileImage(file)
 
 		if err != nil {
-			DB.Close()
 			errorCode, _ := strconv.Atoi(err.Error.Status)
 			c.JSON(errorCode, err)
 			return
@@ -241,24 +218,18 @@ func (uh *UserHandler) Update(c *gin.Context) {
 	}
 
 	// Update User
-	userFactory := &UserFactory{DB: DB}
-	err := userFactory.Update(userGUID, structs.Map(&userData))
+	err := uh.UserFactory.Update(userGUID, structs.Map(&userData))
 
 	if err != nil {
-		DB.Rollback().Close()
 		c.JSON(http.StatusInternalServerError, err)
 		return
 	}
-
-	DB.Commit()
-	DB = c.MustGet("DB").(*gorm.DB).Begin()
 
 	if user.ProfilePicture != "" {
 		// Delete shopping list item image from Amazon S3
 		err = uh.UserService.DeleteImage(user.ProfilePicture)
 
 		if err != nil {
-			DB.Close()
 			c.JSON(http.StatusInternalServerError, err)
 			return
 		}
@@ -272,7 +243,6 @@ func (uh *UserHandler) Update(c *gin.Context) {
 		_, err = uh.SmsService.SendVerificationCode(updatedUser.PhoneNo, updatedUser.GUID)
 
 		if err != nil {
-			DB.Rollback().Close()
 			errorCode, _ := strconv.Atoi(err.Error.Status)
 			c.JSON(errorCode, err)
 			return
@@ -282,13 +252,10 @@ func (uh *UserHandler) Update(c *gin.Context) {
 		err := uh.DeviceFactory.Delete("uuid", userToken["device_uuid"])
 
 		if err != nil {
-			DB.Rollback().Close()
 			c.JSON(http.StatusInternalServerError, err)
 			return
 		}
 	}
 
-	DB.Commit().Close()
 	c.JSON(http.StatusOK, gin.H{"data": updatedUser})
-
 }

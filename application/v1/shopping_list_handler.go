@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/gorm"
 )
 
 // ShoppingListHandler will handle all request related to user shopping list
@@ -19,7 +18,6 @@ type ShoppingListHandler struct {
 
 // View function used to retrieve User Shopping List
 func (slh *ShoppingListHandler) View(c *gin.Context) {
-	DB := c.MustGet("DB").(*gorm.DB)
 	tokenData := c.MustGet("Token").(map[string]string)
 
 	// Retrieve user guid in url
@@ -27,7 +25,6 @@ func (slh *ShoppingListHandler) View(c *gin.Context) {
 
 	// If user GUID not match user GUID inside the token return error message
 	if tokenData["user_guid"] != userGUID {
-		DB.Close()
 		c.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("view shopping list"))
 		return
 	}
@@ -46,14 +43,12 @@ func (slh *ShoppingListHandler) View(c *gin.Context) {
 		shoppingLists = slh.ShoppingListRepository.GetByUserGUID(userGUID, "Occasions")
 	}
 
-	DB.Close()
 	c.JSON(http.StatusOK, gin.H{"data": shoppingLists})
 
 }
 
 // Create function used to create user shopping list
 func (slh *ShoppingListHandler) Create(c *gin.Context) {
-	DB := c.MustGet("DB").(*gorm.DB).Begin()
 	tokenData := c.MustGet("Token").(map[string]string)
 
 	// Retrieve user guid in url
@@ -61,7 +56,6 @@ func (slh *ShoppingListHandler) Create(c *gin.Context) {
 
 	// If user GUID not match user GUID inside the token return error message
 	if tokenData["user_guid"] != userGUID {
-		DB.Close()
 		c.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("update shopping list"))
 		return
 	}
@@ -70,7 +64,6 @@ func (slh *ShoppingListHandler) Create(c *gin.Context) {
 
 	// Bind request based on content type and validate request data
 	if err := Binding.Bind(&shoppingListData, c); err != nil {
-		DB.Close()
 		c.JSON(http.StatusUnprocessableEntity, err)
 		return
 	}
@@ -80,7 +73,6 @@ func (slh *ShoppingListHandler) Create(c *gin.Context) {
 
 	// If Occasion GUID empty return error message
 	if occasion.GUID == "" {
-		DB.Close()
 		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("Occasion", "guid", shoppingListData.OccasionGUID))
 		return
 	}
@@ -90,7 +82,6 @@ func (slh *ShoppingListHandler) Create(c *gin.Context) {
 
 	// If Shopping List name already exist return error message
 	if shoppingList.Name != "" {
-		DB.Close()
 		c.JSON(http.StatusConflict, Error.DuplicateValueErrors("Shopping List", "name", shoppingListData.Name))
 		return
 	}
@@ -98,7 +89,6 @@ func (slh *ShoppingListHandler) Create(c *gin.Context) {
 	createdShoppingList, err := slh.ShoppingListFactory.Create(userGUID, shoppingListData)
 
 	if err != nil {
-		DB.Rollback().Close()
 		errorCode, _ := strconv.Atoi(err.Error.Status)
 		c.JSON(errorCode, err)
 		return
@@ -106,14 +96,12 @@ func (slh *ShoppingListHandler) Create(c *gin.Context) {
 
 	result := slh.ShoppingListRepository.GetByGUID(createdShoppingList.GUID, "")
 
-	DB.Commit().Close()
 	c.JSON(http.StatusOK, gin.H{"data": result})
 
 }
 
 // Update function used to update user shopping list
 func (slh *ShoppingListHandler) Update(c *gin.Context) {
-	DB := c.MustGet("DB").(*gorm.DB).Begin()
 	tokenData := c.MustGet("Token").(map[string]string)
 
 	// Retrieve user guid in url
@@ -121,7 +109,6 @@ func (slh *ShoppingListHandler) Update(c *gin.Context) {
 
 	// If user GUID not match user GUID inside the token return error message
 	if tokenData["user_guid"] != userGUID {
-		DB.Close()
 		c.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("update shopping list"))
 		return
 	}
@@ -134,7 +121,6 @@ func (slh *ShoppingListHandler) Update(c *gin.Context) {
 
 	// If shopping list guid empty return error message
 	if shoppingList.GUID == "" {
-		DB.Close()
 		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("Shopping List", "guid", shoppingListGUID))
 		return
 	}
@@ -143,7 +129,6 @@ func (slh *ShoppingListHandler) Update(c *gin.Context) {
 
 	// Bind request based on content type and validate request data
 	if err := Binding.Bind(&shoppingListData, c); err != nil {
-		DB.Close()
 		c.JSON(http.StatusUnprocessableEntity, err)
 		return
 	}
@@ -154,7 +139,6 @@ func (slh *ShoppingListHandler) Update(c *gin.Context) {
 
 		// If Occasion GUID empty return error message
 		if occasion.GUID == "" {
-			DB.Close()
 			c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("Occasion", "guid", shoppingListData.OccasionGUID))
 			return
 		}
@@ -166,7 +150,6 @@ func (slh *ShoppingListHandler) Update(c *gin.Context) {
 
 		// If Shopping List name already exist return error message
 		if shoppingList.Name != "" && shoppingList.GUID != shoppingListGUID {
-			DB.Close()
 			c.JSON(http.StatusConflict, Error.DuplicateValueErrors("Shopping List", "name", shoppingListData.Name))
 			return
 		}
@@ -175,21 +158,18 @@ func (slh *ShoppingListHandler) Update(c *gin.Context) {
 	err := slh.ShoppingListFactory.Update(userGUID, shoppingListGUID, shoppingListData)
 
 	if err != nil {
-		DB.Rollback().Close()
 		c.JSON(http.StatusInternalServerError, err)
 		return
 	}
 
 	result := slh.ShoppingListRepository.GetByGUID(shoppingListGUID, "")
 
-	DB.Commit().Close()
 	c.JSON(http.StatusOK, gin.H{"data": result})
 
 }
 
 // Delete function used to soft delete device by setting current timeo the deleted_at column
 func (slh *ShoppingListHandler) Delete(c *gin.Context) {
-	DB := c.MustGet("DB").(*gorm.DB).Begin()
 	tokenData := c.MustGet("Token").(map[string]string)
 
 	// Retrieve user guid in url
@@ -197,7 +177,6 @@ func (slh *ShoppingListHandler) Delete(c *gin.Context) {
 
 	// If user GUID not match user GUID inside the token return error message
 	if tokenData["user_guid"] != userGUID {
-		DB.Close()
 		c.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("update shopping list"))
 		return
 	}
@@ -210,7 +189,6 @@ func (slh *ShoppingListHandler) Delete(c *gin.Context) {
 
 	// If shopping list guid empty return error message
 	if shoppingList.GUID == "" {
-		DB.Close()
 		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("Shopping List", "guid", shoppingListGUID))
 		return
 	}
@@ -219,7 +197,6 @@ func (slh *ShoppingListHandler) Delete(c *gin.Context) {
 	err := slh.ShoppingListFactory.Delete("guid", shoppingListGUID)
 
 	if err != nil {
-		DB.Rollback().Close()
 		c.JSON(http.StatusInternalServerError, err)
 		return
 	}
@@ -228,7 +205,6 @@ func (slh *ShoppingListHandler) Delete(c *gin.Context) {
 	err = slh.ShoppingListItemFactory.DeleteByShoppingListGUID(shoppingList.GUID)
 
 	if err != nil {
-		DB.Rollback().Close()
 		c.JSON(http.StatusInternalServerError, err)
 		return
 	}
@@ -237,6 +213,5 @@ func (slh *ShoppingListHandler) Delete(c *gin.Context) {
 	result := make(map[string]string)
 	result["message"] = "Successfully deleted shopping list with guid " + shoppingList.GUID
 
-	DB.Commit().Close()
 	c.JSON(http.StatusOK, gin.H{"data": result})
 }

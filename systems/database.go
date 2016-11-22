@@ -10,6 +10,8 @@ import (
 	"github.com/revel/revel"
 )
 
+var DB *gorm.DB
+
 // Database struct
 type Database struct {
 	host     string

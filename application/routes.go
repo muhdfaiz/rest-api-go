@@ -8,19 +8,11 @@ import (
 	"bitbucket.org/cliqers/shoppermate-api/services/location"
 	"bitbucket.org/cliqers/shoppermate-api/systems"
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
 )
 
 // InitializeObjectAndSetRoutes will initialize object and set all routes across the API
-func InitializeObjectAndSetRoutes(router *gin.Engine) *gin.Engine {
-	Database := &systems.Database{}
-	DB := Database.Connect("production")
-
-	router.Use(func(c *gin.Context) {
-		DB := Database.Connect("production")
-		c.Set("DB", DB)
-		c.Next()
-	})
-
+func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 	// Amazon S3 Config
 	Config := &systems.Configs{}
 	accessKey := Config.Get("app.yaml", "aws_access_key_id", "")
@@ -241,7 +233,7 @@ func InitializeObjectAndSetRoutes(router *gin.Engine) *gin.Engine {
 		version1.GET("deals", dealHandler.ViewAllForGuestUser)
 
 		// Protected Routes
-		version1.Use(middlewares.Auth())
+		version1.Use(middlewares.Auth(DB))
 		{
 			// User Routes
 			version1.PATCH("/users/:guid", userHandler.Update)

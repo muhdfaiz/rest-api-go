@@ -18,7 +18,7 @@ type CustomClaims struct {
 	jwt.StandardClaims
 }
 
-func Auth() gin.HandlerFunc {
+func Auth(DB *gorm.DB) gin.HandlerFunc {
 	jwtSecret := Config.Get("app.yaml", "jwt_token_secret", "secret")
 
 	return func(c *gin.Context) {
@@ -57,10 +57,8 @@ func Auth() gin.HandlerFunc {
 			return []byte(jwtSecret), nil
 		})
 
-		db := c.MustGet("DB").(*gorm.DB)
-
 		if claims, ok := token.Claims.(*CustomClaims); ok && token.Valid {
-			result := db.Where("uuid = ? AND user_guid = ?", claims.Id, claims.Subject).Find(&v1.Device{})
+			result := DB.Where("uuid = ? AND user_guid = ?", claims.Id, claims.Subject).Find(&v1.Device{})
 
 			if result.RowsAffected == 0 {
 				c.JSON(http.StatusUnauthorized, Error.GenericError(strconv.Itoa(http.StatusUnauthorized), systems.TokenNotValid,

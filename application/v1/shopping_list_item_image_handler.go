@@ -7,7 +7,6 @@ import (
 
 	"bitbucket.org/cliqers/shoppermate-api/systems"
 	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/gorm"
 )
 
 //ShoppingListItemImageHandler used to handle all request related to shopping list item image
@@ -22,7 +21,6 @@ type ShoppingListItemImageHandler struct {
 
 // View function used to retrieve shopping list item image from database
 func (sliih *ShoppingListItemImageHandler) View(c *gin.Context) {
-	DB := c.MustGet("DB").(*gorm.DB)
 	tokenData := c.MustGet("Token").(map[string]string)
 
 	// Retrieve user guid in url
@@ -30,7 +28,6 @@ func (sliih *ShoppingListItemImageHandler) View(c *gin.Context) {
 
 	// If user GUID not match user GUID inside the token return error message
 	if tokenData["user_guid"] != userGUID {
-		DB.Close()
 		c.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("update shopping list"))
 		return
 	}
@@ -43,7 +40,6 @@ func (sliih *ShoppingListItemImageHandler) View(c *gin.Context) {
 
 	// If shopping list GUID empty return error message
 	if shoppingList.GUID == "" {
-		DB.Close()
 		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("Shopping List", "guid", shoppingListGUID))
 		return
 	}
@@ -56,7 +52,6 @@ func (sliih *ShoppingListItemImageHandler) View(c *gin.Context) {
 
 	// If shopping list item GUID empty return error message
 	if shoppingListItem.GUID == "" {
-		DB.Close()
 		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("Shopping List Item", "guid", shoppingListItemGUID))
 		return
 	}
@@ -72,18 +67,15 @@ func (sliih *ShoppingListItemImageHandler) View(c *gin.Context) {
 
 	// If shopping list item image GUID empty return error message
 	if shoppingListItemImage.GUID == "" {
-		DB.Close()
 		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("Shopping List Item Image", "guid", shoppingListItemImageGUID))
 		return
 	}
 
-	DB.Close()
 	c.JSON(http.StatusOK, gin.H{"data": shoppingListItemImage})
 }
 
 // Create function used to store shopping list item image in database
 func (sliih *ShoppingListItemImageHandler) Create(c *gin.Context) {
-	DB := c.MustGet("DB").(*gorm.DB).Begin()
 	tokenData := c.MustGet("Token").(map[string]string)
 
 	// Retrieve user guid in url
@@ -91,7 +83,6 @@ func (sliih *ShoppingListItemImageHandler) Create(c *gin.Context) {
 
 	// If user GUID not match user GUID inside the token return error message
 	if tokenData["user_guid"] != userGUID {
-		DB.Close()
 		c.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("update shopping list"))
 		return
 	}
@@ -104,7 +95,6 @@ func (sliih *ShoppingListItemImageHandler) Create(c *gin.Context) {
 
 	// If shopping list GUID empty return error message
 	if shoppingList.GUID == "" {
-		DB.Close()
 		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("Shopping List", "guid", shoppingListGUID))
 		return
 	}
@@ -117,7 +107,6 @@ func (sliih *ShoppingListItemImageHandler) Create(c *gin.Context) {
 
 	// If shopping list item GUID empty return error message
 	if shoppingListItem.GUID == "" {
-		DB.Close()
 		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("Shopping List Item", "guid", shoppingListItemGUID))
 		return
 	}
@@ -126,7 +115,6 @@ func (sliih *ShoppingListItemImageHandler) Create(c *gin.Context) {
 
 	// Bind request based on content type and validate request data
 	if err := Binding.Bind(createImageData, c); err != nil {
-		DB.Close()
 		c.JSON(http.StatusUnprocessableEntity, err)
 		return
 	}
@@ -147,7 +135,6 @@ func (sliih *ShoppingListItemImageHandler) Create(c *gin.Context) {
 	uploadedImages, err := sliih.ShoppingListItemImageService.UploadImages(images)
 
 	if err != nil {
-		DB.Rollback().Close()
 		errorCode, _ := strconv.Atoi(err.Error.Status)
 		c.JSON(errorCode, err)
 		return
@@ -158,19 +145,16 @@ func (sliih *ShoppingListItemImageHandler) Create(c *gin.Context) {
 
 	//Return error message if failed to store uploaded shopping list item image into database
 	if err != nil {
-		DB.Rollback().Close()
 		c.JSON(http.StatusInternalServerError, err)
 		return
 	}
 
-	DB.Commit().Close()
 	c.JSON(http.StatusOK, gin.H{"data": result})
 
 }
 
 // Delete function used to delete multiple shopping list item images
 func (sliih *ShoppingListItemImageHandler) Delete(c *gin.Context) {
-	DB := c.MustGet("DB").(*gorm.DB).Begin()
 	tokenData := c.MustGet("Token").(map[string]string)
 
 	// Retrieve user guid in url
@@ -178,7 +162,6 @@ func (sliih *ShoppingListItemImageHandler) Delete(c *gin.Context) {
 
 	// If user GUID not match user GUID inside the token return error message
 	if tokenData["user_guid"] != userGUID {
-		DB.Close()
 		c.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("update shopping list"))
 		return
 	}
@@ -191,7 +174,6 @@ func (sliih *ShoppingListItemImageHandler) Delete(c *gin.Context) {
 
 	// If shopping list GUID empty return error message
 	if shoppingList.GUID == "" {
-		DB.Close()
 		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("Shopping List", "guid", shoppingListGUID))
 		return
 	}
@@ -204,7 +186,6 @@ func (sliih *ShoppingListItemImageHandler) Delete(c *gin.Context) {
 
 	// If shopping list item GUID empty return error message
 	if shoppingListItem.GUID == "" {
-		DB.Rollback().Close()
 		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("Shopping List Item", "guid", shoppingListItemGUID))
 		return
 	}
@@ -223,7 +204,6 @@ func (sliih *ShoppingListItemImageHandler) Delete(c *gin.Context) {
 
 		// If shopping list item image GUID empty return error message
 		if shoppingListItemImage.GUID == "" {
-			DB.Close()
 			c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("Shopping List Item Image", "guid", shoppingListItemImageGUID))
 			return
 		}
@@ -235,7 +215,6 @@ func (sliih *ShoppingListItemImageHandler) Delete(c *gin.Context) {
 	err := sliih.ShoppingListItemImageFactory.Delete("guid", splitShoppingListItemImageGUID, shoppingListItemImageURLs)
 
 	if err != nil {
-		DB.Rollback().Close()
 		c.JSON(http.StatusInternalServerError, err)
 		return
 	}
@@ -244,6 +223,5 @@ func (sliih *ShoppingListItemImageHandler) Delete(c *gin.Context) {
 	result := make(map[string]string)
 	result["message"] = "Successfully deleted shopping list item image with GUIDs " + shoppingListItemImageGUIDs
 
-	DB.Commit().Close()
 	c.JSON(http.StatusOK, gin.H{"data": result})
 }

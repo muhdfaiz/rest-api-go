@@ -9,6 +9,7 @@ import (
 type DeviceFactoryInterface interface {
 	Create(data CreateDevice) (*Device, *systems.ErrorData)
 	Update(uuid string, data UpdateDevice) *systems.ErrorData
+	SetDeletedAtToNull(deviceGUID string) *systems.ErrorData
 	Delete(attribute string, value string) *systems.ErrorData
 }
 
@@ -50,6 +51,17 @@ func (df *DeviceFactory) Update(uuid string, data UpdateDevice) *systems.ErrorDa
 	}
 
 	result := df.DB.Model(&Device{}).Where(&Device{UUID: uuid}).Updates(updateData)
+
+	if result.Error != nil {
+		return Error.InternalServerError(result.Error, systems.DatabaseError)
+	}
+
+	return nil
+}
+
+func (df *DeviceFactory) SetDeletedAtToNull(deviceGUID string) *systems.ErrorData {
+	// Reactivate device by set null to deleted_at column in devices table
+	result := df.DB.Unscoped().Model(&Device{}).Where(&Device{GUID: deviceGUID}).Update("deleted_at", nil)
 
 	if result.Error != nil {
 		return Error.InternalServerError(result.Error, systems.DatabaseError)

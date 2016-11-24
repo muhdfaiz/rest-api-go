@@ -13,6 +13,7 @@ import (
 )
 
 type UserServiceInterface interface {
+	CheckUserExistOrNot(userGUID string, relations string) *User
 	UploadProfileImage(file multipart.File) (map[string]string, *systems.ErrorData)
 	GiveReferralCashback(referrerGUID string, referentGUID string) (interface{}, *systems.ErrorData)
 	GenerateReferralCode(name string) string
@@ -22,29 +23,34 @@ type UserServiceInterface interface {
 type UserService struct {
 	DB                 *gorm.DB
 	AmazonS3FileSystem *filesystem.AmazonS3Upload
+	UserRepository     UserRepositoryInterface
+}
+
+func (us *UserService) CheckUserExistOrNot(userGUID string, relations string) *User {
+	return us.UserRepository.GetByGUID(userGUID, relations)
 }
 
 // UploadProfileImage function used to upload profile image to Amazon S3 if profile_image exist in the request
 func (us *UserService) UploadProfileImage(file multipart.File) (map[string]string, *systems.ErrorData) {
 
 	// If profile image file type other than jpg, jpeg, png, gif return error message
-	err := FileValidation.ValidateFileType([]string{"jpg", "jpeg", "png", "gif"}, file)
-	if err != nil {
-		return nil, err
+	error := FileValidation.ValidateFileType([]string{"jpg", "jpeg", "png", "gif"}, file)
+	if error != nil {
+		return nil, error
 	}
 
 	// If profile image size equal or more than 1MB return error message
-	_, err = FileValidation.ValidateFileSize(file, 1000000, "profile_picture")
-	if err != nil {
-		return nil, err
+	_, error = FileValidation.ValidateFileSize(file, 1000000, "profile_picture")
+	if error != nil {
+		return nil, error
 	}
 
 	localUploadPath := os.Getenv("GOPATH") + Config.Get("app.yaml", "storage_path", "src/bitbucket.org/cliqers/shoppermate-api/storages/")
 	amazonS3UploadPath := "/profile_images/"
-	uploadedFile, err := us.AmazonS3FileSystem.Upload(file, localUploadPath, amazonS3UploadPath)
+	uploadedFile, error := us.AmazonS3FileSystem.Upload(file, localUploadPath, amazonS3UploadPath)
 
-	if err != nil {
-		return nil, err
+	if error != nil {
+		return nil, error
 	}
 
 	return uploadedFile, nil
@@ -53,10 +59,10 @@ func (us *UserService) UploadProfileImage(file multipart.File) (map[string]strin
 // GiveReferralCashback function used to give cashback to user that refer by another user during registration
 func (us *UserService) GiveReferralCashback(referrerGUID string, referentGUID string) (interface{}, *systems.ErrorData) {
 	ReferralCashbackFactory := &ReferralCashbackFactory{DB: us.DB}
-	referralCashbackCreated, err := ReferralCashbackFactory.CreateReferralCashbackFactory(referrerGUID, referentGUID)
+	referralCashbackCreated, error := ReferralCashbackFactory.CreateReferralCashbackFactory(referrerGUID, referentGUID)
 
-	if err != nil {
-		return nil, err
+	if error != nil {
+		return nil, error
 	}
 
 	return referralCashbackCreated, nil
@@ -114,10 +120,10 @@ func (us *UserService) DeleteImage(ImageURL string) *systems.ErrorData {
 	// Example: `profile_images/f83617cd-2b17-3c59-81a5-78c9cfbe7c4f.png`
 	imageURLs[0] = uriSegments[2]
 
-	err := us.AmazonS3FileSystem.Delete(imageURLs)
+	error := us.AmazonS3FileSystem.Delete(imageURLs)
 
-	if err != nil {
-		return err
+	if error != nil {
+		return error
 	}
 
 	return nil

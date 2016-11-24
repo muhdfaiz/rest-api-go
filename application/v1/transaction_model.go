@@ -6,6 +6,7 @@ type Transaction struct {
 	ID                    int        `json:"id"`
 	GUID                  string     `json:"guid"`
 	UserGUID              string     `json:"user_guid"`
+	ReferenceID           string     `json:"reference_id"`
 	TransactionTypeGUID   string     `json:"transaction_type_guid"`
 	TransactionStatusGUID string     `json:"transaction_status_guid"`
 	Amount                float32    `json:"amount"`

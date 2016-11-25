@@ -26,6 +26,7 @@ func (th *TransactionHandler) ViewUserTransactions(context *gin.Context) {
 	relations := context.Query("include")
 	pageNumber := context.Query("page_number")
 	pageLimit := context.Query("page_limit")
+	isRead := context.Query("is_read")
 
 	user := th.UserService.CheckUserExistOrNot(userGUID, "")
 
@@ -34,7 +35,7 @@ func (th *TransactionHandler) ViewUserTransactions(context *gin.Context) {
 		return
 	}
 
-	transactions := th.TransactionService.GetUserTransactionsForSpecificStatus(context.Request, userGUID, transactionStatus, pageNumber, pageLimit, relations)
+	transactions := th.TransactionService.GetUserTransactionsForSpecificStatus(context.Request, userGUID, transactionStatus, isRead, pageNumber, pageLimit, relations)
 
 	context.JSON(http.StatusOK, gin.H{"data": transactions})
 }

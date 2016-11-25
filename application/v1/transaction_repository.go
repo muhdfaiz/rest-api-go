@@ -3,6 +3,8 @@ package v1
 import (
 	"strings"
 
+	"strconv"
+
 	"bitbucket.org/cliqers/shoppermate-api/systems"
 	"github.com/jinzhu/gorm"
 )
@@ -11,7 +13,7 @@ import (
 type TransactionRepositoryInterface interface {
 	Create(createTransactionData *CreateTransaction) (*Transaction, *systems.ErrorData)
 	GetByGUID(GUID string, relations string) *Transaction
-	GetByUserGUIDAndStatus(userGUID string, transactionStatus string, pageNumber string,
+	GetByUserGUIDAndStatusAndReadStatus(userGUID string, transactionStatus string, readStatus string, pageNumber string,
 		pageLimit string, relations string) ([]*Transaction, int)
 }
 
@@ -29,10 +31,13 @@ func (tr *TransactionRepository) Create(createTransactionData *CreateTransaction
 
 	transaction := &Transaction{
 		GUID:                  Helper.GenerateUUID(),
+		ReferenceID:           Helper.GenerateUniqueShortID(),
 		UserGUID:              createTransactionData.UserGUID,
 		TransactionTypeGUID:   createTransactionData.TransactionTypeGUID,
 		TransactionStatusGUID: pendingTransactionStatusGUID,
-		Amount:                createTransactionData.Amount,
+		TotalAmount:           createTransactionData.Amount,
+		ApprovedAmount:        nil,
+		RejectedAmount:        nil,
 	}
 
 	result := tr.DB.Create(transaction)
@@ -61,8 +66,10 @@ func (tr *TransactionRepository) GetByGUID(GUID string, relations string) *Trans
 	return transaction
 }
 
-// GetByUserGUIDAndStatus function used to retrieve transactions by User GUID and Transaction Status
-func (tr *TransactionRepository) GetByUserGUIDAndStatus(userGUID string, transactionStatus string,
+// GetByUserGUIDAndStatusAndReadStatus function used to retrieve transactions by User GUID and Transaction Status and Read Status.
+// If the value Read Status is 1 means user already read or click the transaction.
+// If the value is 0 means user still not read or click the transaction.
+func (tr *TransactionRepository) GetByUserGUIDAndStatusAndReadStatus(userGUID string, transactionStatus string, readStatus string,
 	pageNumber string, pageLimit string, relations string) ([]*Transaction, int) {
 
 	transactions := []*Transaction{}
@@ -87,6 +94,11 @@ func (tr *TransactionRepository) GetByUserGUIDAndStatus(userGUID string, transac
 				DB = DB.Or("transaction_statuses.slug = ?", transactionStatus)
 			}
 		}
+	}
+
+	if readStatus != "" {
+		readStatusInInt, _ := strconv.Atoi(readStatus)
+		DB = DB.Where(&Transaction{ReadStatus: readStatusInInt}, transactionStatus)
 	}
 
 	if pageLimit != "" && pageNumber != "" {

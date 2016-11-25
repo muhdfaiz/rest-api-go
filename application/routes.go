@@ -285,7 +285,7 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 			version1.GET("users/:guid/deal_cashbacks/shopping_lists/:shopping_list_guid", dealCashbackHandler.ViewByShoppingList)
 
 			// Deal Cashback Transaction
-			version1.POST("users/:guid/deal_cashbacks/:deal_cashback_guids/transactions", dealCashbackTransactionHandler.Create)
+			version1.POST("users/:guid/transactions/deal_cashback_transactions", dealCashbackTransactionHandler.Create)
 
 			// Transaction Routes
 			version1.GET("users/:guid/transactions", transactionHandler.ViewUserTransactions)

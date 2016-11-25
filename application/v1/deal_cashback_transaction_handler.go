@@ -46,7 +46,7 @@ func (dcth *DealCashbackTransactionHandler) Create(c *gin.Context) {
 	}
 
 	// Retrieve shopping list item image guid in url
-	dealCashbackGUIDs := c.Param("deal_cashback_guids")
+	dealCashbackGUIDs := createDealCashbackTransaction.DealCashbackGuids
 
 	relations := "transactiontypes,transactionstatuses,dealcashbacktransactions,dealcashbacktransactions.dealcashbacks,dealcashbacktransactions.dealcashbacks.deals"
 

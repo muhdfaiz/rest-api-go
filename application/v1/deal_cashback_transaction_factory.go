@@ -21,6 +21,8 @@ func (dctf *DealCashbackTransactionFactory) Create(userGUID string, transactionG
 		UserGUID:        userGUID,
 		TransactionGUID: transactionGUID,
 		ReceiptURL:      receiptURL,
+		RemarkTitle:     nil,
+		RemarkBody:      nil,
 	}
 
 	result := dctf.DB.Create(dealCashbackTransaction)

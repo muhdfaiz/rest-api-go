@@ -26,14 +26,14 @@ func (h *Helpers) StrConcat(args ...string) string {
 	return buffer.String()
 }
 
-// GenerateGUID function use to generate Universal Unique Identifier using uuid v5
+// GenerateUUID function use to generate Universal Unique Identifier using uuid v5
 func (h *Helpers) GenerateUUID() string {
 	namespaceDNS := uuid.NewV1()
 	return uuid.NewV5(namespaceDNS, "api.shoppermate.com").String()
 }
 
 func (h *Helpers) GenerateUniqueShortID() string {
-	shortIDSettings, _ := shortid.New(1, shortid.DefaultABC, 2342)
+	shortIDSettings, _ := shortid.New(1, shortid.DefaultABC, 123)
 
 	shortID, _ := shortIDSettings.Generate()
 

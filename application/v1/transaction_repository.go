@@ -11,7 +11,8 @@ import (
 type TransactionRepositoryInterface interface {
 	Create(createTransactionData *CreateTransaction) (*Transaction, *systems.ErrorData)
 	GetByGUID(GUID string, relations string) *Transaction
-	GetByUserGUIDAndStatus(userGUID string, transactionStatus string, relations string) []*Transaction
+	GetByUserGUIDAndStatus(userGUID string, transactionStatus string, pageNumber string,
+		pageLimit string, relations string) ([]*Transaction, int)
 }
 
 // TransactionRepository contains all function that can be used for CRUD operations.
@@ -61,10 +62,14 @@ func (tr *TransactionRepository) GetByGUID(GUID string, relations string) *Trans
 }
 
 // GetByUserGUIDAndStatus function used to retrieve transactions by User GUID and Transaction Status
-func (tr *TransactionRepository) GetByUserGUIDAndStatus(userGUID string, transactionStatus string, relations string) []*Transaction {
+func (tr *TransactionRepository) GetByUserGUIDAndStatus(userGUID string, transactionStatus string,
+	pageNumber string, pageLimit string, relations string) ([]*Transaction, int) {
+
 	transactions := []*Transaction{}
 
 	DB := tr.DB.Model(&Transaction{})
+
+	offset := SetOffsetValue(pageNumber, pageLimit)
 
 	if relations != "" {
 		DB = LoadRelations(DB, relations)
@@ -84,7 +89,15 @@ func (tr *TransactionRepository) GetByUserGUIDAndStatus(userGUID string, transac
 		}
 	}
 
-	DB.Find(&transactions)
+	if pageLimit != "" && pageNumber != "" {
+		DB.Offset(offset).Limit(pageLimit).Find(&transactions)
+	} else {
+		DB.Find(&transactions)
+	}
 
-	return transactions
+	var TotalTransaction int
+
+	DB.Count(&TotalTransaction)
+
+	return transactions, TotalTransaction
 }

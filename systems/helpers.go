@@ -6,8 +6,8 @@ import (
 	"os"
 
 	"github.com/elgs/gostrgen"
-	"github.com/rs/xid"
 	uuid "github.com/satori/go.uuid"
+	"github.com/ventu-io/go-shortid"
 )
 
 // Helpers Struct
@@ -33,9 +33,11 @@ func (h *Helpers) GenerateUUID() string {
 }
 
 func (h *Helpers) GenerateUniqueShortID() string {
-	uniqueShortID := xid.New().String()
+	shortIDSettings, _ := shortid.New(1, shortid.DefaultABC, 2342)
 
-	return uniqueShortID
+	shortID, _ := shortIDSettings.Generate()
+
+	return shortID
 }
 
 // RandomString will generate random stringwith dynamic length and type of string

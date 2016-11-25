@@ -20,7 +20,6 @@ func (dctf *DealCashbackTransactionFactory) Create(userGUID string, transactionG
 		GUID:            Helper.GenerateUUID(),
 		UserGUID:        userGUID,
 		TransactionGUID: transactionGUID,
-		ReferenceID:     Helper.GenerateUniqueShortID(),
 		ReceiptURL:      receiptURL,
 	}
 

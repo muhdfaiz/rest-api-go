@@ -20,7 +20,6 @@ type DealCashbackTransactionService struct {
 	DealCashbackFactory            DealCashbackFactoryInterface
 	DealCashbackRepository         DealCashbackRepositoryInterface
 	DealCashbackTransactionFactory DealCashbackTransactionFactoryInterface
-	TransactionFactory             TransactionFactoryInterface
 	TransactionTypeRepository      TransactionTypeRepositoryInterface
 	DealRepository                 DealRepositoryInterface
 	TransactionRepository          TransactionRepositoryInterface
@@ -58,9 +57,10 @@ func (dcts *DealCashbackTransactionService) CreateTransaction(receipt *multipart
 		UserGUID:            userGUID,
 		TransactionTypeGUID: dealCashbackTransactionTypeGUID,
 		Amount:              totalCashbackAmount,
+		ReferenceID:         Helper.GenerateUniqueShortID(),
 	}
 
-	transaction, err := dcts.TransactionFactory.Create(transactionData)
+	transaction, err := dcts.TransactionRepository.Create(transactionData)
 
 	result, err := dcts.DealCashbackTransactionFactory.Create(userGUID, transaction.GUID, uploadedReceipt["path"])
 

@@ -7,7 +7,6 @@ type DealCashbackTransaction struct {
 	GUID             string     `json:"guid"`
 	UserGUID         string     `json:"user_guid"`
 	TransactionGUID  string     `json:"transaction_guid"`
-	ReferenceID      string     `json:"reference_id"`
 	ReceiptURL       string     `json:"receipt_url"`
 	VerificationDate *string    `json:"verification_date"`
 	Remark           *string    `json:"remark"`

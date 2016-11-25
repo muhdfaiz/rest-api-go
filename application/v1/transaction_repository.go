@@ -3,8 +3,6 @@ package v1
 import (
 	"strings"
 
-	"strconv"
-
 	"bitbucket.org/cliqers/shoppermate-api/systems"
 	"github.com/jinzhu/gorm"
 )
@@ -97,8 +95,7 @@ func (tr *TransactionRepository) GetByUserGUIDAndStatusAndReadStatus(userGUID st
 	}
 
 	if readStatus != "" {
-		readStatusInInt, _ := strconv.Atoi(readStatus)
-		DB = DB.Where(&Transaction{ReadStatus: readStatusInInt}, transactionStatus)
+		DB = DB.Where("read_status = ?", readStatus)
 	}
 
 	if pageLimit != "" && pageNumber != "" {

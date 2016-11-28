@@ -9,10 +9,10 @@ type Transaction struct {
 	ReferenceID           string     `json:"reference_id"`
 	TransactionTypeGUID   string     `json:"transaction_type_guid"`
 	TransactionStatusGUID string     `json:"transaction_status_guid"`
-	TotalAmount           float32    `json:"total_amount"`
-	ApprovedAmount        *float32   `json:"approved_amount"`
-	RejectedAmount        *float32   `json:"rejected_amount"`
 	ReadStatus            int        `json:"read_status"`
+	TotalAmount           float32    `json:"total_amount"`
+	ApprovedAmount        *float32   `json:"approved_amount,omitempty"`
+	RejectedAmount        *float32   `json:"rejected_amount,omitempty"`
 	CreatedAt             time.Time  `json:"created_at"`
 	UpdatedAt             time.Time  `json:"updated_at"`
 	DeletedAt             *time.Time `json:"deleted_at"`

@@ -23,7 +23,7 @@ func (dcth *DealCashbackTransactionHandler) Create(c *gin.Context) {
 
 	// If user GUID not match user GUID inside the token return error message
 	if tokenData["user_guid"] != userGUID {
-		c.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("deal cashback transaction"))
+		c.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("create deal cashback transaction"))
 		return
 	}
 

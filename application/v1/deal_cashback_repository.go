@@ -5,6 +5,9 @@ import "github.com/jinzhu/gorm"
 type DealCashbackRepositoryInterface interface {
 	GetByGUID(GUID string) *DealCashback
 	GetByDealGUIDAndUserGUID(dealGUID string, userGUID string) *DealCashback
+	GetByDealCashbackTransactionGUIDAndGroupByShoppingListGUID(dealCashbackTransactionGUID *string) []*DealCashback
+	GetByDealCashbackTransactionGUIDAndShoppingListGUID(dealCashbackTransactionGUID *string,
+		shoppingListGUID string, relations string) []*DealCashback
 	CountByDealGUIDAndUserGUID(dealGUID string, userGUID string) int
 	CountByDealGUID(dealGUID string) int
 	GetByUserGUIDShoppingListGUIDAndTransactionStatus(userGUID string, shoppingListGUID string, transactionStatus string, pageNumber string,
@@ -29,6 +32,25 @@ func (dcr *DealCashbackRepository) GetByDealGUIDAndUserGUID(dealGUID string, use
 	dcr.DB.Model(&DealCashback{}).Where(DealCashback{DealGUID: dealGUID, UserGUID: userGUID}).Find(&dealCashback)
 
 	return dealCashback
+}
+
+func (dcr *DealCashbackRepository) GetByDealCashbackTransactionGUIDAndGroupByShoppingListGUID(dealCashbackTransactionGUID *string) []*DealCashback {
+	dealCashbacks := []*DealCashback{}
+
+	dcr.DB.Model(&DealCashback{}).Where(DealCashback{DealCashbackTransactionGUID: dealCashbackTransactionGUID}).Group("shopping_list_guid").Find(&dealCashbacks)
+
+	return dealCashbacks
+}
+
+func (dcr *DealCashbackRepository) GetByDealCashbackTransactionGUIDAndShoppingListGUID(dealCashbackTransactionGUID *string,
+	shoppingListGUID string, relations string) []*DealCashback {
+
+	dealCashbacks := []*DealCashback{}
+
+	dcr.DB.Model(&DealCashback{}).Where(DealCashback{DealCashbackTransactionGUID: dealCashbackTransactionGUID, ShoppingListGUID: shoppingListGUID}).
+		Group("shopping_list_guid").Find(&dealCashbacks)
+
+	return dealCashbacks
 }
 
 func (dcr *DealCashbackRepository) CountByDealGUIDAndUserGUID(dealGUID string, userGUID string) int {

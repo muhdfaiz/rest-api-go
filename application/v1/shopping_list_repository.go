@@ -5,6 +5,7 @@ import "github.com/jinzhu/gorm"
 type ShoppingListRepositoryInterface interface {
 	GetByUserGUID(userGUID string, relations string) []*ShoppingList
 	GetByGUID(GUID string, relations string) *ShoppingList
+	GetByGUIDPreloadWithDealCashbacks(GUID string, dealCashbackTransactionGUID string, relations string) *ShoppingList
 	GetByGUIDAndUserGUID(GUID string, userGUID string, relations string) *ShoppingList
 	GetByUserGUIDOccasionGUIDAndName(userGUID string, name string, occasionGUID string, relations string) *ShoppingList
 }
@@ -55,6 +56,17 @@ func (slr *ShoppingListRepository) GetByGUID(GUID string, relations string) *Sho
 	}
 
 	DB.Where(&ShoppingList{GUID: GUID}).First(&shoppingLists)
+
+	return shoppingLists
+}
+
+// GetByGUIDPreloadWithDealCashbacks function used to retrieve user shopping list by and Shopping List GUID and load relation deal cashback
+func (slr *ShoppingListRepository) GetByGUIDPreloadWithDealCashbacks(GUID string, dealCashbackTransactionGUID string, relations string) *ShoppingList {
+	shoppingLists := &ShoppingList{}
+
+	slr.DB.Model(&ShoppingList{}).Preload("Dealcashbacks", func(db *gorm.DB) *gorm.DB {
+		return db.Where("deal_cashback_transaction_guid = ?", dealCashbackTransactionGUID)
+	}).Preload("Dealcashbacks.Deals").Preload("Dealcashbacks.Dealcashbackstatus").Preload("Dealcashbacks.Dealcashbackstatus").Where(&ShoppingList{GUID: GUID}).First(&shoppingLists)
 
 	return shoppingLists
 }

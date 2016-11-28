@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"fmt"
 	"strings"
 
 	"bitbucket.org/cliqers/shoppermate-api/systems"
@@ -10,6 +11,7 @@ import (
 // TransactionRepositoryInterface is a contract that define the methods needed for Transaction Repository
 type TransactionRepositoryInterface interface {
 	Create(createTransactionData *CreateTransaction) (*Transaction, *systems.ErrorData)
+	UpdateReadStatus(transactionGUID string, readStatus int) *systems.ErrorData
 	GetByGUID(GUID string, relations string) *Transaction
 	GetByUserGUIDAndStatusAndReadStatus(userGUID string, transactionStatus string, readStatus string, pageNumber string,
 		pageLimit string, relations string) ([]*Transaction, int)
@@ -49,6 +51,17 @@ func (tr *TransactionRepository) Create(createTransactionData *CreateTransaction
 	return createdTransaction, nil
 }
 
+// UpdateReadStatus function used to set `read_status` column to new value
+func (tr *TransactionRepository) UpdateReadStatus(transactionGUID string, readStatus int) *systems.ErrorData {
+	updateResult := tr.DB.Model(&Transaction{}).Where(&Transaction{GUID: transactionGUID}).Update("read_status", readStatus)
+
+	if updateResult.Error != nil {
+		return Error.InternalServerError(updateResult.Error, systems.DatabaseError)
+	}
+
+	return nil
+}
+
 // GetByGUID function used to retrieve transaction details
 func (tr *TransactionRepository) GetByGUID(GUID string, relations string) *Transaction {
 	transaction := &Transaction{}
@@ -60,7 +73,7 @@ func (tr *TransactionRepository) GetByGUID(GUID string, relations string) *Trans
 	}
 
 	DB.Where(&Transaction{GUID: GUID}).First(&transaction)
-
+	fmt.Println(transaction)
 	return transaction
 }
 

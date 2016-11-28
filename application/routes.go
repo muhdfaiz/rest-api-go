@@ -129,7 +129,9 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 	// Transaction
 	transactionRepository := &v1.TransactionRepository{DB: DB, TransactionStatusRepository: transactionStatusRepository}
 	transactionTransformer := &v1.TransactionTransformer{}
-	transactionService := &v1.TransactionService{TransactionRepository: transactionRepository, TransactionTransformer: transactionTransformer}
+	transactionService := &v1.TransactionService{TransactionRepository: transactionRepository, TransactionTransformer: transactionTransformer,
+		DealCashbackRepository: dealCashbackRepository, ItemRepository: itemRepository, GrocerRepository: grocerRepository,
+		ShoppingListRepository: shoppingListRepository}
 
 	// Deal Cashback Transaction
 	//dealCashbackTransactionRepository := &v1.DealCashbackTransactionRepository{DB: DB}
@@ -199,7 +201,7 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 	dealCashbackTransactionHandler := v1.DealCashbackTransactionHandler{DealCashbackTransactionService: dealCashbackTransactionService,
 		DealCashbackFactory: dealCashbackFactory, DealCashbackRepository: dealCashbackRepository}
 
-	transactionHandler := v1.TransactionHandler{TransactionService: transactionService, UserService: userService}
+	transactionHandler := v1.TransactionHandler{TransactionService: transactionService}
 
 	// V1 Routes
 	version1 := router.Group("/v1")
@@ -289,6 +291,7 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 
 			// Transaction Routes
 			version1.GET("users/:guid/transactions", transactionHandler.ViewUserTransactions)
+			version1.GET("users/:guid/transactions/:transaction_guid/deal_cashback_transactions", transactionHandler.ViewDealCashbackTransaction)
 		}
 	}
 

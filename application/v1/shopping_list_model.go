@@ -16,4 +16,6 @@ type ShoppingList struct {
 
 	// Has many Shopping List Item
 	Items []*ShoppingListItem `json:"items,omitempty" gorm:"ForeignKey:ShoppingListGUID;AssociationForeignKey:GUID"`
+
+	Dealcashbacks []*DealCashback `json:"deal_cashbacks,omitempty" gorm:"ForeignKey:ShoppingListGUID;AssociationForeignKey:GUID"`
 }

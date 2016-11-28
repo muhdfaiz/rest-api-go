@@ -15,7 +15,7 @@ type DealServiceInterface interface {
 	RemoveDealCashbackAndSetItemDealExpired(userGUID string, shoppingListGUID string, dealGUID string) *systems.ErrorData
 	ViewDealDetails(dealGUID string, relations string) *Ads
 	GetAvailableDealsForGuestUser(latitude string, longitude string, pageNumber string, pageLimit string, relations string) ([]*Deal, int)
-	GetAvailableDealsForRegisteredUser(userGUID string, latitude string, longitude string, pageNumber string, pageLimit string,
+	GetAvailableDealsForRegisteredUser(userGUID string, name string, latitude string, longitude string, pageNumber string, pageLimit string,
 		relations string) ([]*Deal, int)
 	GetAvailableDealsGroupByCategoryForRegisteredUser(userGUID string, latitude string, longitude string, dealLimitPerCategory string, relations string) []*ItemCategory
 	GetAvailableDealsByCategoryGroupBySubCategoryForRegisteredUser(userGUID string, categoryGUID string, latitude string, longitude string,
@@ -233,14 +233,14 @@ func (ds *DealService) GetAvailableDealsForGuestUser(latitude string, longitude 
 }
 
 // GetAvailableDealsForRegisteredUser function used to retrieve all deals within valid range 10KM
-func (ds *DealService) GetAvailableDealsForRegisteredUser(userGUID string, latitude string, longitude string, pageNumber string, pageLimit string, relations string) ([]*Deal, int) {
+func (ds *DealService) GetAvailableDealsForRegisteredUser(userGUID string, name string, latitude string, longitude string, pageNumber string, pageLimit string, relations string) ([]*Deal, int) {
 	currentDateInGMT8 := time.Now().UTC().Add(time.Hour * 8).Format("2006-01-02")
 
 	// Convert Latitude and Longitude from string to float65
 	latitude1InFLoat64, _ := strconv.ParseFloat(strings.TrimSpace(latitude), 64)
 	longitudeInFLoat64, _ := strconv.ParseFloat(strings.TrimSpace(longitude), 64)
 
-	deals, totalDeal := ds.DealRepository.GetAllDealsWithinValidRangeStartDateEndDateUserLimitAndQuota(userGUID, latitude1InFLoat64, longitudeInFLoat64,
+	deals, totalDeal := ds.DealRepository.GetAllDealsWithinValidRangeStartDateEndDateUserLimitQuotaAndName(userGUID, name, latitude1InFLoat64, longitudeInFLoat64,
 		currentDateInGMT8, pageNumber, pageLimit, relations)
 
 	for key, deal := range deals {

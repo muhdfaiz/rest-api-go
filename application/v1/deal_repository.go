@@ -10,7 +10,7 @@ type DealRepositoryInterface interface {
 	GetDealByIDWithRelations(dealID int, relations string) *Ads
 	GetAllDealsWithinValidRangeStartDateEndDateAndQuota(latitude float64, longitude float64, currentDateInGMT8 string,
 		pageNumber string, pageLimit string, relations string) ([]*Deal, int)
-	GetAllDealsWithinValidRangeStartDateEndDateUserLimitAndQuota(userGUID string, latitude float64, longitude float64,
+	GetAllDealsWithinValidRangeStartDateEndDateUserLimitQuotaAndName(userGUID string, name string, latitude float64, longitude float64,
 		currentDateInGMT8, pageNumber string, pageLimit string, relations string) ([]*Deal, int)
 	GetAllDealsForCategoryWithinValidRangeStartDateEndDateUserLimitAndQuota(userGUID string, category string, latitude float64, longitude float64,
 		currentDateInGMT8, pageNumber string, pageLimit string, relations string) ([]*Deal, int)
@@ -182,16 +182,16 @@ func (dr *DealRepository) GetAllDealsWithinValidRangeStartDateEndDateAndQuota(la
 	return dealsWithin10KM, total.Total
 }
 
-// GetAllDealsWithinValidRangeStartDateEndDateUserLimitAndQuota used to retrieve deal within valid range (10KM), start date,
+// GetAllDealsWithinValidRangeStartDateEndDateUserLimitQuotaAndName used to retrieve deal within valid range (10KM), start date,
 // end date, user limit and the deal quota still available including the relations like grocers, grocer locations and item.
-func (dr *DealRepository) GetAllDealsWithinValidRangeStartDateEndDateUserLimitAndQuota(userGUID string, latitude float64, longitude float64,
+func (dr *DealRepository) GetAllDealsWithinValidRangeStartDateEndDateUserLimitQuotaAndName(userGUID string, name string, latitude float64, longitude float64,
 	currentDateInGMT8, pageNumber string, pageLimit string, relations string) ([]*Deal, int) {
 
 	dealsWithin10KM := []*Deal{}
 
 	offset := SetOffsetValue(pageNumber, pageLimit)
 
-	sqlQueryStatement := `SELECT SQL_CALC_FOUND_ROWS deals.*, count(deal_cashbacks.deal_guid) AS total_deal_cashback,
+	sqlQueryStatement := `SELECT deals.*, count(deal_cashbacks.deal_guid) AS total_deal_cashback,
 	(SELECT count(*) FROM deal_cashbacks WHERE deal_cashbacks.deal_guid = deals.ads_guid AND user_guid = ?) AS total_user_deal_cashback
 	FROM
 		(SELECT ads.id AS ads_id,
@@ -232,7 +232,7 @@ func (dr *DealRepository) GetAllDealsWithinValidRangeStartDateEndDateUserLimitAn
 		INNER JOIN ads_grocer ON ads.id = ads_grocer.ads_id
 		INNER JOIN grocer_location ON grocer_location.id = ads_grocer.grocer_location_id
 		LEFT JOIN category ON category.id = ads.category_id
-		WHERE ads.status = "publish" AND ads.start_date <= ? AND ads.end_date > ?
+		WHERE ads.status = "publish" AND ads.name LIKE ? AND ads.start_date <= ? AND ads.end_date > ?
 		GROUP BY ads_guid
 		HAVING nearest_grocer_distance_in_km <= ?
 		ORDER BY ads.created_at DESC) AS deals
@@ -242,21 +242,23 @@ func (dr *DealRepository) GetAllDealsWithinValidRangeStartDateEndDateUserLimitAn
 	ORDER BY deal_created_time DESC`
 
 	if pageLimit != "" {
-		sqlQueryStatement = sqlQueryStatement + " LIMIT ? OFFSET ?"
-		dr.DB.Raw(sqlQueryStatement, userGUID, latitude, longitude, latitude, currentDateInGMT8, currentDateInGMT8, 10, pageLimit, offset).Scan(&dealsWithin10KM)
+		sqlQueryStatementWithPagination := sqlQueryStatement + " LIMIT ? OFFSET ?"
+		dr.DB.Raw(sqlQueryStatementWithPagination, userGUID, latitude, longitude, latitude, "%"+name+"%", currentDateInGMT8, currentDateInGMT8, 10, pageLimit, offset).Scan(&dealsWithin10KM)
 	} else {
-		dr.DB.Raw(sqlQueryStatement, userGUID, latitude, longitude, latitude, currentDateInGMT8, currentDateInGMT8, 10).Scan(&dealsWithin10KM)
+		dr.DB.Raw(sqlQueryStatement, userGUID, latitude, longitude, latitude, "%"+name+"%", currentDateInGMT8, currentDateInGMT8, 10).Scan(&dealsWithin10KM)
 	}
 
-	type TotalDeal struct {
-		Total int `json:"total"`
+	sqlCountQueryStatement := "SELECT count(*) as total_user_deal FROM (" + sqlQueryStatement + ") as user_deals;"
+
+	type Deal struct {
+		TotalUserDeal int `json:"total_user_deal"`
 	}
 
-	total := &TotalDeal{}
+	deal := &Deal{}
 
-	dr.DB.Raw(`SELECT FOUND_ROWS() as total;`).Scan(total)
+	dr.DB.Raw(sqlCountQueryStatement, userGUID, latitude, longitude, latitude, "%"+name+"%", currentDateInGMT8, currentDateInGMT8, 10).Scan(deal)
 
-	return dealsWithin10KM, total.Total
+	return dealsWithin10KM, deal.TotalUserDeal
 }
 
 // GetAllDealsForCategoryWithinValidRangeStartDateEndDateUserLimitAndQuota used to retrieve deal within valid range (10KM), start date,

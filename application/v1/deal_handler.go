@@ -90,9 +90,10 @@ func (dh *DealHandler) ViewAllForRegisteredUser(c *gin.Context) {
 
 	pageNumber := c.Query("page_number")
 	pageLimit := c.Query("page_limit")
+	name := c.Query("name")
 
 	// Retrieve deals
-	deals, totalDeal := dh.DealService.GetAvailableDealsForRegisteredUser(userGUID, latitude, longitude, pageNumber, pageLimit, "")
+	deals, totalDeal := dh.DealService.GetAvailableDealsForRegisteredUser(userGUID, name, latitude, longitude, pageNumber, pageLimit, "")
 
 	result := dh.DealTransformer.transformCollection(c.Request, deals, totalDeal, pageLimit)
 

@@ -37,6 +37,7 @@ const (
 	TokenIdentityNotMatch        = "1026"
 	FailedToDeleteAmazonS3File   = "1027"
 	QueryStringValidationFailed  = "1028"
+	CashoutAmountExceededLimit   = "1029"
 
 	TitleValidationError         = "Validation failed."
 	TitleInternalServerError     = "Internal server error."

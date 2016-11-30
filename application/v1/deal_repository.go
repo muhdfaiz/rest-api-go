@@ -3,7 +3,7 @@ package v1
 import "github.com/jinzhu/gorm"
 
 type DealRepositoryInterface interface {
-	SumCashbackAmount(dealGUIDs []string) float32
+	SumCashbackAmount(dealGUIDs []string) float64
 	GetDealsByCategoryAndValidStartEndDate(todayDateInGMT8 string, shoppingListItem *ShoppingListItem) []*Deal
 	GetDealsByValidStartEndDate(todayDateInGMT8 string) []*Deal
 	GetDealByGUID(dealGUID string) *Deal
@@ -26,9 +26,9 @@ type DealRepository struct {
 	GrocerLocationService GrocerLocationServiceInterface
 }
 
-func (dr *DealRepository) SumCashbackAmount(dealGUIDs []string) float32 {
+func (dr *DealRepository) SumCashbackAmount(dealGUIDs []string) float64 {
 	type Ads struct {
-		TotalCashbackAmount float32 `json:"total_cashback_amount"`
+		TotalCashbackAmount float64 `json:"total_cashback_amount"`
 	}
 
 	deal := &Ads{}

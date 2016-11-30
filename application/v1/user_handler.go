@@ -21,6 +21,8 @@ type UserHandler struct {
 	SmsService                 SmsServiceInterface
 	FacebookService            facebook.FacebookServiceInterface
 	DeviceFactory              DeviceFactoryInterface
+	TransactionService         TransactionServiceInterface
+	DealCashbackService        DealCashbackServiceInterface
 }
 
 // View function used to view user detail
@@ -40,8 +42,19 @@ func (uh *UserHandler) View(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"data": user})
+	totalAmountOfPendingDealCashbackTransactions := uh.TransactionService.CalculatePendingAmountForUserTransaction(userGUID)
 
+	totalAmountOfDealCashbackAddedToList := uh.DealCashbackService.CalculateTotalAmountOfDealCashbackAddedTolist(userGUID)
+
+	totalPendingAmount := totalAmountOfPendingDealCashbackTransactions + totalAmountOfDealCashbackAddedToList
+
+	user.PendingAmount = &totalPendingAmount
+
+	totalCashoutAmount := uh.TransactionService.CalculateTotalCashoutAmountForUserTransaction(userGUID)
+
+	user.AllTimeAmount = &totalCashoutAmount
+
+	c.JSON(http.StatusOK, gin.H{"data": user})
 }
 
 // Create function will create new user

@@ -9,6 +9,7 @@ import (
 type UserFactoryInterface interface {
 	Create(data CreateUser) (*User, *systems.ErrorData)
 	Update(guid string, data map[string]interface{}) *systems.ErrorData
+	UpdateUserWallet(userGUID string, amount float64) *systems.ErrorData
 	Delete(attribute string, value string) *systems.ErrorData
 }
 
@@ -51,16 +52,32 @@ func (uf *UserFactory) Create(data CreateUser) (*User, *systems.ErrorData) {
 // Update function used to update user detail by certain field.
 func (uf *UserFactory) Update(guid string, data map[string]interface{}) *systems.ErrorData {
 	updateData := map[string]interface{}{}
+
 	for key, value := range data {
 		if data, ok := value.(string); ok && value.(string) != "" {
 			updateData[snaker.CamelToSnake(key)] = data
 		}
-		if data, ok := value.(int); ok && value.(int) != 0 {
+		if data, ok := value.(int); ok {
+			updateData[snaker.CamelToSnake(key)] = data
+		}
+		if data, ok := value.(float64); ok {
 			updateData[snaker.CamelToSnake(key)] = data
 		}
 	}
 
 	result := uf.DB.Model(&User{}).Where(&User{GUID: guid}).Updates(updateData)
+
+	if result.Error != nil {
+		return Error.InternalServerError(result.Error, systems.DatabaseError)
+	}
+
+	return nil
+}
+
+func (uf *UserFactory) UpdateUserWallet(userGUID string, amount float64) *systems.ErrorData {
+	result := uf.DB.Model(&User{}).Where(&User{GUID: userGUID}).Updates(map[string]interface{}{
+		"wallet": amount,
+	})
 
 	if result.Error != nil {
 		return Error.InternalServerError(result.Error, systems.DatabaseError)

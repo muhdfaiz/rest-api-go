@@ -14,8 +14,8 @@ type Advertiser struct {
 	Postcode         string     `json:"postcode"`
 	City             string     `json:"city"`
 	State            string     `json:"state"`
-	TotalCredits     float32    `json:"-"`
-	RemainingCredtis float32    `json:"-"`
+	TotalCredits     float64    `json:"-"`
+	RemainingCredtis float64    `json:"-"`
 	CreatedAt        time.Time  `json:"created_at"`
 	UpdatedAt        time.Time  `json:"updated_at"`
 	DeletedAt        *time.Time `json:"deleted_at"`

@@ -62,6 +62,10 @@ func (dcts *DealCashbackTransactionService) CreateTransaction(receipt *multipart
 
 	transaction, err := dcts.TransactionRepository.Create(transactionData)
 
+	if err != nil {
+		return nil, err
+	}
+
 	result, err := dcts.DealCashbackTransactionFactory.Create(userGUID, transaction.GUID, uploadedReceipt["path"])
 
 	if err != nil {

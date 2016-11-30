@@ -8,9 +8,13 @@ import (
 
 // TransactionServiceInterface is a contract that defines the methods needed for Transaction Service
 type TransactionServiceInterface interface {
+	CreateTransaction(userGUID string, transactionTypeGUID string, amount float64) (*Transaction, *systems.ErrorData)
+	ViewTransactionDetails(transactionGUID string, relations string) *Transaction
 	ViewDealCashbackTransactionAndUpdateReadStatus(userGUID string, transactionGUID string) (*Transaction, *systems.ErrorData)
 	GetUserTransactionsForSpecificStatus(request *http.Request, userGUID string, transactionStatus string,
 		isRead string, pageNumber string, pageLimit string, relations string) *TransactionResponse
+	CalculatePendingAmountForUserTransaction(userGUID string) float64
+	CalculateTotalCashoutAmountForUserTransaction(userGUID string) float64
 }
 
 // TransactionService used to encapsulates semantic gap domain layer (Transaction Handler) and persistence layer (Transaction Repository)
@@ -23,7 +27,30 @@ type TransactionService struct {
 	ShoppingListRepository ShoppingListRepositoryInterface
 }
 
-// ViewTransactionAndUpdateReadStatus function used to view transaction details and update `read_status` if the transaction
+func (ts *TransactionService) CreateTransaction(userGUID string, transactionTypeGUID string, amount float64) (*Transaction, *systems.ErrorData) {
+	transactionData := &CreateTransaction{
+		UserGUID:            userGUID,
+		TransactionTypeGUID: transactionTypeGUID,
+		Amount:              amount,
+		ReferenceID:         Helper.GenerateUniqueShortID(),
+	}
+
+	transaction, err := ts.TransactionRepository.Create(transactionData)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return transaction, nil
+}
+
+func (ts *TransactionService) ViewTransactionDetails(transactionGUID string, relations string) *Transaction {
+	transaction := ts.TransactionRepository.GetByGUID(transactionGUID, relations)
+
+	return transaction
+}
+
+// ViewDealCashbackTransactionAndUpdateReadStatus function used to view transaction details and update `read_status` if the transaction
 // not equal to `pending`
 func (ts *TransactionService) ViewDealCashbackTransactionAndUpdateReadStatus(userGUID string, transactionGUID string) (*Transaction, *systems.ErrorData) {
 
@@ -87,4 +114,20 @@ func (ts *TransactionService) GetUserTransactionsForSpecificStatus(request *http
 	transactionsResponse := ts.TransactionTransformer.transformCollection(request, transactions, totalNumberOfTransaction, pageLimit)
 
 	return transactionsResponse
+}
+
+// CalculatePendingAmountForUserTransaction function used to calculate total amount of user transaction with status pending.
+func (ts *TransactionService) CalculatePendingAmountForUserTransaction(userGUID string) float64 {
+
+	totalAmountOfPendingDealCashbackTransactions := ts.TransactionRepository.GetTotalAmountOfPendingTransactionsForUser(userGUID)
+
+	return totalAmountOfPendingDealCashbackTransactions
+}
+
+// CalculateTotalCashoutAmountForUserTransaction function used to calculate total amount of user transaction with status pending.
+func (ts *TransactionService) CalculateTotalCashoutAmountForUserTransaction(userGUID string) float64 {
+
+	totalAmountOfCashoutTransaction := ts.TransactionRepository.GetTotalAmountOfCashoutTransactionForUser(userGUID)
+
+	return totalAmountOfCashoutTransaction
 }

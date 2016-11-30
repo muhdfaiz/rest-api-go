@@ -8,6 +8,7 @@ import (
 
 type DealCashbackServiceInterface interface {
 	CountTotalNumberOfDealUserAddToList(userGUID string, dealGUID string) int
+	CalculateTotalAmountOfDealCashbackAddedTolist(userGUID string) float64
 	CreateDealCashbackAndShoppingListItem(userGUID string, dealCashbackData CreateDealCashback) *systems.ErrorData
 	GetUserDealCashbackForUserShoppingList(userGUID string, shoppingListGUID string, transactionStatus string,
 		pageNumber string, pageLimit string, relations string) ([]*DealCashback, int)
@@ -55,6 +56,12 @@ func (dcs *DealCashbackService) CountTotalNumberOfDealUserAddToList(userGUID str
 	total := dcs.DealCashbackRepository.CountByDealGUIDAndUserGUID(dealGUID, userGUID)
 
 	return total
+}
+
+func (dcs *DealCashbackService) CalculateTotalAmountOfDealCashbackAddedTolist(userGUID string) float64 {
+	totalCashbackAmount := dcs.DealCashbackRepository.CalculateTotalCashbackAmountFromDealCashbackAddedTolist(userGUID)
+
+	return totalCashbackAmount
 }
 
 func (dcs *DealCashbackService) GetUserDealCashbackForUserShoppingList(userGUID string, shoppingListGUID string, transactionStatus string, pageNumber string,

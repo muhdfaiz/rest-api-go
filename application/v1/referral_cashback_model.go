@@ -7,7 +7,7 @@ type ReferralCashback struct {
 	GUID           string     `json:"guid"`
 	ReferrerGUID   string     `json:"referrer_guid"`
 	ReferentGUID   string     `json:"referent_guid"`
-	CashbackAmount float32    `json:"cashback_amount"`
+	CashbackAmount float64    `json:"cashback_amount"`
 	CreatedAt      time.Time  `json:"created_at"`
 	UpdatedAt      time.Time  `json:"updated_at"`
 	DeletedAt      *time.Time `json:"deleted_at"`

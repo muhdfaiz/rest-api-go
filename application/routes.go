@@ -145,13 +145,20 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 	eventRepository := &v1.EventRepository{DB: DB}
 	eventService := &v1.EventService{EventRepository: eventRepository, DealCashbackRepository: dealCashbackRepository}
 
+	// Cashout Transaction Object
+	cashoutTransactionRepository := &v1.CashoutTransactionRepository{DB: DB}
+	cashoutTransactionService := &v1.CashoutTransactionService{CashoutTransactionRepository: cashoutTransactionRepository,
+		TransactionService: transactionService, UserRepository: userRepository, TransactionTypeRepository: transactionTypeRepository,
+		UserFactory: userFactory}
+
 	// Sms Handler
 	smsHandler := v1.SmsHandler{UserRepository: userRepository, UserFactory: userFactory, SmsService: smsService,
 		SmsHistoryRepository: smsHistoryRepository, DeviceRepository: deviceRepository, DeviceFactory: deviceFactory}
 
 	// User Handler
-	userHandler := v1.UserHandler{UserRepository: userRepository, UserService: userService, UserFactory: userFactory, DeviceFactory: deviceFactory,
-		ReferralCashbackRepository: referralCashbackRepository, SmsService: smsService, FacebookService: facebookService}
+	userHandler := v1.UserHandler{UserRepository: userRepository, UserService: userService, UserFactory: userFactory,
+		DeviceFactory: deviceFactory, ReferralCashbackRepository: referralCashbackRepository, SmsService: smsService,
+		FacebookService: facebookService, TransactionService: transactionService, DealCashbackService: dealCashbackService}
 
 	// Device Handler
 	deviceHandler := v1.DeviceHandler{UserRepository: userRepository, DeviceRepository: deviceRepository, DeviceFactory: deviceFactory}
@@ -203,6 +210,7 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 
 	transactionHandler := v1.TransactionHandler{TransactionService: transactionService}
 
+	cashoutTransactionHandler := v1.CashoutTransactionHandler{CashoutTransactionService: cashoutTransactionService}
 	// V1 Routes
 	version1 := router.Group("/v1")
 	{
@@ -292,6 +300,9 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 			// Transaction Routes
 			version1.GET("users/:guid/transactions", transactionHandler.ViewUserTransactions)
 			version1.GET("users/:guid/transactions/:transaction_guid/deal_cashback_transactions", transactionHandler.ViewDealCashbackTransaction)
+
+			// Cashout Transaction
+			version1.POST("users/:guid/transactions/cashout_transactions", cashoutTransactionHandler.Create)
 		}
 	}
 

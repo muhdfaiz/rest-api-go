@@ -10,6 +10,7 @@ type DealCashbackRepositoryInterface interface {
 		shoppingListGUID string, relations string) []*DealCashback
 	CountByDealGUIDAndUserGUID(dealGUID string, userGUID string) int
 	CountByDealGUID(dealGUID string) int
+	CalculateTotalCashbackAmountFromDealCashbackAddedTolist(userGUID string) float64
 	GetByUserGUIDShoppingListGUIDAndTransactionStatus(userGUID string, shoppingListGUID string, transactionStatus string, pageNumber string,
 		pageLimit string, relations string) ([]*DealCashback, int)
 }
@@ -67,6 +68,23 @@ func (dcr *DealCashbackRepository) CountByDealGUID(dealGUID string) int {
 	dcr.DB.Model(&DealCashback{}).Where(&DealCashback{DealGUID: dealGUID}).Count(&totalDealCashback)
 
 	return totalDealCashback
+}
+
+// CalculateTotalCashbackAmountFromDealCashbackAddedTolist function used to sum all of cashback amount for deal cashback already
+// added to list.
+func (dcr *DealCashbackRepository) CalculateTotalCashbackAmountFromDealCashbackAddedTolist(userGUID string) float64 {
+
+	type DealCashback struct {
+		TotalAmountOfCashback float64 `json:"total_amount_of_cashback"`
+	}
+
+	dealCashback := &DealCashback{}
+
+	dcr.DB.Model(&DealCashback{}).Select("sum(ads.cashback_amount) as total_amount_of_cashback").
+		Joins("left join ads on ads.guid = deal_cashbacks.deal_guid").
+		Where("deal_cashbacks.deal_cashback_transaction_guid IS NULL").Scan(dealCashback)
+
+	return dealCashback.TotalAmountOfCashback
 }
 
 func (dcr *DealCashbackRepository) GetByUserGUIDShoppingListGUIDAndTransactionStatus(userGUID string, shoppingListGUID string,

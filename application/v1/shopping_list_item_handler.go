@@ -324,7 +324,7 @@ func (slih *ShoppingListItemHandler) DeleteAll(c *gin.Context) {
 
 	if addedToCart == "1" {
 		// Soft delete Shopping List Item incuding relationship
-		err1 := slih.ShoppingListItemFactory.DeleteItemsHasBeenAddedToCartByUserGUID(userGUID)
+		err1 := slih.ShoppingListItemFactory.DeleteItemsHasBeenAddedToCartByUserGUIDAndShoppingListGUID(userGUID, shoppingListGUID)
 
 		if err1 != nil {
 			c.JSON(http.StatusInternalServerError, err1)
@@ -341,7 +341,7 @@ func (slih *ShoppingListItemHandler) DeleteAll(c *gin.Context) {
 
 	if addedToCart == "0" {
 		// Soft delete Shopping List Item incuding relationship
-		err1 := slih.ShoppingListItemFactory.DeleteItemsHasNotBeenAddedToCartByUserGUID(userGUID)
+		err1 := slih.ShoppingListItemFactory.DeleteItemsHasNotBeenAddedToCartByUserGUIDAndShoppingListGUID(userGUID, shoppingListGUID)
 
 		if err1 != nil {
 			c.JSON(http.StatusInternalServerError, err1)

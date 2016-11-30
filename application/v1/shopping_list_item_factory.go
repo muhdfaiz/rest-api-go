@@ -18,8 +18,8 @@ type ShoppingListItemFactoryInterface interface {
 	DeleteByGUID(guid string) *systems.ErrorData
 	DeleteByShoppingListGUID(shoppingListGUID string) *systems.ErrorData
 	DeleteByUserGUID(userGUID string) *systems.ErrorData
-	DeleteItemsHasBeenAddedToCartByUserGUID(userGUID string) *systems.ErrorData
-	DeleteItemsHasNotBeenAddedToCartByUserGUID(userGUID string) *systems.ErrorData
+	DeleteItemsHasBeenAddedToCartByUserGUIDAndShoppingListGUID(userGUID string, shoppingListGUID string) *systems.ErrorData
+	DeleteItemsHasNotBeenAddedToCartByUserGUIDAndShoppingListGUID(userGUID string, shoppingListGUID string) *systems.ErrorData
 }
 
 // ShoppingListItemFactory contain functions to create, update and delete shopping list item
@@ -287,16 +287,16 @@ func (slif *ShoppingListItemFactory) DeleteByUserGUID(userGUID string) *systems.
 	return nil
 }
 
-// DeleteItemsHasBeenAddedToCartByUserGUID function used to soft delete all shopping list item via user GUID
+// DeleteItemsHasBeenAddedToCartByUserGUIDAndShoppingListGUID function used to soft delete all shopping list item via user GUID
 // and items those has been added to cart including the relationship from database
-func (slif *ShoppingListItemFactory) DeleteItemsHasBeenAddedToCartByUserGUID(userGUID string) *systems.ErrorData {
+func (slif *ShoppingListItemFactory) DeleteItemsHasBeenAddedToCartByUserGUIDAndShoppingListGUID(userGUID string, shoppingListGUID string) *systems.ErrorData {
 	userShoppingListItemsHasBeenAddedToCart := []*ShoppingListItem{}
 
 	// Retrieve shopping list item those has been added to cart by user
 	slif.DB.Where("user_guid = ? AND added_to_cart = ?", userGUID, 1).Find(&userShoppingListItemsHasBeenAddedToCart)
 
 	// Delete shopping list item by user_guid and itemsadded to cart
-	deleteShoppingListItem := slif.DB.Where("user_guid = ? AND added_to_cart = ?", userGUID, 1).Delete(&ShoppingListItem{})
+	deleteShoppingListItem := slif.DB.Where("user_guid = ? AND added_to_cart = ? AND shopping_list_guid", userGUID, 1, shoppingListGUID).Delete(&ShoppingListItem{})
 
 	if deleteShoppingListItem.Error != nil {
 		return Error.InternalServerError(deleteShoppingListItem.Error, systems.DatabaseError)
@@ -324,16 +324,16 @@ func (slif *ShoppingListItemFactory) DeleteItemsHasBeenAddedToCartByUserGUID(use
 	return nil
 }
 
-// DeleteItemsHasNotBeenAddedToCartByUserGUID function used to soft delete all shopping list item via user GUID
+// DeleteItemsHasNotBeenAddedToCartByUserGUIDAndShoppingListGUID function used to soft delete all shopping list item via user GUID
 // and items those has been added to cart including the relationship from database
-func (slif *ShoppingListItemFactory) DeleteItemsHasNotBeenAddedToCartByUserGUID(userGUID string) *systems.ErrorData {
+func (slif *ShoppingListItemFactory) DeleteItemsHasNotBeenAddedToCartByUserGUIDAndShoppingListGUID(userGUID string, shoppingListGUID string) *systems.ErrorData {
 	userShoppingListItemsHasBeenAddedToCart := []*ShoppingListItem{}
 
 	// Retrieve shopping list item those has been added to cart by user
 	slif.DB.Where("user_guid = ? AND added_to_cart = ?", userGUID, 0).Find(&userShoppingListItemsHasBeenAddedToCart)
 
 	// Delete shopping list item by user_guid and itemsadded to cart
-	deleteShoppingListItem := slif.DB.Where("user_guid = ? AND added_to_cart = ?", userGUID, 0).Delete(&ShoppingListItem{})
+	deleteShoppingListItem := slif.DB.Where("user_guid = ? AND added_to_cart = ? AND shopping_list_guid", userGUID, 0, shoppingListGUID).Delete(&ShoppingListItem{})
 
 	if deleteShoppingListItem.Error != nil {
 		return Error.InternalServerError(deleteShoppingListItem.Error, systems.DatabaseError)

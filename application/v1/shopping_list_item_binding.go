@@ -7,7 +7,7 @@ type CreateShoppingListItem struct {
 	Quantity         int    `form:"quantity" json:"quantity" binding:"required,gte=0,lte=999"`
 	Remark           string `form:"remark" json:"remark" binding:"omitempty"`
 	AddedFromDeal    int    `form:"added_from_deal" json:"added_from_deal" binding:"omitempty,numeric"`
-	DealGUID         string `form:"deal_guid" json:"deal_guid" binding:"omitempty,uuid4"`
+	DealGUID         string `form:"deal_guid" json:"deal_guid" binding:"omitempty,uuid5"`
 }
 
 type UpdateShoppingListItem struct {

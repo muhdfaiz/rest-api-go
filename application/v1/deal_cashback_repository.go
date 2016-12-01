@@ -81,7 +81,7 @@ func (dcr *DealCashbackRepository) CalculateTotalCashbackAmountFromDealCashbackA
 	dealCashback := &DealCashback{}
 
 	dcr.DB.Model(&DealCashback{}).Select("sum(ads.cashback_amount) as total_amount_of_cashback").
-		Joins("left join ads on ads.guid = deal_cashbacks.deal_guid").
+		Joins("left join ads on ads.guid = deal_cashbacks.deal_guid").Where("user_guid = ?", userGUID).
 		Where("deal_cashbacks.deal_cashback_transaction_guid IS NULL").Scan(dealCashback)
 
 	return dealCashback.TotalAmountOfCashback

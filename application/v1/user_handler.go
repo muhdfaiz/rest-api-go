@@ -251,6 +251,18 @@ func (uh *UserHandler) Update(c *gin.Context) {
 	// Retrieve latest user data
 	updatedUser := uh.UserRepository.GetByGUID(userGUID, "")
 
+	totalAmountOfPendingDealCashbackTransactions := uh.TransactionService.CalculatePendingAmountForUserTransaction(userGUID)
+
+	totalAmountOfDealCashbackAddedToList := uh.DealCashbackService.CalculateTotalAmountOfDealCashbackAddedTolist(userGUID)
+
+	totalPendingAmount := totalAmountOfPendingDealCashbackTransactions + totalAmountOfDealCashbackAddedToList
+
+	updatedUser.PendingAmount = &totalPendingAmount
+
+	totalCashoutAmount := uh.TransactionService.CalculateTotalCashoutAmountForUserTransaction(userGUID)
+
+	updatedUser.AllTimeAmount = &totalCashoutAmount
+
 	// Send SMS verification code
 	if user.PhoneNo != updatedUser.PhoneNo && updatedUser.PhoneNo != "" {
 		_, err = uh.SmsService.SendVerificationCode(updatedUser.PhoneNo, updatedUser.GUID)

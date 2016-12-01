@@ -18,5 +18,4 @@ type UpdateUser struct {
 	BankName          string `form:"bank_name" json:"bank_name" binding:"omitempty"`
 	BankAccountName   string `form:"bank_account_name" json:"bank_account_name" binding:"omitempty"`
 	BankAccountNumber string `form:"bank_account_number" json:"bank_account_number" binding:"omitempty,numeric"`
-	Verified          int    `form:"verified" json:"verified" binding:"omitempty,numeric"`
 }

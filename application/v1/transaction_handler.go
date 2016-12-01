@@ -46,7 +46,7 @@ func (th *TransactionHandler) ViewCashoutTransaction(context *gin.Context) {
 		return
 	}
 
-	transaction, error := th.TransactionService.ViewDealCashbackTransactionAndUpdateReadStatus(userGUID, transactionGUID)
+	transaction, error := th.TransactionService.ViewCashoutTransactionAndUpdateReadStatus(userGUID, transactionGUID)
 
 	if error != nil {
 		errorCode, _ := strconv.Atoi(error.Error.Status)

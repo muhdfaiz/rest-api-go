@@ -132,6 +132,10 @@ func (tr *TransactionRepository) GetByUserGUIDAndStatusAndReadStatus(userGUID st
 
 	DB = DB.Joins("LEFT JOIN transaction_statuses ON transaction_statuses.guid = transactions.transaction_status_guid").Where(&Transaction{UserGUID: userGUID})
 
+	if readStatus != "" {
+		DB = DB.Where("read_status = ?", readStatus)
+	}
+
 	if transactionStatus != "" {
 		transactionStatuses := strings.Split(transactionStatus, ",")
 
@@ -142,10 +146,6 @@ func (tr *TransactionRepository) GetByUserGUIDAndStatusAndReadStatus(userGUID st
 				DB = DB.Or("transaction_statuses.slug = ?", transactionStatus)
 			}
 		}
-	}
-
-	if readStatus != "" {
-		DB = DB.Where("read_status = ?", readStatus)
 	}
 
 	if pageLimit != "" && pageNumber != "" {

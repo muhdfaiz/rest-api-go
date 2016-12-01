@@ -11,6 +11,7 @@ type TransactionServiceInterface interface {
 	CreateTransaction(userGUID string, transactionTypeGUID string, amount float64) (*Transaction, *systems.ErrorData)
 	ViewTransactionDetails(transactionGUID string, relations string) *Transaction
 	ViewDealCashbackTransactionAndUpdateReadStatus(userGUID string, transactionGUID string) (*Transaction, *systems.ErrorData)
+	ViewCashoutTransactionAndUpdateReadStatus(userGUID string, transactionGUID string) (*Transaction, *systems.ErrorData)
 	GetUserTransactionsForSpecificStatus(request *http.Request, userGUID string, transactionStatus string,
 		isRead string, pageNumber string, pageLimit string, relations string) *TransactionResponse
 	CalculatePendingAmountForUserTransaction(userGUID string) float64
@@ -103,6 +104,29 @@ func (ts *TransactionService) ViewDealCashbackTransactionAndUpdateReadStatus(use
 	transaction.Dealcashbacktransactions.TotalDeal = totalDeal
 
 	return transaction, nil
+}
+
+// ViewCashoutTransactionAndUpdateReadStatus function used to view cashout transaction details and update `read_status` if the transaction
+// not equal to `pending`
+func (ts *TransactionService) ViewCashoutTransactionAndUpdateReadStatus(userGUID string, transactionGUID string) (*Transaction, *systems.ErrorData) {
+
+	relations := "transactionstatuses,transactiontypes,cashouttransactions"
+
+	cashoutTransaction := ts.TransactionRepository.GetByGUID(transactionGUID, relations)
+
+	if cashoutTransaction.GUID == "" {
+		return nil, Error.ResourceNotFoundError("Transaction", "guid", transactionGUID)
+	}
+
+	if cashoutTransaction.Transactionstatuses.Slug != "pending" {
+		error := ts.TransactionRepository.UpdateReadStatus(transactionGUID, 1)
+
+		if error != nil {
+			return nil, error
+		}
+	}
+
+	return cashoutTransaction, nil
 }
 
 // GetUserTransactionsForSpecificStatus function used to retrieve list of user transactions that match the transaction status

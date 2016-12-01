@@ -16,7 +16,7 @@ type CashoutTransactionService struct {
 
 func (cts *CashoutTransactionService) CreateCashoutTransaction(userGUID string, cashoutTransactionData *CreateCashoutTransaction) (*Transaction, *systems.ErrorData) {
 	user := cts.UserRepository.GetByGUID(userGUID, "")
-	availableCashoutAmount := *user.Wallet
+	availableCashoutAmount := user.Wallet
 
 	if cashoutTransactionData.Amount > availableCashoutAmount {
 		return nil, Error.GenericError("422", systems.CashoutAmountExceededLimit, "Cashout Amount Exceeded Limit.", "amount", "Cashout amount more than current amount available.")

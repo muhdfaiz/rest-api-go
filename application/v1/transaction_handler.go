@@ -34,6 +34,29 @@ func (th *TransactionHandler) ViewDealCashbackTransaction(context *gin.Context) 
 	context.JSON(http.StatusOK, gin.H{"data": transaction})
 }
 
+func (th *TransactionHandler) ViewCashoutTransaction(context *gin.Context) {
+	tokenData := context.MustGet("Token").(map[string]string)
+
+	userGUID := context.Param("guid")
+
+	transactionGUID := context.Param("transaction_guid")
+
+	if tokenData["user_guid"] != userGUID {
+		context.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("update shopping list"))
+		return
+	}
+
+	transaction, error := th.TransactionService.ViewDealCashbackTransactionAndUpdateReadStatus(userGUID, transactionGUID)
+
+	if error != nil {
+		errorCode, _ := strconv.Atoi(error.Error.Status)
+		context.JSON(errorCode, error)
+		return
+	}
+
+	context.JSON(http.StatusOK, gin.H{"data": transaction})
+}
+
 func (th *TransactionHandler) ViewUserTransactions(context *gin.Context) {
 	tokenData := context.MustGet("Token").(map[string]string)
 

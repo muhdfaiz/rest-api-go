@@ -18,7 +18,7 @@ type User struct {
 	BankAccountNumber string     `json:"bank_account_number"`
 	RegisterBy        string     `json:"register_by"`
 	AllTimeAmount     *float64   `sql:"-" json:"all_time_amount"`
-	Wallet            *float64   `json:"available_cashback_amount"`
+	Wallet            float64    `json:"available_cashback_amount"`
 	PendingAmount     *float64   `sql:"-" json:"pending_amount"`
 	Verified          int        `json:"verified"`
 	CreatedAt         time.Time  `json:"created_at"`

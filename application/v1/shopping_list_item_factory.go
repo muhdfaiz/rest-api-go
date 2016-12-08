@@ -296,7 +296,7 @@ func (slif *ShoppingListItemFactory) DeleteItemsHasBeenAddedToCartByUserGUIDAndS
 	slif.DB.Where("user_guid = ? AND added_to_cart = ?", userGUID, 1).Find(&userShoppingListItemsHasBeenAddedToCart)
 
 	// Delete shopping list item by user_guid and itemsadded to cart
-	deleteShoppingListItem := slif.DB.Where("user_guid = ? AND added_to_cart = ? AND shopping_list_guid", userGUID, 1, shoppingListGUID).Delete(&ShoppingListItem{})
+	deleteShoppingListItem := slif.DB.Where("user_guid = ? AND added_to_cart = ? AND shopping_list_guid = ?", userGUID, 1, shoppingListGUID).Delete(&ShoppingListItem{})
 
 	if deleteShoppingListItem.Error != nil {
 		return Error.InternalServerError(deleteShoppingListItem.Error, systems.DatabaseError)

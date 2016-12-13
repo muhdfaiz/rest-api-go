@@ -19,18 +19,15 @@ type DealHandler struct {
 func (dh *DealHandler) View(c *gin.Context) {
 	tokenData := c.MustGet("Token").(map[string]string)
 
-	user := dh.UserRepository.GetByGUID(tokenData["user_guid"], "")
+	userGUID := c.Param("guid")
 
-	// If user GUID not match user GUID inside the token return error message
-	if user.GUID == "" {
+	if tokenData["user_guid"] != userGUID {
 		c.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("view deals"))
 		return
 	}
 
-	// Retrieve deal guid in url
 	dealGUID := c.Param("deal_guid")
-
-	// Retrieve query string for relations
+	
 	relations := c.Query("include")
 
 	deal := dh.DealService.ViewDealDetails(dealGUID, relations)
@@ -40,8 +37,7 @@ func (dh *DealHandler) View(c *gin.Context) {
 		return
 	}
 
-	// Check If deal quota still available for the user.
-	total := dh.DealCashbackService.CountTotalNumberOfDealUserAddToList(user.GUID, deal.GUID)
+	total := dh.DealCashbackService.CountTotalNumberOfDealUserAddToList(userGUID, deal.GUID)
 
 	deal.CanAddTolist = 1
 
@@ -58,10 +54,8 @@ func (dh *DealHandler) View(c *gin.Context) {
 func (dh *DealHandler) ViewAllForRegisteredUser(c *gin.Context) {
 	tokenData := c.MustGet("Token").(map[string]string)
 
-	// Retrieve user guid in url
 	userGUID := c.Param("guid")
 
-	// If user GUID not match user GUID inside the token return error message
 	if tokenData["user_guid"] != userGUID {
 		c.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("view deals"))
 		return

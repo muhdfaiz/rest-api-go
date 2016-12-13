@@ -1,23 +1,290 @@
 package v1
 
-import "github.com/jinzhu/gorm"
+import (
+	"bitbucket.org/cliqers/shoppermate-api/systems"
+	"github.com/jinzhu/gorm"
+	"github.com/serenize/snaker"
+)
 
 type ShoppingListItemRepositoryInterface interface {
+	Create(data CreateShoppingListItem) (*ShoppingListItem, *systems.ErrorData)
+	UpdateByUserGUIDShoppingListGUIDAndShoppingListItemGUID(userGUID string, shoppingListGUID string, shoppingListItemGUID string,
+		data map[string]interface{}) *systems.ErrorData
+	UpdateByUserGUIDAndShoppingListGUID(userGUID string, shoppingListGUID string, data map[string]interface{}) *systems.ErrorData
+	UpdateByUserGUIDAndDealGUID(userGUID string, dealGUID string, data map[string]interface{}) *systems.ErrorData
+	UpdateByUserGUIDShoppingListGUIDAndDealGUID(userGUID string, shoppingListGUID string, dealGUID string,
+		data map[string]interface{}) *systems.ErrorData
+	SetDealExpired(dealGUID string) *systems.ErrorData
+	DeleteByGUID(shoppingListItemGUID string) *systems.ErrorData
+	DeleteByShoppingListGUID(shoppingListGUID string) *systems.ErrorData
+	DeleteByUserGUIDAndShoppingListGUID(userGUID string, shoppingListGUID string) *systems.ErrorData
+	DeleteByGUIDAndUserGUIDAndShoppingListGUID(shoppingListItemGUID string,
+		userGUID string, shoppingListGUID string) *systems.ErrorData
+	DeleteItemsHasBeenAddedToCartByUserGUIDAndShoppingListGUID(userGUID string, shoppingListGUID string) *systems.ErrorData
+	DeleteItemsHasNotBeenAddedToCartByUserGUIDAndShoppingListGUID(userGUID string, shoppingListGUID string) *systems.ErrorData
 	GetByName(name string, relations string) *ShoppingListItem
 	GetByGUID(guid string, relations string) *ShoppingListItem
-	GetByShoppingListGUIDAndGUID(guid string, shoppingListGUID string, relations string) *ShoppingListItem
+	GetByGUIDUserGUIDAndShoppingListGUID(userGUID string, shoppingListGUID string,
+		shoppingListItemGUID string, relations string) *ShoppingListItem
 	GetByUserGUIDAndShoppingListGUID(userGUID string, shoppingListGUID string, relations string) []*ShoppingListItem
-	GetUserShoppingListItem(userGUID string, shoppingListGUID string, relations string, latitude string,
-		longitude string) map[string][]*ShoppingListItem
-	GetUserShoppingListItemAddedToCart(userGUID string, shoppingListGUID string, relations string) map[string][]*ShoppingListItem
-	GetUserShoppingListItemNotAddedToCart(userGUID string, shoppingListGUID string, relations string, latitude string,
-		longitude string) map[string][]*ShoppingListItem
+	GetByUserGUIDAndShoppingListGUIDAndSubCategory(userGUID string, shoppingListGUID string,
+		subcategory string, relations string) []*ShoppingListItem
+	GetByUserGUIDAndShoppingListGUIDAndAddedToCartAndSubCategory(userGUID string, shoppingListGUID string,
+		addedToCart int, subcategory string, relations string) []*ShoppingListItem
+	GetUniqueSubCategoryFromAllUserShoppingListItem(userGUID string, shoppingListGUID string) []*ShoppingListItem
+	GetUniqueSubCategoryFromUserShoppingListItem(userGUID string, shoppingListGUID string,
+		addedToCart int) []*ShoppingListItem
 }
 
 // ShoppingListItemRepository used to handle all task related to viewing, retrieving shopping list item
 type ShoppingListItemRepository struct {
 	DB          *gorm.DB
 	DealService DealServiceInterface
+}
+
+// Create function used to create user shopping list item
+func (slir *ShoppingListItemRepository) Create(data CreateShoppingListItem) (*ShoppingListItem, *systems.ErrorData) {
+	dealGUID := data.DealGUID
+	cashbackAmount := data.CashbackAmount
+
+	shoppingListItem := &ShoppingListItem{
+		GUID:             Helper.GenerateUUID(),
+		UserGUID:         data.UserGUID,
+		ShoppingListGUID: data.ShoppingListGUID,
+		Name:             data.Name,
+		Category:         data.Category,
+		SubCategory:      data.SubCategory,
+		Quantity:         data.Quantity,
+		AddedToCart:      data.AddedToCart,
+		AddedFromDeal:    data.AddedFromDeal,
+		DealGUID:         &dealGUID,
+		CashbackAmount:   &cashbackAmount,
+	}
+
+	result := slir.DB.Create(shoppingListItem)
+
+	if result.Error != nil || result.RowsAffected == 0 {
+		return nil, Error.InternalServerError(result.Error, systems.DatabaseError)
+	}
+
+	return result.Value.(*ShoppingListItem), nil
+}
+
+// UpdateByUserGUIDShoppingListGUIDAndShoppingListItemGUID function used to update device data
+// Require device uuid. Must provide in url
+func (slir *ShoppingListItemRepository) UpdateByUserGUIDShoppingListGUIDAndShoppingListItemGUID(userGUID string, shoppingListGUID string, shoppingListItemGUID string, data map[string]interface{}) *systems.ErrorData {
+	updateData := map[string]interface{}{}
+
+	for key, value := range data {
+		if data, ok := value.(string); ok && value.(string) != "" {
+			updateData[snaker.CamelToSnake(key)] = data
+		}
+
+		if data, ok := value.(int); ok {
+			if key == "Quantity" && data != 0 {
+				updateData[snaker.CamelToSnake(key)] = data
+			}
+
+			if key != "Quantity" {
+				updateData[snaker.CamelToSnake(key)] = data
+			}
+		}
+	}
+
+	result := slir.DB.Model(&ShoppingListItem{}).Where(&ShoppingListItem{GUID: shoppingListItemGUID, ShoppingListGUID: shoppingListGUID, UserGUID: userGUID}).
+		Updates(updateData)
+
+	if result.Error != nil {
+		return Error.InternalServerError(result.Error, systems.DatabaseError)
+	}
+
+	return nil
+}
+
+// UpdateByUserGUIDAndShoppingListGUID function used to update user shopping list item data by user GUID and shopping list GUID
+func (slir *ShoppingListItemRepository) UpdateByUserGUIDAndShoppingListGUID(userGUID string, shoppingListGUID string, data map[string]interface{}) *systems.ErrorData {
+	updateData := map[string]interface{}{}
+
+	for key, value := range data {
+		if data, ok := value.(string); ok && value.(string) != "" {
+			updateData[snaker.CamelToSnake(key)] = data
+		}
+
+		if data, ok := value.(int); ok {
+			if key == "Quantity" && data != 0 {
+				updateData[snaker.CamelToSnake(key)] = data
+			}
+
+			if key != "Quantity" {
+				updateData[snaker.CamelToSnake(key)] = data
+			}
+		}
+	}
+
+	result := slir.DB.Model(&ShoppingListItem{}).Where(&ShoppingListItem{ShoppingListGUID: shoppingListGUID, UserGUID: userGUID}).
+		Updates(updateData)
+
+	if result.Error != nil {
+		return Error.InternalServerError(result.Error, systems.DatabaseError)
+	}
+
+	return nil
+}
+
+// UpdateByUserGUIDAndDealGUID function used to update user shopping list item by user GUID and deal GUID
+func (slir *ShoppingListItemRepository) UpdateByUserGUIDAndDealGUID(userGUID string, dealGUID string, data map[string]interface{}) *systems.ErrorData {
+	updateData := map[string]interface{}{}
+
+	for key, value := range data {
+		if data, ok := value.(string); ok && value.(string) != "" {
+			updateData[snaker.CamelToSnake(key)] = data
+		}
+
+		if data, ok := value.(int); ok {
+			if key == "Quantity" && data != 0 {
+				updateData[snaker.CamelToSnake(key)] = data
+			}
+
+			if key != "Quantity" {
+				updateData[snaker.CamelToSnake(key)] = data
+			}
+		}
+	}
+
+	result := slir.DB.Model(&ShoppingListItem{}).Where(&ShoppingListItem{UserGUID: userGUID, DealGUID: &dealGUID}).
+		Updates(updateData)
+
+	if result.Error != nil {
+		return Error.InternalServerError(result.Error, systems.DatabaseError)
+	}
+
+	return nil
+}
+
+// UpdateByUserGUIDShoppingListGUIDAndDealGUID function used to update user shopping list item by user GUID and deal GUID
+func (slir *ShoppingListItemRepository) UpdateByUserGUIDShoppingListGUIDAndDealGUID(userGUID string, shoppingListGUID string, dealGUID string,
+	data map[string]interface{}) *systems.ErrorData {
+
+	updateData := map[string]interface{}{}
+
+	for key, value := range data {
+		if data, ok := value.(string); ok && value.(string) != "" {
+			updateData[snaker.CamelToSnake(key)] = data
+		}
+
+		if data, ok := value.(int); ok {
+			if key == "Quantity" && data != 0 {
+				updateData[snaker.CamelToSnake(key)] = data
+			}
+
+			if key != "Quantity" {
+				updateData[snaker.CamelToSnake(key)] = data
+			}
+		}
+	}
+
+	result := slir.DB.Model(&ShoppingListItem{}).Where(&ShoppingListItem{UserGUID: userGUID, ShoppingListGUID: shoppingListGUID, DealGUID: &dealGUID}).
+		Updates(updateData)
+
+	if result.Error != nil {
+		return Error.InternalServerError(result.Error, systems.DatabaseError)
+	}
+
+	return nil
+}
+
+// SetDealExpired function used to set deal expired on shopping list item when the deal already expired.
+func (slir *ShoppingListItemRepository) SetDealExpired(dealGUID string) *systems.ErrorData {
+	result := slir.DB.Model(&ShoppingListItem{}).Where("deal_guid = ?", dealGUID).Select("deal_expired").Updates(map[string]interface{}{"deal_expired": 1})
+
+	if result.Error != nil {
+		return Error.InternalServerError(result.Error, systems.DatabaseError)
+	}
+
+	return nil
+}
+
+// DeleteByGUID function used to soft delete shopping list via GUID including the relationship from database
+func (slir *ShoppingListItemRepository) DeleteByGUID(shoppingListItemGUID string) *systems.ErrorData {
+	deleteShoppingListItem := slir.DB.Where("guid = ?", shoppingListItemGUID).Delete(&ShoppingListItem{})
+
+	if deleteShoppingListItem.Error != nil {
+		return Error.InternalServerError(deleteShoppingListItem.Error, systems.DatabaseError)
+	}
+
+	return nil
+}
+
+// DeleteByShoppingListGUID function used to soft delete shopping list via shopping list GUID including the relationship from database
+func (slir *ShoppingListItemRepository) DeleteByShoppingListGUID(shoppingListGUID string) *systems.ErrorData {
+	// Delete shopping list item by shopping list GUID
+	deleteShoppingListItem := slir.DB.Where("shopping_list_guid = ?", shoppingListGUID).Delete(&ShoppingListItem{})
+
+	if deleteShoppingListItem.Error != nil {
+		return Error.InternalServerError(deleteShoppingListItem.Error, systems.DatabaseError)
+	}
+
+	return nil
+}
+
+// DeleteByUserGUIDAndShoppingListGUID function used to soft delete all user shopping list item by user
+// GUID and shopping list GUID including shopping list item images.
+func (slir *ShoppingListItemRepository) DeleteByUserGUIDAndShoppingListGUID(userGUID string, shoppingListGUID string) *systems.ErrorData {
+	deleteShoppingListItem := slir.DB.Where(&ShoppingListItem{UserGUID: userGUID, ShoppingListGUID: shoppingListGUID}).Delete(&ShoppingListItem{})
+
+	if deleteShoppingListItem.Error != nil {
+		return Error.InternalServerError(deleteShoppingListItem.Error, systems.DatabaseError)
+	}
+
+	return nil
+}
+
+// DeleteByGUIDAndUserGUIDAndShoppingListGUID function used to soft delete user shopping list item by
+// shopping list item GUID, user GUID and shopping list GUID including shopping list item images.
+func (slir *ShoppingListItemRepository) DeleteByGUIDAndUserGUIDAndShoppingListGUID(shoppingListItemGUID string,
+	userGUID string, shoppingListGUID string) *systems.ErrorData {
+
+	deleteShoppingListItem := slir.DB.Where(&ShoppingListItem{GUID: shoppingListItemGUID, UserGUID: userGUID, ShoppingListGUID: shoppingListGUID}).Delete(&ShoppingListItem{})
+
+	if deleteShoppingListItem.Error != nil {
+		return Error.InternalServerError(deleteShoppingListItem.Error, systems.DatabaseError)
+	}
+
+	return nil
+}
+
+// DeleteItemsHasBeenAddedToCartByUserGUIDAndShoppingListGUID function used to soft delete all of user shopping list item
+// those has been added to cart including shopping list item images.
+func (slir *ShoppingListItemRepository) DeleteItemsHasBeenAddedToCartByUserGUIDAndShoppingListGUID(userGUID string, shoppingListGUID string) *systems.ErrorData {
+	userShoppingListItemsHasBeenAddedToCart := []*ShoppingListItem{}
+
+	slir.DB.Where(&ShoppingListItem{UserGUID: userGUID, ShoppingListGUID: shoppingListGUID, AddedToCart: 1}).Find(&userShoppingListItemsHasBeenAddedToCart)
+
+	deleteShoppingListItem := slir.DB.Where(&ShoppingListItem{UserGUID: userGUID, ShoppingListGUID: shoppingListGUID, AddedToCart: 1}).Delete(&ShoppingListItem{})
+
+	if deleteShoppingListItem.Error != nil {
+		return Error.InternalServerError(deleteShoppingListItem.Error, systems.DatabaseError)
+	}
+
+	return nil
+}
+
+// DeleteItemsHasNotBeenAddedToCartByUserGUIDAndShoppingListGUID function used to soft delete all of user shopping list item
+// those has not been added to cart including shopping list item images.
+func (slir *ShoppingListItemRepository) DeleteItemsHasNotBeenAddedToCartByUserGUIDAndShoppingListGUID(userGUID string, shoppingListGUID string) *systems.ErrorData {
+	userShoppingListItemsHasBeenAddedToCart := []*ShoppingListItem{}
+
+	// Retrieve shopping list item those has been added to cart by user
+	slir.DB.Where(&ShoppingListItem{UserGUID: userGUID, ShoppingListGUID: shoppingListGUID, AddedToCart: 0}).Find(&userShoppingListItemsHasBeenAddedToCart)
+
+	// Delete shopping list item by user_guid and itemsadded to cart
+	deleteShoppingListItem := slir.DB.Where(&ShoppingListItem{UserGUID: userGUID, ShoppingListGUID: shoppingListGUID, AddedToCart: 0}).Delete(&ShoppingListItem{})
+
+	if deleteShoppingListItem.Error != nil {
+		return Error.InternalServerError(deleteShoppingListItem.Error, systems.DatabaseError)
+	}
+
+	return nil
 }
 
 // GetByGUID function used to retrieve shopping list item by GUID
@@ -51,8 +318,10 @@ func (slir *ShoppingListItemRepository) GetByName(name string, relations string)
 	return shoppingListItem
 }
 
-// GetByShoppingListGUIDAndGUID function used to retrieve shopping list item by shopping list GUID and GUID
-func (slir *ShoppingListItemRepository) GetByShoppingListGUIDAndGUID(guid string, shoppingListGUID string, relations string) *ShoppingListItem {
+// GetByGUIDUserGUIDAndShoppingListGUID function used to retrieve shopping list item by shopping list GUID and GUID
+func (slir *ShoppingListItemRepository) GetByGUIDUserGUIDAndShoppingListGUID(userGUID string, shoppingListGUID string,
+	shoppingListItemGUID string, relations string) *ShoppingListItem {
+
 	shoppingListItem := &ShoppingListItem{}
 
 	DB := slir.DB.Model(&ShoppingListItem{})
@@ -61,7 +330,7 @@ func (slir *ShoppingListItemRepository) GetByShoppingListGUIDAndGUID(guid string
 		DB = LoadRelations(DB, relations)
 	}
 
-	DB.Where(&ShoppingListItem{GUID: guid, ShoppingListGUID: shoppingListGUID}).First(&shoppingListItem)
+	DB.Where(&ShoppingListItem{GUID: shoppingListItemGUID, UserGUID: userGUID, ShoppingListGUID: shoppingListGUID}).First(&shoppingListItem)
 
 	return shoppingListItem
 }
@@ -81,11 +350,12 @@ func (slir *ShoppingListItemRepository) GetByUserGUIDAndShoppingListGUID(userGUI
 	return shoppingListItem
 }
 
-// GetUserShoppingListItem function used to retrieve shopping list item by user GUID and shopping list GUID
-func (slir *ShoppingListItemRepository) GetUserShoppingListItem(userGUID string, shoppingListGUID string, relations string, latitude string,
-	longitude string) map[string][]*ShoppingListItem {
+// GetByUserGUIDAndShoppingListGUIDAndSubCategory function used to retrieve user shopping list items by user GUID, shopping list GUID,
+// and Subcategory Name
+func (slir *ShoppingListItemRepository) GetByUserGUIDAndShoppingListGUIDAndSubCategory(userGUID string, shoppingListGUID string,
+	subcategory string, relations string) []*ShoppingListItem {
 
-	userShoppingListItemsGroupBySubCategory := make(map[string][]*ShoppingListItem)
+	shoppingListItems := []*ShoppingListItem{}
 
 	DB := slir.DB.Model(&ShoppingListItem{})
 
@@ -93,52 +363,18 @@ func (slir *ShoppingListItemRepository) GetUserShoppingListItem(userGUID string,
 		DB = LoadRelations(DB, relations)
 	}
 
-	shoppingListItemsGroupBySubCategory := []*ShoppingListItem{}
+	DB.Where("user_guid = ? AND shopping_list_guid = ? AND sub_category = ?", userGUID, shoppingListGUID,
+		subcategory).Find(&shoppingListItems)
 
-	dealsCollection := []*Deal{}
-
-	// Retrieve unique shopping list item category from user shopping list
-	// Get Unique Category for user shopping list items
-	DB.Where(&ShoppingListItem{UserGUID: userGUID, ShoppingListGUID: shoppingListGUID}).Group("sub_category").
-		Find(&shoppingListItemsGroupBySubCategory)
-
-	// Loop through each shopping list item category
-	for _, shoppingListItemGroupBySubCategory := range shoppingListItemsGroupBySubCategory {
-		userShoppingListItems := []*ShoppingListItem{}
-
-		// Retrieve shopping list item by shopping list item category
-		DB.Where(&ShoppingListItem{UserGUID: userGUID, ShoppingListGUID: shoppingListGUID, SubCategory: shoppingListItemGroupBySubCategory.SubCategory}).Find(&userShoppingListItems)
-
-		// Retrieve available deals for each item. Maximum deal per item is 3
-		for key, userShopppingListItem := range userShoppingListItems {
-
-			// If user shopping list item was not added from deal and not added to cart, retrieve valid deals
-			if userShopppingListItem.AddedFromDeal == 0 && userShopppingListItem.AddedToCart == 0 && latitude != "" && longitude != "" {
-				deals := slir.DealService.GetDealsBasedOnUserShoppingListItem(userGUID, userShopppingListItem, latitude, longitude, dealsCollection)
-
-				userShoppingListItems[key].Deals = nil
-
-				if len(deals) > 0 {
-					dealsCollection = append(dealsCollection, deals...)
-					userShoppingListItems[key].Deals = deals
-				}
-			}
-
-			// If user shopping list item was added from deal and not added to cart, check deal expired or not
-			if userShopppingListItem.AddedFromDeal == 1 && userShopppingListItem.AddedToCart == 0 {
-				slir.DealService.RemoveDealCashbackAndSetItemDealExpired(userGUID, shoppingListGUID, *userShopppingListItem.DealGUID)
-			}
-		}
-
-		userShoppingListItemsGroupBySubCategory[shoppingListItemGroupBySubCategory.SubCategory] = userShoppingListItems
-	}
-
-	return userShoppingListItemsGroupBySubCategory
+	return shoppingListItems
 }
 
-// GetUserShoppingListItemAddedToCart function used to retrieve shopping list item by user guid and shopping list guid that added to cart
-func (slir *ShoppingListItemRepository) GetUserShoppingListItemAddedToCart(userGUID string, shoppingListGUID string, relations string) map[string][]*ShoppingListItem {
-	userShoppingListItemsGroupBySubCategory := make(map[string][]*ShoppingListItem)
+// GetByUserGUIDAndShoppingListGUIDAndAddedToCartAndSubCategory function used to retrieve user shopping list items by user GUID, shopping list GUID,
+// added to cart and Subcategory Name
+func (slir *ShoppingListItemRepository) GetByUserGUIDAndShoppingListGUIDAndAddedToCartAndSubCategory(userGUID string, shoppingListGUID string,
+	addedToCart int, subcategory string, relations string) []*ShoppingListItem {
+
+	shoppingListItems := []*ShoppingListItem{}
 
 	DB := slir.DB.Model(&ShoppingListItem{})
 
@@ -146,70 +382,32 @@ func (slir *ShoppingListItemRepository) GetUserShoppingListItemAddedToCart(userG
 		DB = LoadRelations(DB, relations)
 	}
 
-	shoppingListItemsGroupBySubCategory := []*ShoppingListItem{}
+	DB.Where("user_guid = ? AND shopping_list_guid = ? AND added_to_cart = ? AND sub_category = ?", userGUID, shoppingListGUID, addedToCart,
+		subcategory).Find(&shoppingListItems)
 
-	DB.Where(&ShoppingListItem{UserGUID: userGUID, ShoppingListGUID: shoppingListGUID, AddedToCart: 1}).Group("sub_category").
-		Find(&shoppingListItemsGroupBySubCategory)
-
-	for _, shoppingListItemGroupBySubCategory := range shoppingListItemsGroupBySubCategory {
-		userShoppingListItems := []*ShoppingListItem{}
-
-		DB.Where(&ShoppingListItem{UserGUID: userGUID, ShoppingListGUID: shoppingListGUID, SubCategory: shoppingListItemGroupBySubCategory.SubCategory, AddedToCart: 1}).
-			Find(&userShoppingListItems)
-
-		userShoppingListItemsGroupBySubCategory[shoppingListItemGroupBySubCategory.SubCategory] = userShoppingListItems
-	}
-
-	return userShoppingListItemsGroupBySubCategory
+	return shoppingListItems
 }
 
-// GetUserShoppingListItemNotAddedToCart function used to retrieve shopping list item by user guid and shopping list guid that not added to cart
-func (slir *ShoppingListItemRepository) GetUserShoppingListItemNotAddedToCart(userGUID string, shoppingListGUID string, relations string,
-	latitude string, longitude string) map[string][]*ShoppingListItem {
-
-	userShoppingListItemsGroupBySubCategory := make(map[string][]*ShoppingListItem)
-
-	DB := slir.DB.Model(&ShoppingListItem{})
-
-	if relations != "" {
-		DB = LoadRelations(DB, relations)
-	}
+// GetUniqueSubCategoryFromAllUserShoppingListItem function used to retrieve unique sub category from all user shopping list items.
+func (slir *ShoppingListItemRepository) GetUniqueSubCategoryFromAllUserShoppingListItem(userGUID string, shoppingListGUID string) []*ShoppingListItem {
 
 	shoppingListItemsGroupBySubCategory := []*ShoppingListItem{}
 
-	// Get Unique Category for user shopping list items
-	DB.Where("user_guid = ? AND shopping_list_guid = ? AND added_to_cart != ?", userGUID, shoppingListGUID, 1).Group("sub_category").
+	slir.DB.Where("user_guid = ? AND shopping_list_guid = ?", userGUID, shoppingListGUID).Group("sub_category").
 		Find(&shoppingListItemsGroupBySubCategory)
 
-	dealsCollection := []*Deal{}
+	return shoppingListItemsGroupBySubCategory
+}
 
-	// Loop through each of user shopping list item category
-	for _, shoppingListItemGroupBySubCategory := range shoppingListItemsGroupBySubCategory {
-		userShoppingListItems := []*ShoppingListItem{}
+// GetUniqueSubCategoryFromUserShoppingListItem function used to retrieve unique sub category from user shopping list items those
+// has been added to cart or those has not been added to cart.
+func (slir *ShoppingListItemRepository) GetUniqueSubCategoryFromUserShoppingListItem(userGUID string, shoppingListGUID string,
+	addedToCart int) []*ShoppingListItem {
 
-		DB.Where("user_guid = ? AND shopping_list_guid = ? AND added_to_cart != ? AND sub_category = ?", userGUID, shoppingListGUID, 1, shoppingListItemGroupBySubCategory.SubCategory).
-			Find(&userShoppingListItems)
+	shoppingListItemsGroupBySubCategory := []*ShoppingListItem{}
 
-		// Retrieve available deals for each item. Maximum deal per item is 3
-		for key, userShopppingListItem := range userShoppingListItems {
+	slir.DB.Where("user_guid = ? AND shopping_list_guid = ? AND added_to_cart = ?", userGUID, shoppingListGUID, addedToCart).Group("sub_category").
+		Find(&shoppingListItemsGroupBySubCategory)
 
-			// If user shopping list item was not added from deal and not added to cart, retrieve valid deals
-			if userShopppingListItem.AddedFromDeal == 0 && userShopppingListItem.AddedToCart == 0 && latitude != "" && longitude != "" {
-				deals := slir.DealService.GetDealsBasedOnUserShoppingListItem(userGUID, userShopppingListItem, latitude, longitude, dealsCollection)
-
-				dealsCollection = append(dealsCollection, deals...)
-
-				userShoppingListItems[key].Deals = deals
-			}
-
-			// If user shopping list item was added from deal and not added to cart, check deal expired or not
-			if userShopppingListItem.AddedFromDeal == 1 && userShopppingListItem.AddedToCart == 0 {
-				slir.DealService.RemoveDealCashbackAndSetItemDealExpired(userGUID, shoppingListGUID, *userShopppingListItem.DealGUID)
-			}
-		}
-
-		userShoppingListItemsGroupBySubCategory[shoppingListItemGroupBySubCategory.SubCategory] = userShoppingListItems
-	}
-
-	return userShoppingListItemsGroupBySubCategory
+	return shoppingListItemsGroupBySubCategory
 }

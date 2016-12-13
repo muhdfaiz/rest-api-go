@@ -72,6 +72,7 @@ const (
 	ErrorValidationLatitude  = "The %s parameter must be valid latitude."
 	ErrorValidationLongitude = "The %s parameter must be valid longitude."
 	ErrorValidationTime      = "The %s parameter must be valid time in RFC3339 format."
+	ErrorGreaterThan         = "The value for %s parameter must be greater than %s"
 	ErrorGreaterThanOrEqual  = "The value for %s parameter must be greater than or equal to %s"
 	ErrorLessThanOrEqual     = "The value for %s parameter must be less than or equal to %s"
 	ErrorInternalServer      = "API cannot return results because an internal server error has occurred."
@@ -275,6 +276,8 @@ func (e Error) ValidationErrors(errors map[string]*validator.FieldError) *ErrorD
 			message = fmt.Sprintf(ErrorValidationEmail, errMsg.Name)
 		case "len":
 			message = fmt.Sprintf(ErrorValidationLength, errMsg.Name, errMsg.Param)
+		case "gt":
+			message = fmt.Sprintf(ErrorGreaterThan, errMsg.Name, errMsg.Param)
 		case "gte":
 			message = fmt.Sprintf(ErrorGreaterThanOrEqual, errMsg.Name, errMsg.Param)
 		case "lte":

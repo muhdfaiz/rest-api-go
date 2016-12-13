@@ -1,21 +1,72 @@
 package v1
 
-import "github.com/jinzhu/gorm"
+import (
+	"bitbucket.org/cliqers/shoppermate-api/systems"
+	"github.com/jinzhu/gorm"
+)
 
+// ShoppingListItemImageRepositoryInterface is a contract that defines the methods needed for Shopping List Item Image Repository.
 type ShoppingListItemImageRepositoryInterface interface {
-	GetByItemGUIDAndGUID(shoppingListItemGUID string, shoppingListItemImageGUID string, relations string) *ShoppingListItemImage
+	Create(userGUID string, shoppingListGUID string, shoppingListItemGUID string,
+		images []map[string]string) ([]*ShoppingListItemImage, *systems.ErrorData)
+	Delete(attribute string, value string) *systems.ErrorData
+	GetByUserGUIDAndShoppingListGUIDAndItemGUIDAndImageGUID(userGUID string, shoppingListGUID string,
+		shoppingListItemGUID string, shoppingListItemImageGUID string, relations string) *ShoppingListItemImage
 	GetByItemGUID(shoppingListItemGUID string, relations string) []*ShoppingListItemImage
 	GetByShoppingListGUID(shoppingListGUID string, relations string) []*ShoppingListItemImage
 	GetByUserGUID(useerGUID string, relations string) []*ShoppingListItemImage
 }
 
+// ShoppingListItemImageRepository will handle all CRUD task for shopping list item image resource.
 type ShoppingListItemImageRepository struct {
 	DB *gorm.DB
 }
 
-// GetByItemGUIDAndGUID function used to retrieve shopping list item image by shopping
-// list item GUID and shoping list item image GUID
-func (sliir *ShoppingListItemImageRepository) GetByItemGUIDAndGUID(shoppingListItemGUID string, shoppingListItemImageGUID string, relations string) *ShoppingListItemImage {
+// Create function used to store shopping list item images in database.
+func (sliir *ShoppingListItemImageRepository) Create(userGUID string, shoppingListGUID string, shoppingListItemGUID string,
+	images []map[string]string) ([]*ShoppingListItemImage, *systems.ErrorData) {
+
+	createdImages := make([]*ShoppingListItemImage, len(images))
+
+	for key, image := range images {
+
+		shoppingListItemImage := &ShoppingListItemImage{
+			GUID:                 Helper.GenerateUUID(),
+			UserGUID:             userGUID,
+			ShoppingListGUID:     shoppingListGUID,
+			ShoppingListItemGUID: shoppingListItemGUID,
+			URL:                  image["path"],
+		}
+
+		result := sliir.DB.Create(shoppingListItemImage)
+
+		if result.Error != nil || result.RowsAffected == 0 {
+			return nil, Error.InternalServerError(result.Error, systems.DatabaseError)
+		}
+
+		createdImages[key] = result.Value.(*ShoppingListItemImage)
+	}
+
+	return createdImages, nil
+}
+
+// Delete function used to soft delete shopping list item image from database.
+func (sliir *ShoppingListItemImageRepository) Delete(attribute string, value string) *systems.ErrorData {
+
+	deleteShoppingListItemImage := sliir.DB.Where(attribute+" = ?", value).Delete(&ShoppingListItemImage{})
+
+	if deleteShoppingListItemImage.Error != nil {
+		return Error.InternalServerError(deleteShoppingListItemImage.Error, systems.DatabaseError)
+	}
+
+	return nil
+}
+
+// GetByUserGUIDAndShoppingListGUIDAndItemGUIDAndImageGUID function used to retrieve shopping list item image by user GUID,
+// shopping list GUID, shopping list item GUID and shopping list item image GUID.
+func (sliir *ShoppingListItemImageRepository) GetByUserGUIDAndShoppingListGUIDAndItemGUIDAndImageGUID(userGUID string, shoppingListGUID string,
+	shoppingListItemGUID string, shoppingListItemImageGUID string, relations string) *ShoppingListItemImage {
+
 	shoppingListItemImage := &ShoppingListItemImage{}
 
 	DB := sliir.DB.Model(&ShoppingListItemImage{})
@@ -29,7 +80,7 @@ func (sliir *ShoppingListItemImageRepository) GetByItemGUIDAndGUID(shoppingListI
 	return shoppingListItemImage
 }
 
-// GetByItemGUID function used to retrieve shopping list item images using shopping list item GUID
+// GetByItemGUID function used to retrieve shopping list item images using shopping list item GUID.
 func (sliir *ShoppingListItemImageRepository) GetByItemGUID(shoppingListItemGUID string, relations string) []*ShoppingListItemImage {
 	shoppingListItemImage := []*ShoppingListItemImage{}
 
@@ -44,7 +95,7 @@ func (sliir *ShoppingListItemImageRepository) GetByItemGUID(shoppingListItemGUID
 	return shoppingListItemImage
 }
 
-// GetByShoppingListGUID function used to retrieve shopping list item images using shopping list GUID
+// GetByShoppingListGUID function used to retrieve shopping list item images using shopping list GUID.
 func (sliir *ShoppingListItemImageRepository) GetByShoppingListGUID(shoppingListGUID string, relations string) []*ShoppingListItemImage {
 	shoppingListItemImage := []*ShoppingListItemImage{}
 
@@ -59,7 +110,7 @@ func (sliir *ShoppingListItemImageRepository) GetByShoppingListGUID(shoppingList
 	return shoppingListItemImage
 }
 
-// GetByUserGUID function used to retrieve shopping list item images using User GUID
+// GetByUserGUID function used to retrieve shopping list item images using User GUID.
 func (sliir *ShoppingListItemImageRepository) GetByUserGUID(userGUID string, relations string) []*ShoppingListItemImage {
 	shoppingListItemImage := []*ShoppingListItemImage{}
 

@@ -303,6 +303,7 @@ func (dr *DealRepository) GetAllDealsForCategoryWithinValidRangeStartDateEndDate
 				ads.created_at,
 				ads.updated_at,
 				ads.deleted_at,
+				category.name AS category_name,
 				grocer_location.name AS nearest_grocer_name,
 				grocer_location.lat AS nearest_grocer_latitude,
 				grocer_location.lng AS nearest_grocer_longitude,
@@ -310,7 +311,8 @@ func (dr *DealRepository) GetAllDealsForCategoryWithinValidRangeStartDateEndDate
 		FROM ads
 		INNER JOIN ads_grocer ON ads.id = ads_grocer.ads_id
 		INNER JOIN grocer_location ON grocer_location.id = ads_grocer.grocer_location_id
-		LEFT JOIN category ON category.id = ads.category_id
+		LEFT JOIN item ON item.id = ads.item_id
+		LEFT JOIN category ON category.id = item.category_id
 		WHERE ads.status = "publish" AND ads.start_date <= ? AND ads.end_date > ? AND category.name = ?
 		GROUP BY ads_guid
 		HAVING nearest_grocer_distance_in_km <= ?

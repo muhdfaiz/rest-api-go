@@ -12,7 +12,7 @@ type ItemCategory struct {
 	DeletedAt *time.Time `json:"deleted_at"`
 
 	// Have Many Deals
-	TotalDeals int     `json:"total_deals"`
+	TotalDeals int     `json:"total_deals,omitempty"`
 	Deals      []*Deal `json:"deals"`
 }
 

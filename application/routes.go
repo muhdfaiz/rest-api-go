@@ -51,12 +51,14 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 	}
 
 	// Occasion Objects
-	occasionRepostory := &v1.OccasionRepository{DB: DB}
+	occasionRepository := &v1.OccasionRepository{DB: DB}
 	occasionTransformer := &v1.OccasionTransformer{}
+	occasionService := &v1.OccasionService{OccasionRepository: occasionRepository, OccasionTransformer: occasionTransformer}
 
 	// Item Objects
 	itemRepository := &v1.ItemRepository{DB: DB}
 	itemTransformer := &v1.ItemTransformer{}
+	itemService := &v1.ItemService{ItemRepository: itemRepository}
 
 	// Item Category Objects
 	itemCategoryRepository := &v1.ItemCategoryRepository{DB: DB}
@@ -66,20 +68,20 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 
 	// Item SubCategory Objects
 	itemSubCategoryRepository := &v1.ItemSubCategoryRepository{DB: DB}
+	itemSubCategoryService := &v1.ItemSubCategoryService{ItemSubCategoryRepository: itemSubCategoryRepository}
 
-	// Shopping List Objects
-	shoppingListFactory := &v1.ShoppingListFactory{DB: DB}
-	shoppingListRepository := &v1.ShoppingListRepository{DB: DB}
+	// Default Shopping List Objects
+	defaultShoppingListRepository := &v1.DefaultShoppingListRepository{DB: DB}
+	defaultShoppingListService := &v1.DefaultShoppingListService{DefaultShoppingListRepository: defaultShoppingListRepository}
 
-	// Shopping List Item Image Objects
-	shoppingListItemImageService := &v1.ShoppingListItemImageService{DB: DB, AmazonS3FileSystem: amazonS3FileSystem}
-	shoppingListItemImageFactory := &v1.ShoppingListItemImageFactory{DB: DB, ShoppingListItemImageService: shoppingListItemImageService}
-	shoppingListItemImageRepository := &v1.ShoppingListItemImageRepository{DB: DB}
+	defaultShoppingListItemRepository := &v1.DefaultShoppingListItemRepository{DB: DB}
+	defaultShoppingListItemService := &v1.DefaultShoppingListItemService{DefaultShoppingListItemRepository: defaultShoppingListItemRepository}
+
+	// Deal Cashback Repository
+	dealCashbackRepository := &v1.DealCashbackRepository{DB: DB}
 
 	// LocationService
 	locationService := &location.LocationService{}
-
-	dealCashbackFactory := &v1.DealCashbackFactory{DB: DB}
 
 	// Grocer Location Repository
 	grocerLocationRepository := &v1.GrocerLocationRepository{DB: DB}
@@ -90,35 +92,43 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 	// Deal Repository
 	dealRepository := &v1.DealRepository{DB: DB, GrocerLocationService: grocerLocationService}
 
-	// Shopping List Item Factory
-	shoppingListItemFactory := &v1.ShoppingListItemFactory{DB: DB, ItemRepository: itemRepository, ShoppingListItemImageFactory: shoppingListItemImageFactory,
-		ShoppingListItemImageRepository: shoppingListItemImageRepository, DealRepository: dealRepository, ItemCategoryRepository: itemCategoryRepository,
-		ItemSubCategoryRepository: itemSubCategoryRepository}
-
-	// Deal Cashback Repository
-	dealCashbackRepository := &v1.DealCashbackRepository{DB: DB}
+	dealCashbackFactory := &v1.DealCashbackFactory{DB: DB}
 
 	// Grocer Objects
 	grocerRepository := &v1.GrocerRepository{DB: DB}
 	grocerTransformer := &v1.GrocerTransformer{}
 
+	shoppingListItemRepository := &v1.ShoppingListItemRepository{DB: DB}
+
 	// Deal Service
 	dealService := &v1.DealService{DealRepository: dealRepository, LocationService: locationService, DealCashbackFactory: dealCashbackFactory,
-		ShoppingListItemFactory: shoppingListItemFactory, DealCashbackRepository: dealCashbackRepository, ItemRepository: itemRepository,
-		ItemCategoryService: itemCategoryService, ItemSubCategoryRepository: itemSubCategoryRepository, GrocerRepository: grocerRepository}
+		DealCashbackRepository: dealCashbackRepository, ItemRepository: itemRepository, ItemCategoryService: itemCategoryService,
+		ItemSubCategoryRepository: itemSubCategoryRepository, GrocerRepository: grocerRepository, ShoppingListItemRepository: shoppingListItemRepository}
 
 	// Deal Transformer
 	dealTransformer := &v1.DealTransformer{}
 
 	// Shopping List Item Repository
-	shoppingListItemRepository := &v1.ShoppingListItemRepository{DB: DB, DealService: dealService}
+	shoppingListItemService := &v1.ShoppingListItemService{ShoppingListItemRepository: shoppingListItemRepository, ItemService: itemService,
+		ItemCategoryService: itemCategoryService, ItemSubCategoryService: itemSubCategoryService, DealService: dealService}
+
+	// Shopping List Item Image Objects
+	shoppingListItemImageRepository := &v1.ShoppingListItemImageRepository{DB: DB}
+	shoppingListItemImageService := &v1.ShoppingListItemImageService{DB: DB, AmazonS3FileSystem: amazonS3FileSystem,
+		ShoppingListItemImageRepository: shoppingListItemImageRepository, ShoppingListItemService: shoppingListItemService}
+
+	// Shopping List Objects
+	shoppingListRepository := &v1.ShoppingListRepository{DB: DB}
+	shoppingListService := &v1.ShoppingListService{ShoppingListRepository: shoppingListRepository, OccasionService: occasionService,
+		DefaultShoppingListService: defaultShoppingListService, DefaultShoppingListItemService: defaultShoppingListItemService,
+		ShoppingListItemService: shoppingListItemService, ShoppingListItemImageService: shoppingListItemImageService}
 
 	// Deal Cashback Transformer
 	dealCashbackTransformer := &v1.DealCashbackTransformer{}
 
 	// Deal Cashback Service
-	dealCashbackService := &v1.DealCashbackService{DealCashbackRepository: dealCashbackRepository, DealRepository: dealRepository,
-		DealCashbackFactory: dealCashbackFactory, ShoppingListItemFactory: shoppingListItemFactory, DealService: dealService}
+	dealCashbackService := &v1.DealCashbackService{DealCashbackRepository: dealCashbackRepository,
+		DealCashbackFactory: dealCashbackFactory, DealService: dealService, ShoppingListItemService: shoppingListItemService}
 
 	// Transaction Status
 	transactionStatusRepository := &v1.TransactionStatusRepository{DB: DB}
@@ -133,7 +143,7 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 		DealCashbackRepository: dealCashbackRepository, ItemRepository: itemRepository, GrocerRepository: grocerRepository,
 		ShoppingListRepository: shoppingListRepository}
 
-	// Deal Cashback Transaction
+	//Deal Cashback Transaction
 	//dealCashbackTransactionRepository := &v1.DealCashbackTransactionRepository{DB: DB}
 	dealCashbackTransactionFactory := &v1.DealCashbackTransactionFactory{DB: DB}
 	dealCashbackTransactionService := &v1.DealCashbackTransactionService{AmazonS3FileSystem: amazonS3FileSystem,
@@ -145,7 +155,7 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 	eventRepository := &v1.EventRepository{DB: DB}
 	eventService := &v1.EventService{EventRepository: eventRepository, DealCashbackRepository: dealCashbackRepository}
 
-	// Cashout Transaction Object
+	//Cashout Transaction Object
 	cashoutTransactionRepository := &v1.CashoutTransactionRepository{DB: DB}
 	cashoutTransactionService := &v1.CashoutTransactionService{CashoutTransactionRepository: cashoutTransactionRepository,
 		TransactionService: transactionService, UserRepository: userRepository, TransactionTypeRepository: transactionTypeRepository,
@@ -164,15 +174,14 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 	deviceHandler := v1.DeviceHandler{UserRepository: userRepository, DeviceRepository: deviceRepository, DeviceFactory: deviceFactory}
 
 	// Shopping List Handler
-	shoppingListHandler := v1.ShoppingListHandler{UserRepository: userRepository, OccasionRepository: occasionRepostory,
-		ShoppingListFactory: shoppingListFactory, ShoppingListRepository: shoppingListRepository, ShoppingListItemFactory: shoppingListItemFactory}
+	shoppingListHandler := v1.ShoppingListHandler{ShoppingListService: shoppingListService, ShoppingListItemImageService: shoppingListItemImageService}
 
 	// Auth Handler
 	authHandler := v1.AuthHandler{UserRepository: userRepository, DeviceRepository: deviceRepository, DeviceFactory: deviceFactory,
 		SmsService: smsService}
 
 	// Occasion Handler
-	occasionHandler := v1.OccasionHandler{OccasionRepository: occasionRepostory, OccasionTransformer: occasionTransformer}
+	occasionHandler := v1.OccasionHandler{OccasionService: occasionService}
 
 	// Item Handler
 	itemHandler := v1.ItemHandler{ItemRepository: itemRepository, ItemTransformer: itemTransformer}
@@ -181,14 +190,11 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 	itemCategoryHandler := v1.ItemCategoryHandler{ItemCategoryService: itemCategoryService}
 
 	// Shopping List Item Handler
-	shoppingListItemHandler := v1.ShoppingListItemHandler{UserRepository: userRepository, ShoppingListRepository: shoppingListRepository,
-		ShoppingListItemRepository: shoppingListItemRepository, ShoppingListItemFactory: shoppingListItemFactory,
-		ShoppingListItemImageFactory: shoppingListItemImageFactory}
+	shoppingListItemHandler := v1.ShoppingListItemHandler{ShoppingListService: shoppingListService, ShoppingListItemService: shoppingListItemService,
+		ShoppingListItemImageService: shoppingListItemImageService}
 
 	// Shopping List Item Image Handler
-	shoppingListItemImageHandler := v1.ShoppingListItemImageHandler{UserRepository: userRepository, ShoppingListRepository: shoppingListRepository,
-		ShoppingListItemImageService: shoppingListItemImageService, ShoppingListItemImageFactory: shoppingListItemImageFactory,
-		ShoppingListItemRepository: shoppingListItemRepository, ShoppingListItemImageRepository: shoppingListItemImageRepository}
+	shoppingListItemImageHandler := v1.ShoppingListItemImageHandler{ShoppingListItemImageService: shoppingListItemImageService}
 
 	// Deal Cashback Handler
 	dealCashbackHandler := v1.DealCashbackHandler{ShoppingListRepository: shoppingListRepository, DealCashbackService: dealCashbackService,
@@ -211,6 +217,7 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 	transactionHandler := v1.TransactionHandler{TransactionService: transactionService}
 
 	cashoutTransactionHandler := v1.CashoutTransactionHandler{CashoutTransactionService: cashoutTransactionService}
+
 	// V1 Routes
 	version1 := router.Group("/v1")
 	{

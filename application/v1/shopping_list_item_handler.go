@@ -4,422 +4,296 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/fatih/structs"
 	"github.com/gin-gonic/gin"
 )
 
-// ShoppingListItemHandler will handle all task related to resource shopping list item
+// ShoppingListItemHandler will handle all task related to shopping list item resource.
 type ShoppingListItemHandler struct {
-	UserRepository               UserRepositoryInterface
-	ShoppingListRepository       ShoppingListRepositoryInterface
-	ShoppingListItemRepository   ShoppingListItemRepositoryInterface
-	ShoppingListItemFactory      ShoppingListItemFactoryInterface
-	ShoppingListItemImageFactory ShoppingListItemImageFactoryInterface
+	ShoppingListItemService      ShoppingListItemServiceInterface
+	ShoppingListService          ShoppingListServiceInterface
+	ShoppingListItemImageService ShoppingListItemImageServiceInterface
 }
 
-// View function used to retrieve shopping list items from database
-func (slih *ShoppingListItemHandler) View(c *gin.Context) {
-	tokenData := c.MustGet("Token").(map[string]string)
+// View function used to retrieve user shopping list items from database.
+func (slih *ShoppingListItemHandler) View(context *gin.Context) {
+	tokenData := context.MustGet("Token").(map[string]string)
 
-	// Retrieve user guid in url
-	userGUID := c.Param("guid")
+	userGUID := context.Param("guid")
 
-	// If user GUID not match user GUID inside the token return error message
+	shoppingListGUID := context.Param("shopping_list_guid")
+
+	shoppingListItemGUID := context.Param("item_guid")
+
+	relations := context.Query("include")
+
 	if tokenData["user_guid"] != userGUID {
-		c.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("update shopping list"))
+		context.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("view shopping list"))
 		return
 	}
 
-	// Retrieve shopping list guid in url
-	shoppingListGUID := c.Param("shopping_list_guid")
+	_, error := slih.ShoppingListService.CheckUserShoppingListExistOrNot(userGUID, shoppingListGUID)
 
-	// Retrieve shopping list by guid and user guif
-	shoppingList := slih.ShoppingListRepository.GetByGUIDAndUserGUID(shoppingListGUID, userGUID, "")
-
-	// If shopping list GUID empty return error message
-	if shoppingList.GUID == "" {
-		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("Shopping List", "guid", shoppingListGUID))
+	if error != nil {
+		errorCode, _ := strconv.Atoi(error.Error.Status)
+		context.JSON(errorCode, error)
 		return
 	}
 
-	// Retrieve shopping list item guid in url
-	shoppingListItemGUID := c.Param("item_guid")
+	shoppingListItem, error := slih.ShoppingListItemService.ViewUserShoppingListItem(userGUID, shoppingListGUID, shoppingListItemGUID, relations)
 
-	// Retrieve query string for relations
-	relations := c.Query("include")
-
-	// Retrieve shopping list item by guid
-	shoppingListItem := slih.ShoppingListItemRepository.GetByShoppingListGUIDAndGUID(shoppingListItemGUID, shoppingListGUID, relations)
-
-	// If shopping list item GUID empty return error message
-	if shoppingListItem.GUID == "" {
-		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("Shopping List Item", "guid", shoppingListItemGUID))
+	if error != nil {
+		errorCode, _ := strconv.Atoi(error.Error.Status)
+		context.JSON(errorCode, error)
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"data": shoppingListItem})
-
+	context.JSON(http.StatusOK, gin.H{"data": shoppingListItem})
 }
 
-// ViewAll function used to retrieve all user shopping list items
-func (slih *ShoppingListItemHandler) ViewAll(c *gin.Context) {
-	tokenData := c.MustGet("Token").(map[string]string)
+// ViewAll function used to retrieve all user shopping list items.
+func (slih *ShoppingListItemHandler) ViewAll(context *gin.Context) {
+	tokenData := context.MustGet("Token").(map[string]string)
 
-	// Validate query string
-	err := Validation.Validate(c.Request.URL.Query(), map[string]string{"added_to_cart": "numeric", "latitude": "latitude", "longitude": "longitude"})
+	userGUID := context.Param("guid")
 
-	// If validation error return error message
-	if err != nil {
-		c.JSON(http.StatusUnprocessableEntity, err)
-		return
-	}
-
-	// Retrieve user guid in url
-	userGUID := c.Param("guid")
-
-	// If user GUID not match user GUID inside the token return error message
 	if tokenData["user_guid"] != userGUID {
-		c.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("update shopping list item"))
+		context.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("update shopping list item"))
 		return
 	}
 
-	// Retrieve shopping list guid in url
-	shoppingListGUID := c.Param("shopping_list_guid")
+	error := Validation.Validate(context.Request.URL.Query(), map[string]string{"added_to_cart": "numeric", "latitude": "latitude", "longitude": "longitude"})
 
-	// Retrieve shopping list by guid and user guid
-	shoppingList := slih.ShoppingListRepository.GetByGUIDAndUserGUID(shoppingListGUID, userGUID, "")
-
-	// If shopping list GUID empty return error message
-	if shoppingList.GUID == "" {
-		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("Shopping List", "guid", shoppingListGUID))
+	if error != nil {
+		context.JSON(http.StatusUnprocessableEntity, error)
 		return
 	}
 
-	// Retrieve query string for relations
-	relations := c.DefaultQuery("include", "")
+	shoppingListGUID := context.Param("shopping_list_guid")
 
-	// Retrieve query string for latitude and longitude
-	latitude := c.Query("latitude")
-	longitude := c.Query("longitude")
+	relations := context.Query("include")
 
-	// Retrieve added_to_cart query string param in url
-	addedToCartBool, err1 := strconv.ParseBool(c.Query("added_to_cart"))
+	latitude := context.Query("latitude")
 
-	if err1 != nil {
-		// Retrieve shopping list item by guid
-		userShoppingListItems := slih.ShoppingListItemRepository.GetUserShoppingListItem(userGUID, shoppingListGUID, relations, latitude, longitude)
+	longitude := context.Query("longitude")
 
-		c.JSON(http.StatusOK, gin.H{"data": userShoppingListItems})
+	addedToCart := context.Query("added_to_cart")
+
+	_, error = slih.ShoppingListService.CheckUserShoppingListExistOrNot(userGUID, shoppingListGUID)
+
+	if error != nil {
+		errorCode, _ := strconv.Atoi(error.Error.Status)
+		context.JSON(errorCode, error)
 		return
 	}
 
-	if addedToCartBool == true {
-		userShoppingListItems := slih.ShoppingListItemRepository.GetUserShoppingListItemAddedToCart(userGUID, shoppingListGUID, relations)
+	userShoppingListItems, error := slih.ShoppingListItemService.ViewAllUserShoppingListItem(userGUID, shoppingListGUID, addedToCart, latitude, longitude, relations)
 
-		c.JSON(http.StatusOK, gin.H{"data": userShoppingListItems})
+	if error != nil {
+		errorCode, _ := strconv.Atoi(error.Error.Status)
+		context.JSON(errorCode, error)
 		return
 	}
 
-	userShoppingListItems := slih.ShoppingListItemRepository.GetUserShoppingListItemNotAddedToCart(userGUID, shoppingListGUID, relations, latitude, longitude)
-
-	c.JSON(http.StatusOK, gin.H{"data": userShoppingListItems})
-	return
-
+	context.JSON(http.StatusOK, gin.H{"data": userShoppingListItems})
 }
 
-// Create function used to create shopping list item
-func (slih *ShoppingListItemHandler) Create(c *gin.Context) {
-	tokenData := c.MustGet("Token").(map[string]string)
+// Create function used to create user shopping list item
+func (slih *ShoppingListItemHandler) Create(context *gin.Context) {
+	tokenData := context.MustGet("Token").(map[string]string)
 
-	// Retrieve user guid in url
-	userGUID := c.Param("guid")
+	userGUID := context.Param("guid")
 
-	// If user GUID not match user GUID inside the token return error message
+	shoppingListGUID := context.Param("shopping_list_guid")
+
 	if tokenData["user_guid"] != userGUID {
-		c.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("update shopping list"))
+		context.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("update shopping list"))
 		return
 	}
 
-	// Retrieve shopping list guid in url
-	shoppingListGUID := c.Param("shopping_list_guid")
+	shoppingListItemToCreate := CreateShoppingListItem{}
 
-	// Retrieve shopping list by guid and user guif
-	shoppingList := slih.ShoppingListRepository.GetByGUIDAndUserGUID(shoppingListGUID, userGUID, "")
-
-	// If shopping list GUID empty return error message
-	if shoppingList.GUID == "" {
-		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("Shopping List", "guid", shoppingListGUID))
+	if error := Binding.Bind(&shoppingListItemToCreate, context); error != nil {
+		context.JSON(http.StatusUnprocessableEntity, error)
 		return
 	}
 
-	createShoppingListItemData := CreateShoppingListItem{}
+	_, error := slih.ShoppingListService.CheckUserShoppingListExistOrNot(userGUID, shoppingListGUID)
 
-	// Bind request based on content type and validate request data
-	if err := Binding.Bind(&createShoppingListItemData, c); err != nil {
-		c.JSON(http.StatusUnprocessableEntity, err)
+	if error != nil {
+		errorCode, _ := strconv.Atoi(error.Error.Status)
+		context.JSON(errorCode, error)
 		return
 	}
 
-	createShoppingListItemData.ShoppingListGUID = shoppingListGUID
-	createShoppingListItemData.UserGUID = userGUID
+	createdShoppingListItem, error := slih.ShoppingListItemService.CreateUserShoppingListItem(userGUID, shoppingListGUID, shoppingListItemToCreate)
 
-	// Create Shopping List item
-	result, err := slih.ShoppingListItemFactory.Create(createShoppingListItemData)
-
-	// Output error if failed to create new device
-	if err != nil {
-		errorCode, _ := strconv.Atoi(err.Error.Status)
-		c.JSON(errorCode, err)
+	if error != nil {
+		errorCode, _ := strconv.Atoi(error.Error.Status)
+		context.JSON(errorCode, error)
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"data": result})
+	context.JSON(http.StatusOK, gin.H{"data": createdShoppingListItem})
 }
 
-// Update function used to update shopping list item
-func (slih *ShoppingListItemHandler) Update(c *gin.Context) {
-	tokenData := c.MustGet("Token").(map[string]string)
+// Update function used to update one of the user shopping list item
+func (slih *ShoppingListItemHandler) Update(context *gin.Context) {
+	tokenData := context.MustGet("Token").(map[string]string)
 
-	// Retrieve user guid in url
-	userGUID := c.Param("guid")
+	userGUID := context.Param("guid")
 
-	// If user GUID not match user GUID inside the token return error message
 	if tokenData["user_guid"] != userGUID {
-		c.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("update shopping list"))
+		context.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("update shopping list"))
 		return
 	}
 
-	// Retrieve shopping list guid in url
-	shoppingListGUID := c.Param("shopping_list_guid")
+	shoppingListItemToUpdate := UpdateShoppingListItem{}
 
-	// Retrieve shopping list by guid and user guif
-	shoppingList := slih.ShoppingListRepository.GetByGUIDAndUserGUID(shoppingListGUID, userGUID, "")
-
-	// If shopping list GUID empty return error message
-	if shoppingList.GUID == "" {
-		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("Shopping List", "guid", shoppingListGUID))
+	if error := Binding.Bind(&shoppingListItemToUpdate, context); error != nil {
+		context.JSON(http.StatusUnprocessableEntity, error)
 		return
 	}
 
-	// Retrieve shopping list item guid in url
-	shoppingListItemGUID := c.Param("item_guid")
+	shoppingListGUID := context.Param("shopping_list_guid")
+	shoppingListItemGUID := context.Param("item_guid")
 
-	// Retrieve shopping list item by guid
-	shoppingListItem := slih.ShoppingListItemRepository.GetByShoppingListGUIDAndGUID(shoppingListItemGUID, shoppingListGUID, "")
+	_, error := slih.ShoppingListService.CheckUserShoppingListExistOrNot(userGUID, shoppingListGUID)
 
-	// If shopping list item GUID empty return error message
-	if shoppingListItem.GUID == "" {
-		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("Shopping List Item", "guid", shoppingListItemGUID))
+	if error != nil {
+		errorCode, _ := strconv.Atoi(error.Error.Status)
+		context.JSON(errorCode, error)
 		return
 	}
 
-	updateShoppingListItemData := UpdateShoppingListItem{}
+	updatedShoppingList, error := slih.ShoppingListItemService.UpdateUserShoppingListItem(userGUID, shoppingListGUID, shoppingListItemGUID, shoppingListItemToUpdate, "")
 
-	// Bind request based on content type and validate request data
-	if err := Binding.Bind(&updateShoppingListItemData, c); err != nil {
-		c.JSON(http.StatusUnprocessableEntity, err)
+	if error != nil {
+		errorCode, _ := strconv.Atoi(error.Error.Status)
+		context.JSON(errorCode, error)
 		return
 	}
 
-	// Update Shopping List Item
-	err := slih.ShoppingListItemFactory.UpdateByUserGUIDShoppingListGUIDAndShoppingListItemGUID(userGUID, shoppingListGUID, shoppingListItemGUID, structs.Map(updateShoppingListItemData))
-
-	// If update shopping list item error, return error message
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, err)
-		return
-	}
-
-	// Retrieve updated shopping list item
-	result := slih.ShoppingListItemRepository.GetByGUID(shoppingListItemGUID, "")
-
-	c.JSON(http.StatusOK, gin.H{"data": result})
+	context.JSON(http.StatusOK, gin.H{"data": updatedShoppingList})
 }
 
 // UpdateAll function used to update shopping list item
-func (slih *ShoppingListItemHandler) UpdateAll(c *gin.Context) {
-	tokenData := c.MustGet("Token").(map[string]string)
+func (slih *ShoppingListItemHandler) UpdateAll(context *gin.Context) {
+	tokenData := context.MustGet("Token").(map[string]string)
 
-	// Retrieve user guid in url
-	userGUID := c.Param("guid")
+	userGUID := context.Param("guid")
 
-	// If user GUID not match user GUID inside the token return error message
 	if tokenData["user_guid"] != userGUID {
-		c.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("update shopping list"))
-		return
-	}
-
-	// Retrieve shopping list guid in url
-	shoppingListGUID := c.Param("shopping_list_guid")
-
-	// Retrieve shopping list by guid and user guif
-	shoppingList := slih.ShoppingListRepository.GetByGUIDAndUserGUID(shoppingListGUID, userGUID, "")
-
-	// If shopping list GUID empty return error message
-	if shoppingList.GUID == "" {
-		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("Shopping List", "guid", shoppingListGUID))
+		context.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("update shopping list"))
 		return
 	}
 
 	updateShoppingListItemData := UpdateShoppingListItem{}
 
-	// Bind request based on content type and validate request data
-	if err := Binding.Bind(&updateShoppingListItemData, c); err != nil {
-		c.JSON(http.StatusUnprocessableEntity, err)
+	if error := Binding.Bind(&updateShoppingListItemData, context); error != nil {
+		context.JSON(http.StatusUnprocessableEntity, error)
 		return
 	}
 
-	// Update Shopping List Item
-	err := slih.ShoppingListItemFactory.UpdateByUserGUIDAndShoppingListGUID(userGUID, shoppingListGUID, structs.Map(updateShoppingListItemData))
+	shoppingListGUID := context.Param("shopping_list_guid")
 
-	// If update shopping list item error, return error message
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, err)
+	_, error := slih.ShoppingListService.CheckUserShoppingListExistOrNot(userGUID, shoppingListGUID)
+
+	if error != nil {
+		errorCode, _ := strconv.Atoi(error.Error.Status)
+		context.JSON(errorCode, error)
 		return
 	}
 
-	// Retrieve updated shopping list items
-	result := slih.ShoppingListItemRepository.GetByUserGUIDAndShoppingListGUID(userGUID, shoppingListGUID, "")
+	updatedShoppingListItems, error := slih.ShoppingListItemService.UpdateAllUserShoppingListItem(userGUID, shoppingListGUID, updateShoppingListItemData)
 
-	c.JSON(http.StatusOK, gin.H{"data": result})
+	if error != nil {
+		errorCode, _ := strconv.Atoi(error.Error.Status)
+		context.JSON(errorCode, error)
+		return
+	}
+
+	context.JSON(http.StatusOK, gin.H{"data": updatedShoppingListItems})
 }
 
 // DeleteAll function used to delete all shopping list items including relation like image
 // or to to delete all shopping list items from cart
-func (slih *ShoppingListItemHandler) DeleteAll(c *gin.Context) {
-	tokenData := c.MustGet("Token").(map[string]string)
+func (slih *ShoppingListItemHandler) DeleteAll(context *gin.Context) {
+	tokenData := context.MustGet("Token").(map[string]string)
 
-	// Retrieve user guid in url
-	userGUID := c.Param("guid")
+	userGUID := context.Param("guid")
 
-	// If user GUID not match user GUID inside the token return error message
 	if tokenData["user_guid"] != userGUID {
-		c.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("update shopping list"))
+		context.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("update shopping list"))
 		return
 	}
 
-	// Validate query string
-	err := Validation.Validate(c.Request.URL.Query(), map[string]string{"added_to_cart": "numeric,len=1"})
+	error := Validation.Validate(context.Request.URL.Query(), map[string]string{"added_to_cart": "numeric,len=1"})
 
-	// If validation error return error message
-	if err != nil {
-		c.JSON(http.StatusUnprocessableEntity, err)
+	if error != nil {
+		context.JSON(http.StatusUnprocessableEntity, error)
 		return
 	}
 
-	// Retrieve shopping list guid in url
-	shoppingListGUID := c.Param("shopping_list_guid")
+	shoppingListGUID := context.Param("shopping_list_guid")
 
-	// Retrieve shopping list by guid and user guif
-	shoppingList := slih.ShoppingListRepository.GetByGUIDAndUserGUID(shoppingListGUID, userGUID, "")
+	deleteItemInCart := context.Query("added_to_cart")
 
-	// If shopping list GUID empty return error message
-	if shoppingList.GUID == "" {
-		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("Shopping List", "guid", shoppingListGUID))
+	_, error = slih.ShoppingListService.CheckUserShoppingListExistOrNot(userGUID, shoppingListGUID)
+
+	if error != nil {
+		errorCode, _ := strconv.Atoi(error.Error.Status)
+		context.JSON(errorCode, error)
 		return
 	}
 
-	// Retrieve only_added_to_cart query string in request
-	addedToCart := c.Query("added_to_cart")
+	result, error := slih.ShoppingListItemService.DeleteUserShoppingListItem(userGUID, shoppingListGUID, deleteItemInCart)
 
-	if addedToCart == "1" {
-		// Soft delete Shopping List Item incuding relationship
-		err1 := slih.ShoppingListItemFactory.DeleteItemsHasBeenAddedToCartByUserGUIDAndShoppingListGUID(userGUID, shoppingListGUID)
-
-		if err1 != nil {
-			c.JSON(http.StatusInternalServerError, err1)
-			return
-		}
-
-		// Response data
-		result := make(map[string]string)
-		result["message"] = "Successfully deleted all shopping list items those has been added to cart for user guid " + userGUID
-
-		c.JSON(http.StatusOK, gin.H{"data": result})
+	if error != nil {
+		errorCode, _ := strconv.Atoi(error.Error.Status)
+		context.JSON(errorCode, error)
 		return
 	}
 
-	if addedToCart == "0" {
-		// Soft delete Shopping List Item incuding relationship
-		err1 := slih.ShoppingListItemFactory.DeleteItemsHasNotBeenAddedToCartByUserGUIDAndShoppingListGUID(userGUID, shoppingListGUID)
+	error = slih.ShoppingListItemImageService.DeleteImagesForShoppingList(shoppingListGUID)
 
-		if err1 != nil {
-			c.JSON(http.StatusInternalServerError, err1)
-			return
-		}
-
-		// Response data
-		result := make(map[string]string)
-		result["message"] = "Successfully deleted all shopping list items those hasn't been added to cart for user guid " + userGUID
-
-		c.JSON(http.StatusOK, gin.H{"data": result})
+	if error != nil {
+		errorCode, _ := strconv.Atoi(error.Error.Status)
+		context.JSON(errorCode, error)
 		return
 	}
 
-	if addedToCart == "" {
-		// Soft delete Shopping List Item incuding relationship
-		err1 := slih.ShoppingListItemFactory.DeleteByUserGUID(userGUID)
-
-		if err1 != nil {
-			c.JSON(http.StatusInternalServerError, err1)
-			return
-		}
-	}
-
-	// Response data
-	result := make(map[string]string)
-	result["message"] = "Successfully deleted all shopping list item for user guid " + userGUID
-
-	c.JSON(http.StatusOK, gin.H{"data": result})
+	context.JSON(http.StatusOK, gin.H{"data": result})
 }
 
-func (slih *ShoppingListItemHandler) Delete(c *gin.Context) {
-	tokenData := c.MustGet("Token").(map[string]string)
+// Delete function used to delete user shopping list item by shopping list item GUID, user GUID and shopping list GUID.
+func (slih *ShoppingListItemHandler) Delete(context *gin.Context) {
+	tokenData := context.MustGet("Token").(map[string]string)
 
-	// Retrieve user guid in url
-	userGUID := c.Param("guid")
+	userGUID := context.Param("guid")
 
-	// If user GUID not match user GUID inside the token return error message
 	if tokenData["user_guid"] != userGUID {
-		c.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("update shopping list"))
+		context.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("delete shopping list"))
 		return
 	}
 
-	// Retrieve shopping list guid in url
-	shoppingListGUID := c.Param("shopping_list_guid")
+	shoppingListGUID := context.Param("shopping_list_guid")
+	shoppingListItemGUID := context.Param("item_guid")
 
-	// Retrieve shopping list by guid and user guif
-	shoppingList := slih.ShoppingListRepository.GetByGUIDAndUserGUID(shoppingListGUID, userGUID, "")
+	result, error := slih.ShoppingListItemService.DeleteShoppingListItemInShoppingList(shoppingListItemGUID, userGUID, shoppingListGUID)
 
-	// If shopping list GUID empty return error message
-	if shoppingList.GUID == "" {
-		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("Shopping List", "guid", shoppingListGUID))
+	if error != nil {
+		errorCode, _ := strconv.Atoi(error.Error.Status)
+		context.JSON(errorCode, error)
 		return
 	}
 
-	// Retrieve shopping list item guid in url
-	shoppingListItemGUID := c.Param("item_guid")
+	error = slih.ShoppingListItemImageService.DeleteImagesForShoppingListItem(shoppingListItemGUID)
 
-	// Retrieve shopping list item by guid
-	shoppingListItem := slih.ShoppingListItemRepository.GetByShoppingListGUIDAndGUID(shoppingListItemGUID, shoppingListGUID, "")
-
-	// If shopping list item GUID empty return error message
-	if shoppingListItem.GUID == "" {
-		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("Shopping List Item", "guid", shoppingListItemGUID))
+	if error != nil {
+		errorCode, _ := strconv.Atoi(error.Error.Status)
+		context.JSON(errorCode, error)
 		return
 	}
 
-	// Soft delete Shopping List Item incuding relationship
-	err := slih.ShoppingListItemFactory.DeleteByGUID(shoppingListItem.GUID)
-
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, err)
-		return
-	}
-
-	// Response data
-	result := make(map[string]string)
-	result["message"] = "Successfully deleted shopping list item with guid " + shoppingListItem.GUID
-
-	c.JSON(http.StatusOK, gin.H{"data": result})
+	context.JSON(http.StatusOK, gin.H{"data": result})
 }

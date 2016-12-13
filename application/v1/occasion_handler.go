@@ -7,34 +7,28 @@ import (
 )
 
 type OccasionHandler struct {
-	OccasionRepository  OccasionRepositoryInterface
-	OccasionTransformer OccasionTransformerInterface
+	OccasionService OccasionServiceInterface
 }
 
 // Index function used to retrieve shopping list occasions
-func (oh *OccasionHandler) Index(c *gin.Context) {
-	// Validate query string
-	err := Validation.Validate(c.Request.URL.Query(), map[string]string{"last_sync_date": "time"})
+func (oh *OccasionHandler) Index(context *gin.Context) {
+	error := Validation.Validate(context.Request.URL.Query(), map[string]string{"last_sync_date": "time"})
 
-	// If validation error return error message
-	if err != nil {
-		c.JSON(http.StatusUnprocessableEntity, err)
+	if error != nil {
+		context.JSON(http.StatusUnprocessableEntity, error)
 		return
 	}
 
-	// Retrieve filter query string in request
-	lastSyncDate := c.DefaultQuery("last_sync_date", "")
+	lastSyncDate := context.Query("last_sync_date")
 
 	if lastSyncDate != "" {
-		occasions, totalOccasion := oh.OccasionRepository.GetLatestUpdate(lastSyncDate)
-		result := oh.OccasionTransformer.TransformCollection(occasions, totalOccasion)
+		occasions := oh.OccasionService.GetLatestOccasionAfterLastSyncDate(lastSyncDate)
 
-		c.JSON(http.StatusOK, result)
+		context.JSON(http.StatusOK, occasions)
 		return
 	}
 
-	occasions, totalOccasion := oh.OccasionRepository.GetAll()
-	result := oh.OccasionTransformer.TransformCollection(occasions, totalOccasion)
+	occasions := oh.OccasionService.GetAllOccasions()
 
-	c.JSON(http.StatusOK, result)
+	context.JSON(http.StatusOK, occasions)
 }

@@ -64,7 +64,7 @@ func (sliis *ShoppingListItemImageService) ViewUserShoppingListItemImage(userGUI
 func (sliis *ShoppingListItemImageService) CreateUserShoppingListItemImage(userGUID string, shoppingListGUID string, shoppingListItemGUID string,
 	imagesToUpload []*multipart.FileHeader) ([]*ShoppingListItemImage, *systems.ErrorData) {
 
-	_, error := sliis.ShoppingListItemService.CheckUserShoppingListItemExistOrNot(userGUID, shoppingListGUID, shoppingListItemGUID)
+	_, error := sliis.ShoppingListItemService.CheckUserShoppingListItemExistOrNot(shoppingListItemGUID, userGUID, shoppingListGUID)
 
 	if error != nil {
 		return nil, error
@@ -113,6 +113,7 @@ func (sliis *ShoppingListItemImageService) UploadShoppingListItemImages(imagesTo
 
 		uploadedFiles[key] = uploadedFile
 
+		image.Close()
 	}
 
 	return uploadedFiles, nil
@@ -126,8 +127,6 @@ func (sliis *ShoppingListItemImageService) ValidateShoppingListItemImages(images
 	for key, image := range imagesToUpload {
 
 		openedImage, error := image.Open()
-
-		defer openedImage.Close()
 
 		if error != nil {
 			return nil, Error.InternalServerError(error.Error(), systems.CannotReadFile)

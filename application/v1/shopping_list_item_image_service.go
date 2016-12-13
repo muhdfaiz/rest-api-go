@@ -158,25 +158,27 @@ func (sliis *ShoppingListItemImageService) DeleteImagesForShoppingList(shoppingL
 
 	deletedImagesURI := make([]string, len(shoppingListItemImages))
 
-	for key, shoppingListItemImage := range shoppingListItemImages {
+	if len(shoppingListItemImages) > 0 {
+		for key, shoppingListItemImage := range shoppingListItemImages {
 
-		error := sliis.ShoppingListItemImageRepository.Delete("guid", shoppingListItemImage.GUID)
+			error := sliis.ShoppingListItemImageRepository.Delete("guid", shoppingListItemImage.GUID)
+
+			if error != nil {
+				return error
+			}
+
+			url, _ := url.Parse(shoppingListItemImage.URL)
+
+			uriSegments := strings.SplitN(url.Path, "/", 3)
+
+			deletedImagesURI[key] = uriSegments[2]
+		}
+
+		error := sliis.AmazonS3FileSystem.Delete(deletedImagesURI)
 
 		if error != nil {
 			return error
 		}
-
-		url, _ := url.Parse(shoppingListItemImage.URL)
-
-		uriSegments := strings.SplitN(url.Path, "/", 3)
-
-		deletedImagesURI[key] = uriSegments[2]
-	}
-
-	error := sliis.AmazonS3FileSystem.Delete(deletedImagesURI)
-
-	if error != nil {
-		return error
 	}
 
 	return nil
@@ -189,25 +191,28 @@ func (sliis *ShoppingListItemImageService) DeleteImagesForShoppingListItem(shopp
 
 	deletedImagesURI := make([]string, len(shoppingListItemImages))
 
-	for key, shoppingListItemImage := range shoppingListItemImages {
+	if len(shoppingListItemImages) > 0 {
 
-		error := sliis.ShoppingListItemImageRepository.Delete("guid", shoppingListItemImage.GUID)
+		for key, shoppingListItemImage := range shoppingListItemImages {
+
+			error := sliis.ShoppingListItemImageRepository.Delete("guid", shoppingListItemImage.GUID)
+
+			if error != nil {
+				return error
+			}
+
+			url, _ := url.Parse(shoppingListItemImage.URL)
+
+			uriSegments := strings.SplitN(url.Path, "/", 3)
+
+			deletedImagesURI[key] = uriSegments[2]
+		}
+
+		error := sliis.AmazonS3FileSystem.Delete(deletedImagesURI)
 
 		if error != nil {
 			return error
 		}
-
-		url, _ := url.Parse(shoppingListItemImage.URL)
-
-		uriSegments := strings.SplitN(url.Path, "/", 3)
-
-		deletedImagesURI[key] = uriSegments[2]
-	}
-
-	error := sliis.AmazonS3FileSystem.Delete(deletedImagesURI)
-
-	if error != nil {
-		return error
 	}
 
 	return nil

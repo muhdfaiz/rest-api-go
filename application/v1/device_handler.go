@@ -4,137 +4,71 @@ import (
 	"net/http"
 	"strconv"
 
-	validator "gopkg.in/go-playground/validator.v8"
-
 	"github.com/gin-gonic/gin"
 )
 
-// DeviceHandler will handle all request related to device endpoint
+// DeviceHandler will handle all request related to device endpoint.
 type DeviceHandler struct {
-	UserRepository   UserRepositoryInterface
-	DeviceRepository DeviceRepositoryInterface
-	DeviceFactory    DeviceFactoryInterface
+	DeviceService DeviceServiceInterface
 }
 
-// Create function used to create new device and store inside database
-func (dh *DeviceHandler) Create(c *gin.Context) {
-	// Bind request data based on header content type
+// Create function used to create new device and store in database.
+func (dh *DeviceHandler) Create(context *gin.Context) {
 	deviceData := CreateDevice{}
 
-	// TODO change binding to custom binding create in system package
-	if err := c.Bind(&deviceData); err != nil {
-		c.JSON(http.StatusBadRequest, Error.ValidationErrors(err.(validator.ValidationErrors)))
+	if error := Binding.Bind(&deviceData, context); error != nil {
+		context.JSON(http.StatusUnprocessableEntity, error)
 		return
 	}
 
-	// Retrieve device by UUID
-	device := dh.DeviceRepository.GetByUUID(deviceData.UUID)
+	device, error := dh.DeviceService.CreateDevice(deviceData)
 
-	// If device UUID not empty return error message
-	if device.UUID != "" {
-		c.JSON(http.StatusConflict, Error.DuplicateValueErrors("Device", "uuid", device.UUID))
+	if error != nil {
+		errorCode, _ := strconv.Atoi(error.Error.Status)
+		context.JSON(errorCode, error)
 		return
 	}
 
-	// If user GUID exist in the request
-	if deviceData.UserGUID != "" {
-		// Retrieve user by GUID
-		user := dh.UserRepository.GetByGUID(deviceData.UserGUID, "")
-
-		// If user GUID empty return error message
-		if user.GUID == "" {
-			c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("User", "guid", deviceData.UserGUID))
-			return
-		}
-	}
-
-	// Create new device
-	result, err := dh.DeviceFactory.Create(deviceData)
-
-	// Output error if failed to create new device
-	if err != nil {
-		errorCode, _ := strconv.Atoi(err.Error.Status)
-		c.JSON(errorCode, err)
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"data": result})
+	context.JSON(http.StatusOK, gin.H{"data": device})
 }
 
 // Update function used to update device with new data.
-func (dh *DeviceHandler) Update(c *gin.Context) {
-	// Retrieve device UUID in url
-	deviceUUID := c.Param("uuid")
-
-	// Retrieve device by UUID
-	device := dh.DeviceRepository.GetByUUID(deviceUUID)
-
-	// If device UUID empty return error message
-	if device.UUID == "" {
-		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("Device", "uuid", deviceUUID))
-		return
-	}
-
-	// Bind Device data
+func (dh *DeviceHandler) Update(context *gin.Context) {
 	deviceData := UpdateDevice{}
 
-	// Bind request based on content type and validate request data
-	if err := Binding.Bind(&deviceData, c); err != nil {
-		c.JSON(http.StatusUnprocessableEntity, err)
+	if err := Binding.Bind(&deviceData, context); err != nil {
+		context.JSON(http.StatusUnprocessableEntity, err)
 		return
 	}
 
-	// If user GUID exist in the request
-	if deviceData.UserGUID != "" {
-		// Retrieve user by GUID
-		user := dh.UserRepository.GetByGUID(deviceData.UserGUID, "")
+	deviceUUID := context.Param("uuid")
 
-		// If user GUID empty return error message
-		if user.GUID == "" {
-			c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("User", "guid", deviceData.UserGUID))
-			return
-		}
-	}
+	device, error := dh.DeviceService.UpdateDevice(deviceUUID, deviceData)
 
-	// Update Device data
-	err := dh.DeviceFactory.Update(deviceUUID, deviceData)
-
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, err)
+	if error != nil {
+		errorCode, _ := strconv.Atoi(error.Error.Status)
+		context.JSON(errorCode, error)
 		return
 	}
 
-	// Retrieve device latest data
-	device = dh.DeviceRepository.GetByUUID(deviceUUID)
-
-	c.JSON(http.StatusOK, gin.H{"data": device})
+	context.JSON(http.StatusOK, gin.H{"data": device})
 }
 
-// Delete function used to soft delete device by setting current timeo the deleted_at column
-func (dh *DeviceHandler) Delete(c *gin.Context) {
-	// Retrieve device uuid in url
-	deviceUUID := c.Param("uuid")
+// Delete function used to soft delete device by setting current date and time as a value
+// for deleted_at column.
+func (dh *DeviceHandler) Delete(context *gin.Context) {
+	deviceUUID := context.Param("uuid")
 
-	// Retrieve device by UUID
-	device := dh.DeviceRepository.GetByUUID(deviceUUID)
+	error := dh.DeviceService.DeleteDeviceByUUID(deviceUUID)
 
-	// If device uuid empty return error message
-	if device.UUID == "" {
-		c.JSON(http.StatusNotFound, Error.ResourceNotFoundError("Device", "uuid", deviceUUID))
+	if error != nil {
+		errorCode, _ := strconv.Atoi(error.Error.Status)
+		context.JSON(errorCode, error)
 		return
 	}
 
-	// Soft delete device
-	err := dh.DeviceFactory.Delete("uuid", deviceUUID)
-
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, err)
-		return
-	}
-
-	// Response data
 	result := make(map[string]string)
-	result["message"] = "Successfully deleted device with uuid " + device.UUID
+	result["message"] = "Successfully deleted device with uuid " + deviceUUID
 
-	c.JSON(http.StatusOK, gin.H{"data": result})
+	context.JSON(http.StatusOK, gin.H{"data": result})
 }

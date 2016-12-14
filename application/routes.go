@@ -35,11 +35,14 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 
 	// Device Objects
 	deviceRepository := &v1.DeviceRepository{DB: DB}
-	deviceFactory := &v1.DeviceFactory{DB: DB}
+	deviceService := &v1.DeviceService{DeviceRepository: deviceRepository, UserService: userService}
 
 	// Sms Objects
 	smsHistoryRepository := &v1.SmsHistoryRepository{DB: DB}
 	smsService := &v1.SmsService{DB: DB}
+
+	// Auth Service
+	authService := &v1.AuthService{UserService: userService, SmsService: smsService, DeviceService: deviceService}
 
 	// Referral Cashback Objects
 	referralCashbackRepository := &v1.ReferralCashbackRepository{DB: DB}
@@ -163,22 +166,21 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 
 	// Sms Handler
 	smsHandler := v1.SmsHandler{UserRepository: userRepository, UserFactory: userFactory, SmsService: smsService,
-		SmsHistoryRepository: smsHistoryRepository, DeviceRepository: deviceRepository, DeviceFactory: deviceFactory}
+		SmsHistoryRepository: smsHistoryRepository, DeviceService: deviceService}
 
 	// User Handler
 	userHandler := v1.UserHandler{UserRepository: userRepository, UserService: userService, UserFactory: userFactory,
-		DeviceFactory: deviceFactory, ReferralCashbackRepository: referralCashbackRepository, SmsService: smsService,
+		DeviceService: deviceService, ReferralCashbackRepository: referralCashbackRepository, SmsService: smsService,
 		FacebookService: facebookService, TransactionService: transactionService, DealCashbackService: dealCashbackService}
 
 	// Device Handler
-	deviceHandler := v1.DeviceHandler{UserRepository: userRepository, DeviceRepository: deviceRepository, DeviceFactory: deviceFactory}
+	deviceHandler := v1.DeviceHandler{DeviceService: deviceService}
 
 	// Shopping List Handler
 	shoppingListHandler := v1.ShoppingListHandler{ShoppingListService: shoppingListService, ShoppingListItemImageService: shoppingListItemImageService}
 
 	// Auth Handler
-	authHandler := v1.AuthHandler{UserRepository: userRepository, DeviceRepository: deviceRepository, DeviceFactory: deviceFactory,
-		SmsService: smsService}
+	authHandler := v1.AuthHandler{AuthService: authService}
 
 	// Occasion Handler
 	occasionHandler := v1.OccasionHandler{OccasionService: occasionService}

@@ -13,7 +13,9 @@ import (
 )
 
 type UserServiceInterface interface {
-	CheckUserExistOrNot(userGUID string, relations string) *User
+	CheckUserExistOrNot(userGUID string) *systems.ErrorData
+	CheckUserPhoneNumberValidOrNot(phoneNo string) (*User, *systems.ErrorData)
+	CheckUserFacebookIDValidOrNot(facebookID string) (*User, *systems.ErrorData)
 	UploadProfileImage(file multipart.File) (map[string]string, *systems.ErrorData)
 	GiveReferralCashback(referrerGUID string, referentGUID string) (interface{}, *systems.ErrorData)
 	GenerateReferralCode(name string) string
@@ -26,8 +28,37 @@ type UserService struct {
 	UserRepository     UserRepositoryInterface
 }
 
-func (us *UserService) CheckUserExistOrNot(userGUID string, relations string) *User {
-	return us.UserRepository.GetByGUID(userGUID, relations)
+// CheckUserExistOrNot function used to check user exist or not in database by checking the user GUID.
+func (us *UserService) CheckUserExistOrNot(userGUID string) *systems.ErrorData {
+	user := us.UserRepository.GetByGUID(userGUID, "")
+
+	if user.GUID != "" {
+		return Error.ResourceNotFoundError("User", "guid", userGUID)
+	}
+
+	return nil
+}
+
+// CheckUserPhoneNumberValidOrNot function used to check user phone number valid or not.
+func (us *UserService) CheckUserPhoneNumberValidOrNot(phoneNo string) (*User, *systems.ErrorData) {
+	user := us.UserRepository.GetByPhoneNo(phoneNo, "")
+
+	if user.PhoneNo == "" {
+		return nil, Error.ResourceNotFoundError("User", "phone_no", phoneNo)
+	}
+
+	return user, nil
+}
+
+// CheckUserFacebookIDValidOrNot function used to check user facebook ID valid or not.
+func (us *UserService) CheckUserFacebookIDValidOrNot(facebookID string) (*User, *systems.ErrorData) {
+	user := us.UserRepository.GetByFacebookID(facebookID, "")
+
+	if user.PhoneNo == "" {
+		return nil, Error.ResourceNotFoundError("User", "facebook_id", facebookID)
+	}
+
+	return user, nil
 }
 
 // UploadProfileImage function used to upload profile image to Amazon S3 if profile_image exist in the request

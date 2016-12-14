@@ -20,7 +20,7 @@ type UserHandler struct {
 	ReferralCashbackRepository ReferralCashbackRepositoryInterface
 	SmsService                 SmsServiceInterface
 	FacebookService            facebook.FacebookServiceInterface
-	DeviceFactory              DeviceFactoryInterface
+	DeviceService              DeviceServiceInterface
 	TransactionService         TransactionServiceInterface
 	DealCashbackService        DealCashbackServiceInterface
 }
@@ -274,7 +274,7 @@ func (uh *UserHandler) Update(c *gin.Context) {
 		}
 
 		// Soft delete device by set current time to deleted_at column
-		err := uh.DeviceFactory.Delete("uuid", userToken["device_uuid"])
+		err := uh.DeviceService.DeleteDeviceByUUID(userToken["device_uuid"])
 
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, err)

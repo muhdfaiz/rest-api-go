@@ -34,6 +34,7 @@ func (slh *ShoppingListHandler) View(context *gin.Context) {
 		context.JSON(errorCode, error)
 		return
 	}
+	
 	context.JSON(http.StatusOK, gin.H{"data": shoppingLists})
 }
 

@@ -19,8 +19,7 @@ type SmsHandler struct {
 	UserFactory          UserFactoryInterface
 	SmsService           SmsServiceInterface
 	SmsHistoryRepository SmsHistoryRepositoryInterface
-	DeviceRepository     DeviceRepositoryInterface
-	DeviceFactory        DeviceFactoryInterface
+	DeviceService        DeviceServiceInterface
 }
 
 // Send function used to send sms to the user during login & registration
@@ -123,11 +122,11 @@ func (sh *SmsHandler) Verify(c *gin.Context) {
 	}
 
 	// Retrieve device by uuid
-	device := sh.DeviceRepository.GetByUUIDUnscoped(smsData.DeviceUUID)
+	device := sh.DeviceService.ViewDeviceByUUIDIncludingSoftDelete(smsData.DeviceUUID)
 
 	// If Device User GUID empty, update device with User GUID
 	if device.UserGUID == "" {
-		err := sh.DeviceFactory.Update(smsData.DeviceUUID, UpdateDevice{UserGUID: user.GUID})
+		_, err := sh.DeviceService.UpdateDevice(smsData.DeviceUUID, UpdateDevice{UserGUID: user.GUID})
 
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, err)
@@ -176,7 +175,7 @@ func (sh *SmsHandler) Verify(c *gin.Context) {
 	}
 
 	// Set deleted_at column in devices table to null
-	err = sh.DeviceFactory.SetDeletedAtToNull(device.GUID)
+	err = sh.DeviceService.ReactivateDevice(device.GUID)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err)

@@ -32,7 +32,7 @@ type UserService struct {
 func (us *UserService) CheckUserExistOrNot(userGUID string) *systems.ErrorData {
 	user := us.UserRepository.GetByGUID(userGUID, "")
 
-	if user.GUID != "" {
+	if user.GUID == "" {
 		return Error.ResourceNotFoundError("User", "guid", userGUID)
 	}
 

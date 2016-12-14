@@ -118,8 +118,14 @@ func (ds *DealService) GetDealsBasedOnSampleShoppingListItem(defaultShoppingList
 	latitude1InFLoat64, _ := strconv.ParseFloat(strings.TrimSpace(latitude), 64)
 	longitude1InFLoat64, _ := strconv.ParseFloat(strings.TrimSpace(longitude), 64)
 
-	deals, _ := ds.DealRepository.GetAllDealsForCategoryWithinValidRangeStartDateEndDateAndQuota(defaultShoppingListItem.Category,
-		latitude1InFLoat64, longitude1InFLoat64, currentDateInGMT8, "1", "", "Category")
+	deals := []*Deal{}
+
+	if latitude == "" || longitude == "" {
+		deals, _ = ds.DealRepository.GetAllDealsForCategoryWithinStartDateEndDateAndQuota(defaultShoppingListItem.Category, currentDateInGMT8, "1", "", "Category")
+	} else {
+		deals, _ = ds.DealRepository.GetAllDealsForCategoryWithinValidRangeStartDateEndDateAndQuota(defaultShoppingListItem.Category,
+			latitude1InFLoat64, longitude1InFLoat64, currentDateInGMT8, "1", "", "Category")
+	}
 
 	if len(deals) < 1 {
 		return nil

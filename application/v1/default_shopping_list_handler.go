@@ -13,7 +13,7 @@ type DefaultShoppingListHandler struct {
 
 // ViewAll function used to retrieve all default shopping lists.
 func (dslh *DefaultShoppingListHandler) ViewAll(context *gin.Context) {
-	error := Validation.Validate(context.Request.URL.Query(), map[string]string{"latitude": "required,latitude", "longitude": "required,longitude"})
+	error := Validation.Validate(context.Request.URL.Query(), map[string]string{"latitude": "latitude", "longitude": "longitude"})
 
 	if error != nil {
 		context.JSON(http.StatusUnprocessableEntity, error)

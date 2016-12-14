@@ -73,13 +73,6 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 	itemSubCategoryRepository := &v1.ItemSubCategoryRepository{DB: DB}
 	itemSubCategoryService := &v1.ItemSubCategoryService{ItemSubCategoryRepository: itemSubCategoryRepository}
 
-	// Default Shopping List Objects
-	defaultShoppingListRepository := &v1.DefaultShoppingListRepository{DB: DB}
-	defaultShoppingListService := &v1.DefaultShoppingListService{DefaultShoppingListRepository: defaultShoppingListRepository}
-
-	defaultShoppingListItemRepository := &v1.DefaultShoppingListItemRepository{DB: DB}
-	defaultShoppingListItemService := &v1.DefaultShoppingListItemService{DefaultShoppingListItemRepository: defaultShoppingListItemRepository}
-
 	// Deal Cashback Repository
 	dealCashbackRepository := &v1.DealCashbackRepository{DB: DB}
 
@@ -107,6 +100,13 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 	dealService := &v1.DealService{DealRepository: dealRepository, LocationService: locationService, DealCashbackFactory: dealCashbackFactory,
 		DealCashbackRepository: dealCashbackRepository, ItemRepository: itemRepository, ItemCategoryService: itemCategoryService,
 		ItemSubCategoryRepository: itemSubCategoryRepository, GrocerRepository: grocerRepository, ShoppingListItemRepository: shoppingListItemRepository}
+
+	// Default Shopping List Objects
+	defaultShoppingListRepository := &v1.DefaultShoppingListRepository{DB: DB}
+	defaultShoppingListService := &v1.DefaultShoppingListService{DefaultShoppingListRepository: defaultShoppingListRepository, DealService: dealService}
+
+	defaultShoppingListItemRepository := &v1.DefaultShoppingListItemRepository{DB: DB}
+	defaultShoppingListItemService := &v1.DefaultShoppingListItemService{DefaultShoppingListItemRepository: defaultShoppingListItemRepository}
 
 	// Deal Transformer
 	dealTransformer := &v1.DealTransformer{}
@@ -220,6 +220,8 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 
 	cashoutTransactionHandler := v1.CashoutTransactionHandler{CashoutTransactionService: cashoutTransactionService}
 
+	defaultShoppingListHandler := v1.DefaultShoppingListHandler{DefaultShoppingListService: defaultShoppingListService}
+
 	// V1 Routes
 	version1 := router.Group("/v1")
 	{
@@ -251,8 +253,11 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 		// Grocer Routes
 		version1.GET("/grocers", grocerHandler.Index)
 
-		// Deal Handler
+		// Deal Route
 		version1.GET("deals", dealHandler.ViewAllForGuestUser)
+
+		// Default Shopping List Route
+		version1.GET("/shopping_list_samples", defaultShoppingListHandler.ViewAll)
 
 		// Protected Routes
 		version1.Use(middlewares.Auth(DB))

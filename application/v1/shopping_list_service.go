@@ -7,7 +7,7 @@ type ShoppingListServiceInterface interface {
 	CreateUserShoppingList(userGUID string, createData CreateShoppingList) (*ShoppingList, *systems.ErrorData)
 	UpdateUserShoppingList(userGUID string, shoppingListGUID string, updateData UpdateShoppingList) (*ShoppingList, *systems.ErrorData)
 	DeleteUserShoppingListIncludingItemsAndImages(userGUID string, shoppingListGUID string) *systems.ErrorData
-	GetUserShoppingListsAndCreateSampleIfEmpty(userGUID string, relations string) ([]*ShoppingList, *systems.ErrorData)
+	GetUserShoppingLists(userGUID string, relations string) ([]*ShoppingList, *systems.ErrorData)
 	ViewShoppingListByGUID(shoppingListGUID string, relations string) *ShoppingList
 	CheckUserShoppingListDuplicate(userGUID string, shoppingListName string, occasionGUID string) *systems.ErrorData
 	CheckUserShoppingListExistOrNot(userGUID string, shoppingListGUID string) (*ShoppingList, *systems.ErrorData)
@@ -114,21 +114,9 @@ func (sls *ShoppingListService) DeleteUserShoppingListIncludingItemsAndImages(us
 	return nil
 }
 
-// GetUserShoppingListsAndCreateSampleIfEmpty function used to retrieve user shopping lists by user GUID.
-// If user shopping list empty, API will create default shopping list that was set from Admin Dashboard.
-func (sls *ShoppingListService) GetUserShoppingListsAndCreateSampleIfEmpty(userGUID string, relations string) ([]*ShoppingList, *systems.ErrorData) {
+// GetUserShoppingLists function used to retrieve user shopping lists by user GUID.
+func (sls *ShoppingListService) GetUserShoppingLists(userGUID string, relations string) ([]*ShoppingList, *systems.ErrorData) {
 	shoppingLists := sls.ShoppingListRepository.GetByUserGUID(userGUID, relations)
-
-	if len(shoppingLists) <= 0 {
-
-		error := sls.CreateSampleShoppingListsAndItemsForUser(userGUID)
-
-		if error != nil {
-			return nil, error
-		}
-
-		shoppingLists = sls.ShoppingListRepository.GetByUserGUID(userGUID, relations)
-	}
 
 	return shoppingLists, nil
 }
@@ -166,7 +154,7 @@ func (sls *ShoppingListService) CheckUserShoppingListExistOrNot(userGUID string,
 
 // CreateSampleShoppingListsAndItemsForUser function used to create sample shopping list and shopping list item for user.
 func (sls *ShoppingListService) CreateSampleShoppingListsAndItemsForUser(userGUID string) *systems.ErrorData {
-	defaultShoppingLists := sls.DefaultShoppingListService.GetAllDefaultShoppingList()
+	defaultShoppingLists := sls.DefaultShoppingListService.GetAllDefaultShoppingLists("")
 
 	for _, defaultShoppingList := range defaultShoppingLists {
 		userShoppingList := CreateShoppingList{

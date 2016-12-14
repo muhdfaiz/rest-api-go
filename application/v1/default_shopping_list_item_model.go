@@ -15,4 +15,10 @@ type DefaultShoppingListItem struct {
 	CreatedAt        time.Time  `json:"created_at"`
 	UpdatedAt        time.Time  `json:"updated_at"`
 	DeletedAt        *time.Time `json:"deleted_at"`
+
+	// Has many Defauly Shopping List Item Image
+	Images []*DefaultShoppingListItemImage `json:"images,omitempty" gorm:"ForeignKey:ShoppingListItemGUID;AssociationForeignKey:GUID"`
+
+	// Has many Deals
+	Deals []*Deal `json:"deals"`
 }

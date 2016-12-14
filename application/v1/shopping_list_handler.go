@@ -27,14 +27,14 @@ func (slh *ShoppingListHandler) View(context *gin.Context) {
 
 	relations := context.DefaultQuery("include", "")
 
-	shoppingLists, error := slh.ShoppingListService.GetUserShoppingListsAndCreateSampleIfEmpty(userGUID, relations)
+	shoppingLists, error := slh.ShoppingListService.GetUserShoppingLists(userGUID, relations)
 
 	if error != nil {
 		errorCode, _ := strconv.Atoi(error.Error.Status)
 		context.JSON(errorCode, error)
 		return
 	}
-	
+
 	context.JSON(http.StatusOK, gin.H{"data": shoppingLists})
 }
 

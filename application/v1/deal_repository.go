@@ -12,6 +12,8 @@ type DealRepositoryInterface interface {
 		pageNumber string, pageLimit string, relations string) ([]*Deal, int)
 	GetAllDealsWithinValidRangeStartDateEndDateUserLimitQuotaAndName(userGUID string, name string, latitude float64, longitude float64,
 		currentDateInGMT8, pageNumber string, pageLimit string, relations string) ([]*Deal, int)
+	GetAllDealsForCategoryWithinValidRangeStartDateEndDateAndQuota(category string, latitude float64, longitude float64,
+		currentDateInGMT8, pageNumber string, pageLimit string, relations string) ([]*Deal, int)
 	GetAllDealsForCategoryWithinValidRangeStartDateEndDateUserLimitAndQuota(userGUID string, category string, latitude float64, longitude float64,
 		currentDateInGMT8, pageNumber string, pageLimit string, relations string) ([]*Deal, int)
 	GetUniqueSubCategoriesForDealsWithinValidRangeStartDateEndDateUserLimitSubCategoryAndQuota(userGUID string, categoryGUID string, latitude float64,
@@ -109,6 +111,9 @@ func (dr *DealRepository) GetDealByIDWithRelations(dealID int, relations string)
 
 // GetAllDealsWithinValidRangeStartDateEndDateAndQuota used to retrieve deal within valid range (10KM), start date, end date and the
 // deal quota still available including the relations like grocers, grocer locations and item.
+// The deal is valid if user location within valid range (10KM radius).
+// The deal is valid if today date is within deal start date and end date.
+// The deal is valid when total deal added to list by all user below the deal quota.
 func (dr *DealRepository) GetAllDealsWithinValidRangeStartDateEndDateAndQuota(latitude float64, longitude float64, currentDateInGMT8 string,
 	pageNumber string, pageLimit string, relations string) ([]*Deal, int) {
 
@@ -184,6 +189,11 @@ func (dr *DealRepository) GetAllDealsWithinValidRangeStartDateEndDateAndQuota(la
 
 // GetAllDealsWithinValidRangeStartDateEndDateUserLimitQuotaAndName used to retrieve deal within valid range (10KM), start date,
 // end date, user limit and the deal quota still available including the relations like grocers, grocer locations and item.
+// The deal is valid if user location within valid range (10KM radius).
+// The deal is valid if today date is within deal start date and end date.
+// The deal is valid if total amount of deal added to list by user not exceed deal perlimit.
+// The deal is valid when total deal added to list by all user below the deal quota.
+// The deal is valid when deal item name contain the name keyword in the parameter.
 func (dr *DealRepository) GetAllDealsWithinValidRangeStartDateEndDateUserLimitQuotaAndName(userGUID string, name string, latitude float64, longitude float64,
 	currentDateInGMT8, pageNumber string, pageLimit string, relations string) ([]*Deal, int) {
 
@@ -261,8 +271,97 @@ func (dr *DealRepository) GetAllDealsWithinValidRangeStartDateEndDateUserLimitQu
 	return dealsWithin10KM, deal.TotalUserDeal
 }
 
+// GetAllDealsForCategoryWithinValidRangeStartDateEndDateAndQuota used to retrieve deal within valid range (10KM), start date,
+// end date, category and the deal quota still available including the relations like grocers, grocer locations and item.
+// The deal is valid if item category must be same with shopping list item category.
+// The deal is valid if user location within valid range (10KM radius).
+// The deal is valid if today date is within deal start date and end date.
+// The deal is valid when total deal added to list by all user below the deal quota.
+func (dr *DealRepository) GetAllDealsForCategoryWithinValidRangeStartDateEndDateAndQuota(category string, latitude float64, longitude float64,
+	currentDateInGMT8, pageNumber string, pageLimit string, relations string) ([]*Deal, int) {
+
+	deals := []*Deal{}
+
+	offset := SetOffsetValue(pageNumber, pageLimit)
+
+	sqlQueryStatement := `SELECT SQL_CALC_FOUND_ROWS deals.*, count(deal_cashbacks.deal_guid) AS total_deal_cashback
+		FROM
+			(SELECT ads.id AS ads_id,
+					ads.guid AS ads_guid,
+					ads.id,
+					ads.guid,
+					ads.advertiser_id,
+					ads.campaign_id,
+					ads.item_id,
+					ads.category_id,
+					ads.img,
+					ads.front_name,
+					ads.name,
+					ads.body,
+					ads.start_date,
+					ads.end_date,
+					ads.positive_tag,
+					ads.negative_tag,
+					ads.time,
+					ads.refresh_period,
+					ads.perlimit,
+					ads.perlimit AS ads_perlimit,
+					ads.cashback_amount,
+					ads.quota AS ads_quota,
+					ads.quota,
+					ads.status,
+					ads.grocer_exclusive,
+					ads.terms,
+					ads.created_at as deal_created_time,
+					ads.created_at,
+					ads.updated_at,
+					ads.deleted_at,
+					category.name AS category_name,
+					grocer_location.name AS nearest_grocer_name,
+					grocer_location.lat AS nearest_grocer_latitude,
+					grocer_location.lng AS nearest_grocer_longitude,
+					( min(6373 * acos ( cos (radians(?)) * cos(radians(grocer_location.lat)) * cos(radians(grocer_location.lng) - radians(?)) + sin (radians(?)) * sin(radians(grocer_location.lat)) ))) AS nearest_grocer_distance_in_km
+			FROM ads
+			INNER JOIN ads_grocer ON ads.id = ads_grocer.ads_id
+			INNER JOIN grocer_location ON grocer_location.id = ads_grocer.grocer_location_id
+			LEFT JOIN item ON item.id = ads.item_id
+			LEFT JOIN category ON category.id = item.category_id
+			WHERE ads.status = "publish" AND ads.start_date <= ? AND ads.end_date > ? AND category.name = ?
+			GROUP BY ads_guid
+			HAVING nearest_grocer_distance_in_km <= ?
+			ORDER BY ads.created_at DESC) AS deals
+		LEFT OUTER JOIN deal_cashbacks ON ads_guid = deal_cashbacks.deal_guid
+		GROUP BY ads_guid
+		HAVING total_deal_cashback < ads_quota
+		ORDER BY deal_created_time DESC`
+
+	if pageLimit != "" {
+		sqlQueryStatement = sqlQueryStatement + " LIMIT ? OFFSET ?"
+		dr.DB.Raw(sqlQueryStatement, latitude, longitude, latitude, currentDateInGMT8, currentDateInGMT8,
+			category, 10, pageLimit, offset).Scan(&deals)
+	} else {
+		dr.DB.Raw(sqlQueryStatement, latitude, longitude, latitude, currentDateInGMT8, currentDateInGMT8,
+			category, 10).Scan(&deals)
+	}
+
+	type TotalDeal struct {
+		Total int `json:"total"`
+	}
+
+	total := &TotalDeal{}
+
+	dr.DB.Raw(`SELECT FOUND_ROWS() as total;`).Scan(total)
+
+	return deals, total.Total
+}
+
 // GetAllDealsForCategoryWithinValidRangeStartDateEndDateUserLimitAndQuota used to retrieve deal within valid range (10KM), start date,
 // end date, user limit, category and the deal quota still available including the relations like grocers, grocer locations and item.
+// The deal is valid if item category must be same with shopping list item category.
+// The deal is valid if user location within valid range (10KM radius).
+// The deal is valid if today date is within deal start date and end date.
+// The deal is valid if total number of deal added to list by user not exceed deal perlimit.
+// The deal is valid when total deal added to list by all user below the deal quota.
 func (dr *DealRepository) GetAllDealsForCategoryWithinValidRangeStartDateEndDateUserLimitAndQuota(userGUID string, category string, latitude float64, longitude float64,
 	currentDateInGMT8, pageNumber string, pageLimit string, relations string) ([]*Deal, int) {
 
@@ -414,6 +513,11 @@ func (dr *DealRepository) GetUniqueSubCategoriesForDealsWithinValidRangeStartDat
 
 // GetAllDealsForSubCategoryWithinValidRangeStartDateEndDateUserLimitAndQuota used to retrieve deal for subcategory within valid range (10KM), start date,
 // end date, user limit and the deal quota still available including the relations like grocers, grocer locations and item.
+// The deal is valid if item subcategory same with shopping list item subcategory.
+// The deal is valid if user location within valid range (10KM radius).
+// The deal is valid if today date is within deal start date and end date.
+// The deal is valid if total number of deal added to list by user not exceed deal perlimit.
+// The deal is valid when total deal added to list by all user below the deal quota.
 func (dr *DealRepository) GetAllDealsForSubCategoryWithinValidRangeStartDateEndDateUserLimitAndQuota(userGUID string, subCategoryGUID string,
 	latitude float64, longitude float64, currentDateInGMT8, pageNumber string, pageLimit string, relations string) ([]*Deal, int) {
 

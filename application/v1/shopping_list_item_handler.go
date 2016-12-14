@@ -24,8 +24,6 @@ func (slih *ShoppingListItemHandler) View(context *gin.Context) {
 
 	shoppingListItemGUID := context.Param("item_guid")
 
-	relations := context.Query("include")
-
 	if tokenData["user_guid"] != userGUID {
 		context.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("view shopping list"))
 		return
@@ -39,7 +37,7 @@ func (slih *ShoppingListItemHandler) View(context *gin.Context) {
 		return
 	}
 
-	shoppingListItem, error := slih.ShoppingListItemService.ViewUserShoppingListItem(userGUID, shoppingListGUID, shoppingListItemGUID, relations)
+	shoppingListItem, error := slih.ShoppingListItemService.ViewUserShoppingListItem(userGUID, shoppingListGUID, shoppingListItemGUID, "occasions,items.images")
 
 	if error != nil {
 		errorCode, _ := strconv.Atoi(error.Error.Status)

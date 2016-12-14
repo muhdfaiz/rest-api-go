@@ -5,7 +5,7 @@ import "github.com/jinzhu/gorm"
 // DefaultShoppingListRepositoryInterface is a contract that defines the method needed for Default Shopping
 // List Repository.
 type DefaultShoppingListRepositoryInterface interface {
-	GetAll() []*DefaultShoppingList
+	GetAll(relations string) []*DefaultShoppingList
 }
 
 // DefaultShoppingListRepository will handle all task related to CRUD
@@ -14,10 +14,16 @@ type DefaultShoppingListRepository struct {
 }
 
 // GetAll function used to retrieve all default shopping lists from database.
-func (dslr *DefaultShoppingListRepository) GetAll() []*DefaultShoppingList {
+func (dslr *DefaultShoppingListRepository) GetAll(relations string) []*DefaultShoppingList {
 	defaultShoppingLists := []*DefaultShoppingList{}
 
-	dslr.DB.Model(&DefaultShoppingList{}).Find(&defaultShoppingLists)
+	DB := dslr.DB.Model(&DefaultShoppingList{})
+
+	if relations != "" {
+		DB = LoadRelations(DB, relations)
+	}
+
+	DB.Find(&defaultShoppingLists)
 
 	return defaultShoppingLists
 }

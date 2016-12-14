@@ -9,8 +9,11 @@ import (
 	"bitbucket.org/cliqers/shoppermate-api/systems"
 )
 
+// DealServiceInterface is contract the defines the method needed for Deal Service.
 type DealServiceInterface interface {
 	GetDealsBasedOnUserShoppingListItem(userGUID string, shopppingListItems *ShoppingListItem, latitude string,
+		longitude string, dealsCollection []*Deal) []*Deal
+	GetDealsBasedOnSampleShoppingListItem(defaultShoppingListItem *DefaultShoppingListItem, latitude string,
 		longitude string, dealsCollection []*Deal) []*Deal
 	FilteredDealMustBeUniqueForEachOfShoppingListItem(deals []*Deal, dealsCollection []*Deal, userGUID string) []*Deal
 	FilteredDealMustBeWithinStartAndEndTime(deals []*Deal, currentDateInGMT8 string, currentTimeInGMT8 string) []*Deal
@@ -44,18 +47,27 @@ type DealService struct {
 	DealCashbackService        DealCashbackServiceInterface
 }
 
+// GetDealsBasedOnUserShoppingListItem function used to retrieve deals for each of user shopping list items.
+// Maximum 3 deals for each of shopping list items.
+// The deal is valid if item category must be same with shopping list item category.
+// The deal is valid if user location within valid range (10KM radius).
+// The deal is valid if today date is within deal start date and end date.
+// The deal is valid if total number of deal added to list by user not exceed deal perlimit.
+// The deal is valid when total deal added to list by all user below the deal quota.
+// If deal start time and end time not empty, the deal is valid if current time within start time and end time.
+// If deal positive tag not empty, the deal is valid if the item name contain any of the positive tag keyword.
+// If deal negative tag not empty, the deal is not valid if the item name contain any of the negative tag keyword.
 func (ds *DealService) GetDealsBasedOnUserShoppingListItem(userGUID string, shoppingListItem *ShoppingListItem,
 	latitude string, longitude string, dealsCollection []*Deal) []*Deal {
 
 	currentDateInGMT8 := time.Now().UTC().Add(time.Hour * 8).Format("2006-01-02")
 	currentTimeInGMT8 := time.Now().UTC().Add(time.Hour * 8).Format("15:04")
 
-	// Convert Latitude and Longitude from string to float64
 	latitude1InFLoat64, _ := strconv.ParseFloat(strings.TrimSpace(latitude), 64)
 	longitude1InFLoat64, _ := strconv.ParseFloat(strings.TrimSpace(longitude), 64)
 
 	deals, _ := ds.DealRepository.GetAllDealsForCategoryWithinValidRangeStartDateEndDateUserLimitAndQuota(userGUID, shoppingListItem.Category,
-		latitude1InFLoat64, longitude1InFLoat64, currentDateInGMT8, "1", "10000", "Category")
+		latitude1InFLoat64, longitude1InFLoat64, currentDateInGMT8, "1", "", "Category")
 
 	if len(deals) < 1 {
 		return nil
@@ -88,6 +100,58 @@ func (ds *DealService) GetDealsBasedOnUserShoppingListItem(userGUID string, shop
 	return filteredDealsByNegativeTags
 }
 
+// GetDealsBasedOnSampleShoppingListItem function used to retrieve deals for each of sample shopping list items.
+// Maximum 3 deals for each of sample shopping list items.
+// The deal is valid if item category must be same with shopping list item category.
+// The deal is valid if user location within valid range (10KM radius).
+// The deal is valid if today date is within deal start date and end date.
+// The deal is valid when total deal added to list by all user below the deal quota.
+// If deal start time and end time not empty, the deal is valid if current time within start time and end time.
+// If deal positive tag not empty, the deal is valid if the item name contain any of the positive tag keyword.
+// If deal negative tag not empty, the deal is not valid if the item name contain any of the negative tag keyword.
+func (ds *DealService) GetDealsBasedOnSampleShoppingListItem(defaultShoppingListItem *DefaultShoppingListItem, latitude string,
+	longitude string, dealsCollection []*Deal) []*Deal {
+
+	currentDateInGMT8 := time.Now().UTC().Add(time.Hour * 8).Format("2006-01-02")
+	currentTimeInGMT8 := time.Now().UTC().Add(time.Hour * 8).Format("15:04")
+
+	latitude1InFLoat64, _ := strconv.ParseFloat(strings.TrimSpace(latitude), 64)
+	longitude1InFLoat64, _ := strconv.ParseFloat(strings.TrimSpace(longitude), 64)
+
+	deals, _ := ds.DealRepository.GetAllDealsForCategoryWithinValidRangeStartDateEndDateAndQuota(defaultShoppingListItem.Category,
+		latitude1InFLoat64, longitude1InFLoat64, currentDateInGMT8, "1", "", "Category")
+
+	if len(deals) < 1 {
+		return nil
+	}
+
+	filteredDealsUniqueForEachShoppingList := ds.FilteredDealMustBeUniqueForEachOfShoppingListItem(deals, dealsCollection, "")
+
+	if len(filteredDealsUniqueForEachShoppingList) < 1 {
+		return nil
+	}
+
+	filteredDealsByStartAndEndTime := ds.FilteredDealMustBeWithinStartAndEndTime(filteredDealsUniqueForEachShoppingList, currentDateInGMT8, currentTimeInGMT8)
+
+	if len(filteredDealsByStartAndEndTime) < 1 {
+		return nil
+	}
+
+	filteredDealsByPositiveTags := ds.FilteredDealByPositiveTag(filteredDealsByStartAndEndTime, defaultShoppingListItem.Name)
+
+	if len(filteredDealsByPositiveTags) < 1 {
+		return nil
+	}
+
+	filteredDealsByNegativeTags := ds.FilteredDealByNegativeTag(filteredDealsByPositiveTags, defaultShoppingListItem.Name)
+
+	if len(filteredDealsByNegativeTags) < 1 {
+		return nil
+	}
+
+	return filteredDealsByNegativeTags
+}
+
 // FilteredDealMustBeUniqueForEachOfShoppingListItem function used to set the deal must be unique for each of shopping lists items.
 func (ds *DealService) FilteredDealMustBeUniqueForEachOfShoppingListItem(deals []*Deal, dealsCollection []*Deal, userGUID string) []*Deal {
 	filteredDealsUniqueForEachShoppingList := []*Deal{}
@@ -103,17 +167,21 @@ func (ds *DealService) FilteredDealMustBeUniqueForEachOfShoppingListItem(deals [
 		}
 
 		if dealAlreadyExistInOtherItem == false {
-			deal.CanAddTolist = 1
 
-			// Check If deal quota still available for the user.
-			total := ds.DealCashbackRepository.CountByDealGUIDAndUserGUID(deal.GUID, userGUID)
+			if userGUID != "" {
+				deal.CanAddTolist = 1
 
-			if total >= deal.Perlimit {
-				deal.CanAddTolist = 0
+				// Check If deal quota still available for the user.
+				total := ds.DealCashbackRepository.CountByDealGUIDAndUserGUID(deal.GUID, userGUID)
+
+				if total >= deal.Perlimit {
+					deal.CanAddTolist = 0
+				}
+
+				deal.NumberOfDealAddedToList = total
+				deal.RemainingAddToList = deal.Perlimit - total
 			}
 
-			deal.NumberOfDealAddedToList = total
-			deal.RemainingAddToList = deal.Perlimit - total
 			filteredDealsUniqueForEachShoppingList = append(filteredDealsUniqueForEachShoppingList, deal)
 		}
 	}

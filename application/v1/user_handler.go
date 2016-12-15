@@ -44,7 +44,7 @@ func (uh *UserHandler) View(c *gin.Context) {
 
 	totalAmountOfPendingDealCashbackTransactions := uh.TransactionService.SumTotalAmountOfUserPendingTransaction(userGUID)
 
-	totalAmountOfDealCashbackAddedToList := uh.DealCashbackService.SumTotalAmountOfDealCashbackAddedTolistByUser(userGUID)
+	totalAmountOfDealCashbackAddedToList := uh.DealCashbackService.SumTotalAmountOfDealAddedTolistByUser(userGUID)
 
 	totalPendingAmount := totalAmountOfPendingDealCashbackTransactions + totalAmountOfDealCashbackAddedToList
 
@@ -253,7 +253,7 @@ func (uh *UserHandler) Update(c *gin.Context) {
 
 	totalAmountOfPendingDealCashbackTransactions := uh.TransactionService.SumTotalAmountOfUserPendingTransaction(userGUID)
 
-	totalAmountOfDealCashbackAddedToList := uh.DealCashbackService.SumTotalAmountOfDealCashbackAddedTolistByUser(userGUID)
+	totalAmountOfDealCashbackAddedToList := uh.DealCashbackService.SumTotalAmountOfDealAddedTolistByUser(userGUID)
 
 	totalPendingAmount := totalAmountOfPendingDealCashbackTransactions + totalAmountOfDealCashbackAddedToList
 

@@ -373,7 +373,7 @@ func (slis *ShoppingListItemService) GetAndSetDealForShoppingListItems(userGUID 
 	for key, userShoppingListItem := range userShoppingListItems {
 
 		if userShoppingListItem.AddedFromDeal == 0 && userShoppingListItem.AddedToCart == 0 && latitude != "" && longitude != "" {
-			deals := slis.DealService.GetDealsBasedOnUserShoppingListItem(userGUID, userShoppingListItem, latitude, longitude, dealsCollection)
+			deals := slis.DealService.GetDealsBasedOnUserShoppingListItem(userGUID, shoppingListGUID, userShoppingListItem, latitude, longitude, dealsCollection)
 
 			dealsCollection = append(dealsCollection, deals...)
 

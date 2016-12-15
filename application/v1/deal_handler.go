@@ -30,7 +30,7 @@ func (dh *DealHandler) View(c *gin.Context) {
 		return
 	}
 
-	total := dh.DealCashbackService.CountTotalNumberOfDealUserAddToList(tokenData["user_guid"], deal.GUID)
+	total := dh.DealCashbackService.CountTotalNumberOfDealUserAddedToList(tokenData["user_guid"], deal.GUID)
 
 	deal.CanAddTolist = 1
 

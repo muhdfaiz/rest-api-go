@@ -57,6 +57,7 @@ func (th *TransactionHandler) ViewCashoutTransaction(context *gin.Context) {
 	context.JSON(http.StatusOK, gin.H{"data": transaction})
 }
 
+// ViewUserTransactions function used to view all types of user transactions.
 func (th *TransactionHandler) ViewUserTransactions(context *gin.Context) {
 	tokenData := context.MustGet("Token").(map[string]string)
 
@@ -69,12 +70,11 @@ func (th *TransactionHandler) ViewUserTransactions(context *gin.Context) {
 
 	transactionStatus := context.Query("transaction_status")
 
-	relations := context.Query("include")
 	pageNumber := context.Query("page_number")
 	pageLimit := context.Query("page_limit")
 	isRead := context.Query("is_read")
 
-	transactions := th.TransactionService.GetUserTransactionsForSpecificStatus(context.Request, userGUID, transactionStatus, isRead, pageNumber, pageLimit, relations)
+	transactions := th.TransactionService.GetUserTransactions(context.Request, userGUID, transactionStatus, isRead, pageNumber, pageLimit)
 
 	context.JSON(http.StatusOK, gin.H{"data": transactions})
 }

@@ -31,6 +31,7 @@ type DealServiceInterface interface {
 	GetAvailableDealsForSubCategoryForRegisteredUser(userGUID string, category string, latitude string, longitude string, pageNumber string, pageLimit string,
 		relations string) ([]*Deal, int)
 	GetDealByGUID(dealGUID string) *Deal
+	SetAddTolistInfoAndItemsAndGrocerExclusiveForDeal(deal *Deal, userGUID string) *Deal
 	SetAddTolistInfoAndItemsAndGrocerExclusiveForDeals(deals []*Deal, userGUID string) []*Deal
 }
 
@@ -449,13 +450,31 @@ func (ds *DealService) GetDealByGUID(dealGUID string) *Deal {
 	return deal
 }
 
+// SetAddTolistInfoAndItemsAndGrocerExclusiveForDeal function used to set number of deal added to list by user,
+// remaining time user can add to list, and can add to list status to tell user allow to add the deal or not.
+func (ds *DealService) SetAddTolistInfoAndItemsAndGrocerExclusiveForDeal(deal *Deal, userGUID string) *Deal {
+	deal.CanAddTolist = 1
+
+	total := ds.DealCashbackRepository.CountByDealGUIDAndUserGUID(deal.GUID, userGUID)
+
+	if total >= deal.Perlimit {
+		deal.CanAddTolist = 0
+	}
+
+	deal.NumberOfDealAddedToList = total
+	deal.RemainingAddToList = deal.Perlimit - total
+	deal.Items = ds.ItemRepository.GetByID(deal.ItemID, "Categories,Subcategories")
+	deal.Grocerexclusives = ds.GrocerRepository.GetByID(deal.GrocerExclusive, "")
+
+	return deal
+}
+
 // SetAddTolistInfoAndItemsAndGrocerExclusiveForDeals function used to set number of deal added to list by user,
 // remaining time user can add to list, and can add to list status to tell user allow to add the deal or not.
 func (ds *DealService) SetAddTolistInfoAndItemsAndGrocerExclusiveForDeals(deals []*Deal, userGUID string) []*Deal {
 	for key, deal := range deals {
 		deals[key].CanAddTolist = 1
 
-		// Check If deal quota still available for the user.
 		total := ds.DealCashbackRepository.CountByDealGUIDAndUserGUID(deal.GUID, userGUID)
 
 		if total >= deals[key].Perlimit {

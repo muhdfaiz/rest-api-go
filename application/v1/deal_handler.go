@@ -19,15 +19,8 @@ type DealHandler struct {
 func (dh *DealHandler) View(c *gin.Context) {
 	tokenData := c.MustGet("Token").(map[string]string)
 
-	userGUID := c.Param("guid")
-
-	if tokenData["user_guid"] != userGUID {
-		c.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("view deals"))
-		return
-	}
-
 	dealGUID := c.Param("deal_guid")
-	
+
 	relations := c.Query("include")
 
 	deal := dh.DealService.ViewDealDetails(dealGUID, relations)
@@ -37,7 +30,7 @@ func (dh *DealHandler) View(c *gin.Context) {
 		return
 	}
 
-	total := dh.DealCashbackService.CountTotalNumberOfDealUserAddToList(userGUID, deal.GUID)
+	total := dh.DealCashbackService.CountTotalNumberOfDealUserAddToList(tokenData["user_guid"], deal.GUID)
 
 	deal.CanAddTolist = 1
 

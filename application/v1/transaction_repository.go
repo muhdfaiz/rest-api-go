@@ -1,8 +1,6 @@
 package v1
 
 import (
-	"strings"
-
 	"bitbucket.org/cliqers/shoppermate-api/systems"
 	"github.com/jinzhu/gorm"
 )
@@ -12,10 +10,9 @@ type TransactionRepositoryInterface interface {
 	Create(createTransactionData *CreateTransaction) (*Transaction, *systems.ErrorData)
 	UpdateReadStatus(transactionGUID string, readStatus int) *systems.ErrorData
 	GetByGUID(GUID string, relations string) *Transaction
-	GetTotalAmountOfPendingTransactionsForUser(userGUID string) float64
-	GetTotalAmountOfCashoutTransactionForUser(userGUID string) float64
-	GetByUserGUIDAndStatusAndReadStatus(userGUID string, transactionStatus string, readStatus string, pageNumber string,
-		pageLimit string, relations string) ([]*Transaction, int)
+	GetByUserGUID(userGUID string, relations string) []*Transaction
+	SumTotalAmountOfUserPendingTransactions(userGUID string) float64
+	SumTotalAmountOfUserCashoutTransaction(userGUID string) float64
 }
 
 // TransactionRepository contains all function that can be used for CRUD operations.
@@ -78,9 +75,25 @@ func (tr *TransactionRepository) GetByGUID(GUID string, relations string) *Trans
 	return transaction
 }
 
-// GetTotalAmountOfPendingTransactionsForUser function used to sum all of total amount for deal cashback transaction
+// GetByUserGUID function used to retrieve transactions by user GUID.
+func (tr *TransactionRepository) GetByUserGUID(userGUID string, relations string) []*Transaction {
+
+	transactions := []*Transaction{}
+
+	DB := tr.DB.Model(&Transaction{})
+
+	if relations != "" {
+		DB = LoadRelations(DB, relations)
+	}
+
+	DB.Where(&Transaction{UserGUID: userGUID}).Find(&transactions)
+
+	return transactions
+}
+
+// SumTotalAmountOfUserPendingTransactions function used to sum all of total amount for deal cashback transaction
 // with status pending.
-func (tr *TransactionRepository) GetTotalAmountOfPendingTransactionsForUser(userGUID string) float64 {
+func (tr *TransactionRepository) SumTotalAmountOfUserPendingTransactions(userGUID string) float64 {
 
 	type PendingDealCashbackTransaction struct {
 		TotalAmountOfPendingDealCashbackTransaction float64 `json:"total_amount_of_pending_deal_cashback_transaction"`
@@ -97,7 +110,8 @@ func (tr *TransactionRepository) GetTotalAmountOfPendingTransactionsForUser(user
 	return pendingDealCashbackTransaction.TotalAmountOfPendingDealCashbackTransaction
 }
 
-func (tr *TransactionRepository) GetTotalAmountOfCashoutTransactionForUser(userGUID string) float64 {
+// SumTotalAmountOfUserCashoutTransaction function used to sum total amount of cashout transaction made by user.
+func (tr *TransactionRepository) SumTotalAmountOfUserCashoutTransaction(userGUID string) float64 {
 
 	type CashoutTransaction struct {
 		TotalAmountOfCashoutTransaction float64 `json:"total_amount_of_cashout_transaction"`
@@ -112,51 +126,4 @@ func (tr *TransactionRepository) GetTotalAmountOfCashoutTransactionForUser(userG
 		Where("transaction_statuses.slug = ?", "approved").Scan(cashoutTransaction)
 
 	return cashoutTransaction.TotalAmountOfCashoutTransaction
-}
-
-// GetByUserGUIDAndStatusAndReadStatus function used to retrieve transactions by User GUID and Transaction Status and Read Status.
-// If the value Read Status is 1 means user already read or click the transaction.
-// If the value is 0 means user still not read or click the transaction.
-func (tr *TransactionRepository) GetByUserGUIDAndStatusAndReadStatus(userGUID string, transactionStatus string, readStatus string,
-	pageNumber string, pageLimit string, relations string) ([]*Transaction, int) {
-
-	transactions := []*Transaction{}
-
-	DB := tr.DB.Model(&Transaction{})
-
-	offset := SetOffsetValue(pageNumber, pageLimit)
-
-	if relations != "" {
-		DB = LoadRelations(DB, relations)
-	}
-
-	DB = DB.Joins("LEFT JOIN transaction_statuses ON transaction_statuses.guid = transactions.transaction_status_guid").Where(&Transaction{UserGUID: userGUID})
-
-	if readStatus != "" {
-		DB = DB.Where("read_status = ?", readStatus)
-	}
-
-	if transactionStatus != "" {
-		transactionStatuses := strings.Split(transactionStatus, ",")
-
-		for key, transactionStatus := range transactionStatuses {
-			if key == 0 {
-				DB = DB.Where("transaction_statuses.slug = ?", transactionStatus)
-			} else {
-				DB = DB.Or("transaction_statuses.slug = ?", transactionStatus)
-			}
-		}
-	}
-
-	if pageLimit != "" && pageNumber != "" {
-		DB.Offset(offset).Limit(pageLimit).Find(&transactions)
-	} else {
-		DB.Find(&transactions)
-	}
-
-	var TotalTransaction int
-
-	DB.Count(&TotalTransaction)
-
-	return transactions, TotalTransaction
 }

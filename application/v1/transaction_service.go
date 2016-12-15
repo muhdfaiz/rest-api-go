@@ -2,6 +2,9 @@ package v1
 
 import (
 	"net/http"
+	"strings"
+
+	"strconv"
 
 	"bitbucket.org/cliqers/shoppermate-api/systems"
 )
@@ -12,22 +15,24 @@ type TransactionServiceInterface interface {
 	ViewTransactionDetails(transactionGUID string, relations string) *Transaction
 	ViewDealCashbackTransactionAndUpdateReadStatus(userGUID string, transactionGUID string) (*Transaction, *systems.ErrorData)
 	ViewCashoutTransactionAndUpdateReadStatus(userGUID string, transactionGUID string) (*Transaction, *systems.ErrorData)
-	GetUserTransactionsForSpecificStatus(request *http.Request, userGUID string, transactionStatus string,
-		isRead string, pageNumber string, pageLimit string, relations string) *TransactionResponse
-	CalculatePendingAmountForUserTransaction(userGUID string) float64
-	CalculateTotalCashoutAmountForUserTransaction(userGUID string) float64
+	GetUserTransactions(request *http.Request, userGUID string, transactionStatus string,
+		isRead string, pageNumber string, pageLimit string) *TransactionResponse
+	SumTotalAmountOfUserPendingTransaction(userGUID string) float64
+	SumTotalAmountOfUserCashoutTransaction(userGUID string) float64
 }
 
 // TransactionService used to encapsulates semantic gap domain layer (Transaction Handler) and persistence layer (Transaction Repository)
 type TransactionService struct {
-	TransactionRepository  TransactionRepositoryInterface
-	TransactionTransformer TransactionTransformerInterface
-	DealCashbackRepository DealCashbackRepositoryInterface
-	ItemRepository         ItemRepositoryInterface
-	GrocerRepository       GrocerRepositoryInterface
-	ShoppingListRepository ShoppingListRepositoryInterface
+	TransactionRepository    TransactionRepositoryInterface
+	TransactionTransformer   TransactionTransformerInterface
+	DealCashbackService      DealCashbackServiceInterface
+	ShoppingListService      ShoppingListServiceInterface
+	DealService              DealServiceInterface
+	TransactionTypeService   TransactionTypeServiceInterface
+	TransactionStatusService TransactionStatusServiceInterface
 }
 
+// CreateTransaction function used to create new user transaction and store in database.
 func (ts *TransactionService) CreateTransaction(userGUID string, transactionTypeGUID string, amount float64) (*Transaction, *systems.ErrorData) {
 	transactionData := &CreateTransaction{
 		UserGUID:            userGUID,
@@ -45,6 +50,7 @@ func (ts *TransactionService) CreateTransaction(userGUID string, transactionType
 	return transaction, nil
 }
 
+// ViewTransactionDetails function used to view transaction details.
 func (ts *TransactionService) ViewTransactionDetails(transactionGUID string, relations string) *Transaction {
 	transaction := ts.TransactionRepository.GetByGUID(transactionGUID, relations)
 
@@ -52,7 +58,7 @@ func (ts *TransactionService) ViewTransactionDetails(transactionGUID string, rel
 }
 
 // ViewDealCashbackTransactionAndUpdateReadStatus function used to view transaction details and update `read_status` if the transaction
-// not equal to `pending`
+// not equal to `pending`.
 func (ts *TransactionService) ViewDealCashbackTransactionAndUpdateReadStatus(userGUID string, transactionGUID string) (*Transaction, *systems.ErrorData) {
 
 	relations := "transactionstatuses,transactiontypes,dealcashbacktransactions.receipt.receiptitems"
@@ -72,32 +78,22 @@ func (ts *TransactionService) ViewDealCashbackTransactionAndUpdateReadStatus(use
 	}
 
 	// Get deal cashbacks by deal_cashback_transaction_guid group by shopping list id to retrieve unique shopping list
-	dealsCashbacksGroupByShoppingListGUID := ts.DealCashbackRepository.GetByDealCashbackTransactionGUIDAndGroupByShoppingListGUID(&transaction.Dealcashbacktransactions.GUID)
+	dealsCashbacksGroupByShoppingListGUID := ts.DealCashbackService.GetDealCashbacksByTransactionGUIDAndGroupByShoppingList(transaction.Dealcashbacktransactions.GUID)
 
 	totalDeal := 0
 
 	for _, dealCashbackGroupByShoppingListGUID := range dealsCashbacksGroupByShoppingListGUID {
-
-		shoppingListWithDealCashbacks := ts.ShoppingListRepository.GetByGUIDPreloadWithDealCashbacks(dealCashbackGroupByShoppingListGUID.ShoppingListGUID,
-			transaction.Dealcashbacktransactions.GUID, "")
+		shoppingListWithDealCashbacks := ts.ShoppingListService.GetShoppingListIncludingDealCashbacks(dealCashbackGroupByShoppingListGUID.ShoppingListGUID,
+			transaction.Dealcashbacktransactions.GUID)
 
 		totalDeal = totalDeal + len(shoppingListWithDealCashbacks.Dealcashbacks)
 
 		transaction.Dealcashbacktransactions.DealCashbackGroupByShoppingListName = append(transaction.Dealcashbacktransactions.DealCashbackGroupByShoppingListName, shoppingListWithDealCashbacks)
 
-		for key, dealCashback := range shoppingListWithDealCashbacks.Dealcashbacks {
-			shoppingListWithDealCashbacks.Dealcashbacks[key].Deals.CanAddTolist = 1
+		for key := range shoppingListWithDealCashbacks.Dealcashbacks {
+			deal := ts.DealService.SetAddTolistInfoAndItemsAndGrocerExclusiveForDeal(shoppingListWithDealCashbacks.Dealcashbacks[key].Deals, userGUID)
 
-			total := ts.DealCashbackRepository.CountByDealGUIDAndUserGUID(dealCashback.Deals.GUID, userGUID)
-
-			if total >= shoppingListWithDealCashbacks.Dealcashbacks[key].Deals.Perlimit {
-				shoppingListWithDealCashbacks.Dealcashbacks[key].Deals.CanAddTolist = 0
-			}
-
-			shoppingListWithDealCashbacks.Dealcashbacks[key].Deals.NumberOfDealAddedToList = total
-			shoppingListWithDealCashbacks.Dealcashbacks[key].Deals.RemainingAddToList = dealCashback.Deals.Perlimit - total
-			shoppingListWithDealCashbacks.Dealcashbacks[key].Deals.Items = ts.ItemRepository.GetByID(dealCashback.Deals.ItemID, "Categories,Subcategories")
-			shoppingListWithDealCashbacks.Dealcashbacks[key].Deals.Grocerexclusives = ts.GrocerRepository.GetByID(dealCashback.Deals.GrocerExclusive, "")
+			shoppingListWithDealCashbacks.Dealcashbacks[key].Deals = deal
 		}
 	}
 
@@ -129,29 +125,104 @@ func (ts *TransactionService) ViewCashoutTransactionAndUpdateReadStatus(userGUID
 	return cashoutTransaction, nil
 }
 
-// GetUserTransactionsForSpecificStatus function used to retrieve list of user transactions that match the transaction status
-func (ts *TransactionService) GetUserTransactionsForSpecificStatus(request *http.Request, userGUID string, transactionStatus string,
-	isRead string, pageNumber string, pageLimit string, relations string) *TransactionResponse {
+// GetUserTransactions function used to retrieve list of user transactions that match the transaction status and read status
+// transaction status and read status is optional.
+func (ts *TransactionService) GetUserTransactions(request *http.Request, userGUID string, transactionStatus string,
+	isRead string, pageNumber string, pageLimit string) *TransactionResponse {
 
-	transactions, totalNumberOfTransaction := ts.TransactionRepository.GetByUserGUIDAndStatusAndReadStatus(userGUID, transactionStatus, isRead, pageNumber, pageLimit, relations)
+	transactions := ts.TransactionRepository.GetByUserGUID(userGUID, "transactionstatuses,transactiontypes")
 
-	transactionsResponse := ts.TransactionTransformer.transformCollection(request, transactions, totalNumberOfTransaction, pageLimit)
+	transactions = ts.FilterByTransactionStatus(transactions, transactionStatus)
+
+	transactions = ts.FilterByReadStatus(transactions, isRead)
+
+	totalTransactions := len(transactions)
+
+	if pageLimit != "" && pageNumber != "" {
+		transactions = ts.PaginateTransactions(transactions, pageNumber, pageLimit)
+	}
+
+	transactionsResponse := ts.TransactionTransformer.transformCollection(request, transactions, totalTransactions, pageLimit)
 
 	return transactionsResponse
 }
 
-// CalculatePendingAmountForUserTransaction function used to calculate total amount of user transaction with status pending.
-func (ts *TransactionService) CalculatePendingAmountForUserTransaction(userGUID string) float64 {
+// FilterByTransactionStatus function used to filter transactions that match with any of transaction status slug specified.
+// Able to specify multiple transaction status (pending, approved, rejected, partial_success)
+func (ts *TransactionService) FilterByTransactionStatus(transactions []*Transaction, transactionStatus string) []*Transaction {
+	if transactionStatus == "" {
+		return transactions
+	}
 
-	totalAmountOfPendingDealCashbackTransactions := ts.TransactionRepository.GetTotalAmountOfPendingTransactionsForUser(userGUID)
+	transactionStatuses := strings.Split(transactionStatus, ",")
+
+	filteredTransactions := []*Transaction{}
+
+	for _, transaction := range transactions {
+		stringExistInSlice := Helper.StringInSlice(transaction.Transactionstatuses.Slug, transactionStatuses)
+
+		if stringExistInSlice == true {
+			filteredTransactions = append(filteredTransactions, transaction)
+		}
+	}
+
+	return filteredTransactions
+}
+
+// FilterByReadStatus function used to filter transactions that match with read status value specified.
+func (ts *TransactionService) FilterByReadStatus(transactions []*Transaction, readStatus string) []*Transaction {
+	if readStatus == "" {
+		return transactions
+	}
+
+	filteredTransactions := []*Transaction{}
+
+	readStatusInInt, _ := strconv.Atoi(readStatus)
+
+	for _, transaction := range transactions {
+		if transaction.ReadStatus == readStatusInInt {
+			filteredTransactions = append(filteredTransactions, transaction)
+		}
+	}
+
+	return filteredTransactions
+}
+
+// SumTotalAmountOfUserPendingTransaction function used to sum total amount of user transaction with status pending.
+func (ts *TransactionService) SumTotalAmountOfUserPendingTransaction(userGUID string) float64 {
+
+	totalAmountOfPendingDealCashbackTransactions := ts.TransactionRepository.SumTotalAmountOfUserPendingTransactions(userGUID)
 
 	return totalAmountOfPendingDealCashbackTransactions
 }
 
-// CalculateTotalCashoutAmountForUserTransaction function used to calculate total amount of user transaction with status pending.
-func (ts *TransactionService) CalculateTotalCashoutAmountForUserTransaction(userGUID string) float64 {
+// SumTotalAmountOfUserCashoutTransaction function used to sum total amount of user transaction with status pending.
+func (ts *TransactionService) SumTotalAmountOfUserCashoutTransaction(userGUID string) float64 {
 
-	totalAmountOfCashoutTransaction := ts.TransactionRepository.GetTotalAmountOfCashoutTransactionForUser(userGUID)
+	totalAmountOfCashoutTransaction := ts.TransactionRepository.SumTotalAmountOfUserCashoutTransaction(userGUID)
 
 	return totalAmountOfCashoutTransaction
+}
+
+func (ts *TransactionService) PaginateTransactions(transactions []*Transaction, pageNumber string, pageLimit string) []*Transaction {
+	paginatedTransactions := []*Transaction{}
+
+	pageNumberInInt, _ := strconv.Atoi(pageNumber)
+	pageLimitInInt, _ := strconv.Atoi(pageLimit)
+
+	offset := 0
+
+	if pageNumberInInt != 0 && pageNumberInInt != 1 {
+		offset = (pageNumberInInt * pageLimitInInt) - 1
+	}
+
+	limit := offset + pageLimitInInt
+
+	for key, transaction := range transactions {
+		if key >= offset && key < limit {
+			paginatedTransactions = append(paginatedTransactions, transaction)
+		}
+	}
+
+	return paginatedTransactions
 }

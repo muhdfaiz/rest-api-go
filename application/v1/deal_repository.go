@@ -1,6 +1,8 @@
 package v1
 
-import "github.com/jinzhu/gorm"
+import (
+	"github.com/jinzhu/gorm"
+)
 
 type DealRepositoryInterface interface {
 	SumCashbackAmount(dealGUIDs []string) float64

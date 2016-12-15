@@ -11,6 +11,7 @@ type ShoppingListServiceInterface interface {
 	ViewShoppingListByGUID(shoppingListGUID string, relations string) *ShoppingList
 	CheckUserShoppingListDuplicate(userGUID string, shoppingListName string, occasionGUID string) *systems.ErrorData
 	CheckUserShoppingListExistOrNot(userGUID string, shoppingListGUID string) (*ShoppingList, *systems.ErrorData)
+	GetShoppingListIncludingDealCashbacks(shoppingListGUID string, dealCashbackTransactionGUID string) *ShoppingList
 	CreateSampleShoppingListsAndItemsForUser(userGUID string) *systems.ErrorData
 	createSampleShoppingListItems(userGUID string, shoppingListGUID string) *systems.ErrorData
 }
@@ -150,6 +151,15 @@ func (sls *ShoppingListService) CheckUserShoppingListExistOrNot(userGUID string,
 	}
 
 	return shoppingList, nil
+}
+
+// GetShoppingListIncludingDealCashbacks function used to retrieve shopping list by shopping list GUID including deal cashback
+// related to the shopping list.
+func (sls *ShoppingListService) GetShoppingListIncludingDealCashbacks(shoppingListGUID string, dealCashbackTransactionGUID string) *ShoppingList {
+	shoppingListWithDealCashbacks := sls.ShoppingListRepository.GetByGUIDPreloadWithDealCashbacks(shoppingListGUID,
+		dealCashbackTransactionGUID, "")
+
+	return shoppingListWithDealCashbacks
 }
 
 // CreateSampleShoppingListsAndItemsForUser function used to create sample shopping list and shopping list item for user.

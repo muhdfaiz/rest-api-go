@@ -32,6 +32,7 @@ func (h *Helpers) GenerateUUID() string {
 	return uuid.NewV5(namespaceDNS, "api.shoppermate.com").String()
 }
 
+// GenerateUniqueShortID function used to generate unique short id.
 func (h *Helpers) GenerateUniqueShortID() string {
 	shortIDSettings, _ := shortid.New(1, shortid.DefaultABC, 123)
 
@@ -84,6 +85,16 @@ func (h *Helpers) RandomString(strType string, length int, include string, exclu
 func (h *Helpers) StoragePath() string {
 	config := Configs{}
 	return os.Getenv("GOPATH") + config.Get("app.yaml", "storage_path", "")
+}
+
+// StringInSlice function used to check if string contain in slice.
+func (h *Helpers) StringInSlice(str string, list []string) bool {
+	for _, v := range list {
+		if v == str {
+			return true
+		}
+	}
+	return false
 }
 
 func convertLogicalOperatorToSQLOperator(logicalOperator string) string {

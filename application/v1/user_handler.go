@@ -42,15 +42,15 @@ func (uh *UserHandler) View(c *gin.Context) {
 		return
 	}
 
-	totalAmountOfPendingDealCashbackTransactions := uh.TransactionService.CalculatePendingAmountForUserTransaction(userGUID)
+	totalAmountOfPendingDealCashbackTransactions := uh.TransactionService.SumTotalAmountOfUserPendingTransaction(userGUID)
 
-	totalAmountOfDealCashbackAddedToList := uh.DealCashbackService.CalculateTotalAmountOfDealCashbackAddedTolist(userGUID)
+	totalAmountOfDealCashbackAddedToList := uh.DealCashbackService.SumTotalAmountOfDealCashbackAddedTolistByUser(userGUID)
 
 	totalPendingAmount := totalAmountOfPendingDealCashbackTransactions + totalAmountOfDealCashbackAddedToList
 
 	user.PendingAmount = &totalPendingAmount
 
-	totalCashoutAmount := uh.TransactionService.CalculateTotalCashoutAmountForUserTransaction(userGUID)
+	totalCashoutAmount := uh.TransactionService.SumTotalAmountOfUserCashoutTransaction(userGUID)
 
 	user.AllTimeAmount = &totalCashoutAmount
 
@@ -251,15 +251,15 @@ func (uh *UserHandler) Update(c *gin.Context) {
 	// Retrieve latest user data
 	updatedUser := uh.UserRepository.GetByGUID(userGUID, "")
 
-	totalAmountOfPendingDealCashbackTransactions := uh.TransactionService.CalculatePendingAmountForUserTransaction(userGUID)
+	totalAmountOfPendingDealCashbackTransactions := uh.TransactionService.SumTotalAmountOfUserPendingTransaction(userGUID)
 
-	totalAmountOfDealCashbackAddedToList := uh.DealCashbackService.CalculateTotalAmountOfDealCashbackAddedTolist(userGUID)
+	totalAmountOfDealCashbackAddedToList := uh.DealCashbackService.SumTotalAmountOfDealCashbackAddedTolistByUser(userGUID)
 
 	totalPendingAmount := totalAmountOfPendingDealCashbackTransactions + totalAmountOfDealCashbackAddedToList
 
 	updatedUser.PendingAmount = &totalPendingAmount
 
-	totalCashoutAmount := uh.TransactionService.CalculateTotalCashoutAmountForUserTransaction(userGUID)
+	totalCashoutAmount := uh.TransactionService.SumTotalAmountOfUserCashoutTransaction(userGUID)
 
 	updatedUser.AllTimeAmount = &totalCashoutAmount
 

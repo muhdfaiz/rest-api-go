@@ -135,16 +135,18 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 
 	// Transaction Status
 	transactionStatusRepository := &v1.TransactionStatusRepository{DB: DB}
+	transactionStatusService := &v1.TransactionStatusService{TransactionStatusRepository: transactionStatusRepository}
 
 	// Transaction Type
 	transactionTypeRepository := &v1.TransactionTypeRepository{DB: DB}
+	transactionTypeService := &v1.TransactionTypeService{TransactionTypeRepository: transactionTypeRepository}
 
 	// Transaction
 	transactionRepository := &v1.TransactionRepository{DB: DB, TransactionStatusRepository: transactionStatusRepository}
 	transactionTransformer := &v1.TransactionTransformer{}
 	transactionService := &v1.TransactionService{TransactionRepository: transactionRepository, TransactionTransformer: transactionTransformer,
-		DealCashbackRepository: dealCashbackRepository, ItemRepository: itemRepository, GrocerRepository: grocerRepository,
-		ShoppingListRepository: shoppingListRepository}
+		DealCashbackService: dealCashbackService, ShoppingListService: shoppingListService, DealService: dealService,
+		TransactionTypeService: transactionTypeService, TransactionStatusService: transactionStatusService}
 
 	//Deal Cashback Transaction
 	//dealCashbackTransactionRepository := &v1.DealCashbackTransactionRepository{DB: DB}

@@ -69,10 +69,6 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 	itemCategoryService := &v1.ItemCategoryService{ItemCategoryRepository: itemCategoryRepository,
 		ItemCategoryTransformer: itemCategoryTransformer}
 
-	// Item SubCategory Objects
-	itemSubCategoryRepository := &v1.ItemSubCategoryRepository{DB: DB}
-	itemSubCategoryService := &v1.ItemSubCategoryService{ItemSubCategoryRepository: itemSubCategoryRepository}
-
 	// Deal Cashback Repository
 	dealCashbackRepository := &v1.DealCashbackRepository{DB: DB}
 
@@ -88,18 +84,22 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 	// Deal Repository
 	dealRepository := &v1.DealRepository{DB: DB, GrocerLocationService: grocerLocationService}
 
+	// Item SubCategory Objects
+	itemSubCategoryRepository := &v1.ItemSubCategoryRepository{DB: DB}
+	itemSubCategoryService := &v1.ItemSubCategoryService{ItemSubCategoryRepository: itemSubCategoryRepository, DealRepository: dealRepository}
+
 	dealCashbackFactory := &v1.DealCashbackFactory{DB: DB}
 
 	// Grocer Objects
 	grocerRepository := &v1.GrocerRepository{DB: DB}
-	grocerTransformer := &v1.GrocerTransformer{}
+	grocerService := &v1.GrocerService{GrocerRepository: grocerRepository, DealRepository: dealRepository}
 
 	shoppingListItemRepository := &v1.ShoppingListItemRepository{DB: DB}
 
 	// Deal Service
 	dealService := &v1.DealService{DealRepository: dealRepository, LocationService: locationService, DealCashbackFactory: dealCashbackFactory,
 		DealCashbackRepository: dealCashbackRepository, ItemRepository: itemRepository, ItemCategoryService: itemCategoryService,
-		ItemSubCategoryRepository: itemSubCategoryRepository, GrocerRepository: grocerRepository, ShoppingListItemRepository: shoppingListItemRepository}
+		ItemSubCategoryRepository: itemSubCategoryRepository, GrocerService: grocerService, ShoppingListItemRepository: shoppingListItemRepository}
 
 	// Default Shopping List Objects
 	defaultShoppingListRepository := &v1.DefaultShoppingListRepository{DB: DB}
@@ -131,7 +131,7 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 
 	// Deal Cashback Service
 	dealCashbackService := &v1.DealCashbackService{DealCashbackRepository: dealCashbackRepository,
-		DealCashbackFactory: dealCashbackFactory, DealService: dealService, ShoppingListItemService: shoppingListItemService}
+		DealCashbackFactory: dealCashbackFactory, ShoppingListItemService: shoppingListItemService}
 
 	// Transaction Status
 	transactionStatusRepository := &v1.TransactionStatusRepository{DB: DB}
@@ -208,9 +208,6 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 	dealHandler := v1.DealHandler{DealService: dealService, DealTransformer: dealTransformer, ItemCategoryService: itemCategoryService,
 		DealCashbackService: dealCashbackService, UserRepository: userRepository, ItemSubCategoryRepository: itemSubCategoryRepository}
 
-	// Grocer Handler
-	grocerHandler := v1.GrocerHandler{GrocerRepository: grocerRepository, GrocerTransformer: grocerTransformer}
-
 	// Event Handler
 	eventHandler := v1.EventHandler{EventService: eventService}
 
@@ -224,6 +221,7 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 
 	defaultShoppingListHandler := v1.DefaultShoppingListHandler{DefaultShoppingListService: defaultShoppingListService}
 
+	grocerHandler := v1.GrocerHandler{GrocerService: grocerService}
 	// V1 Routes
 	version1 := router.Group("/v1")
 	{
@@ -251,9 +249,6 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 
 		// Shopping List Item Categories Routes
 		version1.GET("/shopping_lists/items/categories", itemCategoryHandler.ViewAll)
-
-		// Grocer Routes
-		version1.GET("/grocers", grocerHandler.Index)
 
 		// Deal Route
 		version1.GET("deals", dealHandler.ViewAllForGuestUser)
@@ -302,6 +297,7 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 			version1.GET("users/:guid/deals/categories/:category_guid", dealHandler.ViewByCategory)
 			version1.GET("users/:guid/deals/categories/:category_guid/subcategories", dealHandler.ViewByCategoryAndGroupBySubCategory)
 			version1.GET("users/:guid/deals/subcategories/:subcategory_guid", dealHandler.ViewBySubCategory)
+			version1.GET("users/:guid/deals/grocers", grocerHandler.GetAllGrocersThatContainDeals)
 
 			// Feature Deal (In Carousel) Handler
 			version1.GET("users/:guid/featured_deals", eventHandler.ViewAll)

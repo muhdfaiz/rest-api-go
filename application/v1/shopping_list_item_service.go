@@ -349,7 +349,7 @@ func (slis *ShoppingListItemService) CheckUserShoppingListItemExistOrNot(shoppin
 // by checking shopping list item name with item name in database. If not exist set category and subcategory
 // to `Others`.
 func (slis *ShoppingListItemService) SetShoppingListItemCategoryAndSubcategory(shoppingListItemName string) (string, string) {
-	item := slis.ItemService.GetItemByName(shoppingListItemName)
+	item := slis.ItemService.GetItemByName(shoppingListItemName, "")
 
 	shoppingListItemCategory := "Others"
 	shoppingListItemSubCategory := "Others"

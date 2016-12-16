@@ -6,33 +6,35 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// GrocerHandler used to handle all request related to grocers
 type GrocerHandler struct {
-	GrocerRepository  GrocerRepositoryInterface
-	GrocerTransformer GrocerTransformerInterface
+	GrocerService GrocerServiceInterface
 }
 
-// Index function used to retrieve all grocers
-func (gh *GrocerHandler) Index(c *gin.Context) {
-	// Validate query string
-	err := Validation.Validate(c.Request.URL.Query(), map[string]string{"latitude": "required,latitude", "longitude": "required,longitude"})
+func (gh *GrocerHandler) GetAllGrocersThatContainDeals(context *gin.Context) {
+	queryStringValidationRules := map[string]string{
+		"latitude":  "required,latitude",
+		"longitude": "required,longitude",
+	}
 
-	// If validation error return error message
-	if err != nil {
-		c.JSON(http.StatusUnprocessableEntity, err)
+	error := Validation.Validate(context.Request.URL.Query(), queryStringValidationRules)
+
+	if error != nil {
+		context.JSON(http.StatusUnprocessableEntity, error)
 		return
 	}
 
-	// Retrieve query string in request
-	offset := c.DefaultQuery("page_number", "1")
-	limit := c.DefaultQuery("page_limit", "-1")
-	relations := c.Query("include")
-	// latitude := c.Query("latitude")
-	// longitude := c.Query("longitude")
+	latitude := context.Query("latitude")
+	longitude := context.Query("longitude")
 
-	grocers, totalGrocers := gh.GrocerRepository.GetAll(offset, limit, relations)
+	tokenData := context.MustGet("Token").(map[string]string)
+	userGUID := context.Param("guid")
 
-	result := gh.GrocerTransformer.transformCollection(c.Request, grocers, totalGrocers, limit)
+	if tokenData["user_guid"] != userGUID {
+		context.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("view all deals by subcategory"))
+		return
+	}
 
-	c.JSON(http.StatusOK, result)
+	grocers := gh.GrocerService.GetAllGrocersIncludingDeals(userGUID, latitude, longitude)
+
+	context.JSON(http.StatusOK, gin.H{"data": grocers})
 }

@@ -16,10 +16,11 @@ type DealCashbackServiceInterface interface {
 }
 
 type DealCashbackService struct {
-	ShoppingListItemService ShoppingListItemServiceInterface
-	DealService             DealServiceInterface
-	DealCashbackRepository  DealCashbackRepositoryInterface
-	DealCashbackFactory     DealCashbackFactoryInterface
+	ShoppingListItemService    ShoppingListItemServiceInterface
+	ShoppingListItemRepository ShoppingListItemRepositoryInterface
+	DealCashbackRepository     DealCashbackRepositoryInterface
+	DealCashbackFactory        DealCashbackFactoryInterface
+	DealRepository             DealRepositoryInterface
 }
 
 // CreateDealCashbackAndShoppingListItem function used to create deal cashback and store new shopping list item based on deal item
@@ -30,7 +31,7 @@ func (dcs *DealCashbackService) CreateDealCashbackAndShoppingListItem(userGUID s
 		return err
 	}
 
-	deal := dcs.DealService.GetDealByGUID(dealCashbackData.DealGUID)
+	deal := dcs.DealRepository.GetDealByGUID(dealCashbackData.DealGUID)
 
 	shoppingListItemData := CreateShoppingListItem{
 		UserGUID:         userGUID,
@@ -84,7 +85,7 @@ func (dcs *DealCashbackService) GetUserDealCashbackForUserShoppingList(userGUID 
 
 		// When the deal already expired more than 7 days
 		if diffInDays > 7 {
-			dcs.DealService.RemoveDealCashbackAndSetItemDealExpired(userGUID, shoppingListGUID, userDealCashback.Deals.GUID)
+			dcs.RemoveDealCashbackAndSetItemDealExpired(userGUID, shoppingListGUID, userDealCashback.Deals.GUID)
 		}
 
 	}
@@ -104,4 +105,27 @@ func (dcs *DealCashbackService) GetUserDealCashbackForUserShoppingList(userGUID 
 	}
 
 	return userDealCashbacks, totalUserDealCashbacks
+}
+
+// RemoveDealCashbackAndSetItemDealExpired function used to soft delete deal cashback that already expired and set the item deal expired.
+func (dcs *DealCashbackService) RemoveDealCashbackAndSetItemDealExpired(userGUID, shoppingListGUID, dealGUID string) *systems.ErrorData {
+	currentDateInGMT8 := time.Now().UTC().Add(time.Hour * 8).Format("2006-01-02")
+
+	deal := dcs.DealRepository.GetDealByGUIDAndValidStartEndDate(dealGUID, currentDateInGMT8)
+
+	if deal.GUID == "" {
+		error := dcs.DealCashbackFactory.DeleteByUserGUIDShoppingListGUIDAndDealGUID(userGUID, shoppingListGUID, dealGUID)
+
+		if error != nil {
+			return error
+		}
+
+		error = dcs.ShoppingListItemRepository.SetDealExpired(dealGUID)
+
+		if error != nil {
+			return error
+		}
+	}
+
+	return nil
 }

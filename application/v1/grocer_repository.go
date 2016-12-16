@@ -4,6 +4,7 @@ import "github.com/jinzhu/gorm"
 
 type GrocerRepositoryInterface interface {
 	GetAll(pageNumber string, pageLimit string, relations string) ([]*Grocer, int)
+	GetAllGrocersThoseOnlyHaveDeal() []*Grocer
 	GetByID(id int, relations string) *Grocer
 }
 
@@ -31,6 +32,15 @@ func (gr *GrocerRepository) GetAll(pageNumber string, pageLimit string, relation
 	gr.DB.Model(&Grocer{}).Count(&totalGrocers)
 
 	return grocers, *totalGrocers
+}
+
+// GetAllGrocersThoseOnlyHaveDeal function used to retrieve all grocers those only have deals.
+func (gr *GrocerRepository) GetAllGrocersThoseOnlyHaveDeal() []*Grocer {
+	grocers := []*Grocer{}
+
+	gr.DB.Model(&Grocer{}).Joins("INNER JOIN ads_grocer ON ads_grocer.grocer_id = grocer.id").Group("grocer.id").Find(&grocers)
+
+	return grocers
 }
 
 // GetByID function used to retrieve grocer by ID in the database

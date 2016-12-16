@@ -38,8 +38,7 @@ type ShoppingListItemRepositoryInterface interface {
 
 // ShoppingListItemRepository used to handle all task related to viewing, retrieving shopping list item
 type ShoppingListItemRepository struct {
-	DB          *gorm.DB
-	DealService DealServiceInterface
+	DB *gorm.DB
 }
 
 // Create function used to create user shopping list item

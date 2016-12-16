@@ -33,7 +33,6 @@ type DealServiceInterface interface {
 		relations string) ([]*Deal, int)
 	GetAvailableDealsForSubCategoryForRegisteredUser(userGUID, category, latitude, longitude, pageNumber, pageLimit,
 		relations string) ([]*Deal, int)
-	GetDealByGUID(dealGUID string) *Deal
 	SetAddTolistInfoAndItemsAndGrocerExclusiveForDeal(deal *Deal, userGUID string) *Deal
 	SetAddTolistInfoAndItemsAndGrocerExclusiveForDeals(deals []*Deal, userGUID string) []*Deal
 }
@@ -47,7 +46,7 @@ type DealService struct {
 	ItemRepository             ItemRepositoryInterface
 	ItemCategoryService        ItemCategoryServiceInterface
 	ItemSubCategoryRepository  ItemSubCategoryRepositoryInterface
-	GrocerRepository           GrocerRepositoryInterface
+	GrocerService              GrocerServiceInterface
 	ShoppingListService        ShoppingListServiceInterface
 }
 
@@ -70,7 +69,7 @@ func (ds *DealService) GetDealsBasedOnUserShoppingListItem(userGUID, shoppingLis
 	latitude1InFLoat64, _ := strconv.ParseFloat(strings.TrimSpace(latitude), 64)
 	longitude1InFLoat64, _ := strconv.ParseFloat(strings.TrimSpace(longitude), 64)
 
-	deals, _ := ds.DealRepository.GetAllDealsForCategoryWithinValidRangeStartDateEndDateUserLimitAndQuota(userGUID, shoppingListItem.Category,
+	deals, _ := ds.DealRepository.GetDealsForCategoryWithinRangeAndDateRangeAndUserLimitAndQuota(userGUID, shoppingListItem.Category,
 		latitude1InFLoat64, longitude1InFLoat64, currentDateInGMT8, "1", "", "Category")
 
 	if len(deals) < 1 {
@@ -125,9 +124,9 @@ func (ds *DealService) GetDealsBasedOnSampleShoppingListItem(defaultShoppingList
 	deals := []*Deal{}
 
 	if latitude == "" || longitude == "" {
-		deals, _ = ds.DealRepository.GetAllDealsForCategoryWithinStartDateEndDateAndQuota(defaultShoppingListItem.Category, currentDateInGMT8, "1", "", "Category")
+		deals, _ = ds.DealRepository.GetDealsForCategoryWithinDateRangeAndQuota(defaultShoppingListItem.Category, currentDateInGMT8, "1", "", "Category")
 	} else {
-		deals, _ = ds.DealRepository.GetAllDealsForCategoryWithinValidRangeStartDateEndDateAndQuota(defaultShoppingListItem.Category,
+		deals, _ = ds.DealRepository.GetDealsForCategoryWithinRangeAndDateRangeAndQuota(defaultShoppingListItem.Category,
 			latitude1InFLoat64, longitude1InFLoat64, currentDateInGMT8, "1", "", "Category")
 	}
 
@@ -342,16 +341,15 @@ func (ds *DealService) ViewDealDetails(dealGUID, relations string) *Ads {
 func (ds *DealService) GetAvailableDealsForGuestUser(latitude, longitude, pageNumber, pageLimit, relations string) ([]*Deal, int) {
 	currentDateInGMT8 := time.Now().UTC().Add(time.Hour * 8).Format("2006-01-02")
 
-	// Convert Latitude and Longitude from string to float65
 	latitudeInFLoat64, _ := strconv.ParseFloat(strings.TrimSpace(latitude), 64)
 	longitudeInFLoat64, _ := strconv.ParseFloat(strings.TrimSpace(longitude), 64)
 
-	deals, totalDeal := ds.DealRepository.GetAllDealsWithinValidRangeStartDateEndDateAndQuota(latitudeInFLoat64, longitudeInFLoat64,
+	deals, totalDeal := ds.DealRepository.GetDealsWithinRangeAndDateRangeAndQuota(latitudeInFLoat64, longitudeInFLoat64,
 		currentDateInGMT8, pageNumber, pageLimit, relations)
 
 	for key, deal := range deals {
 		deals[key].Items = ds.ItemRepository.GetByID(deal.ItemID, "Categories,Subcategories")
-		deals[key].Grocerexclusives = ds.GrocerRepository.GetByID(deal.GrocerExclusive, "")
+		deals[key].Grocerexclusives = ds.GrocerService.GetGrocerByID(deal.GrocerExclusive, "")
 	}
 
 	return deals, totalDeal
@@ -363,11 +361,10 @@ func (ds *DealService) GetAvailableDealsForRegisteredUser(userGUID, name, latitu
 
 	currentDateInGMT8 := time.Now().UTC().Add(time.Hour * 8).Format("2006-01-02")
 
-	// Convert Latitude and Longitude from string to float65
 	latitude1InFLoat64, _ := strconv.ParseFloat(strings.TrimSpace(latitude), 64)
 	longitudeInFLoat64, _ := strconv.ParseFloat(strings.TrimSpace(longitude), 64)
 
-	deals, totalDeal := ds.DealRepository.GetAllDealsWithinValidRangeStartDateEndDateUserLimitQuotaAndName(userGUID, name, latitude1InFLoat64, longitudeInFLoat64,
+	deals, totalDeal := ds.DealRepository.GetDealsWithinRangeAndDateRangeAndUserLimitAndQuotaAndName(userGUID, name, latitude1InFLoat64, longitudeInFLoat64,
 		currentDateInGMT8, pageNumber, pageLimit, relations)
 
 	deals = ds.SetAddTolistInfoAndItemsAndGrocerExclusiveForDeals(deals, userGUID)
@@ -381,14 +378,13 @@ func (ds *DealService) GetAvailableDealsGroupByCategoryForRegisteredUser(userGUI
 
 	currentDateInGMT8 := time.Now().UTC().Add(time.Hour * 8).Format("2006-01-02")
 
-	// Convert Latitude and Longitude from string to float65
 	latitude1InFLoat64, _ := strconv.ParseFloat(strings.TrimSpace(latitude), 64)
 	longitude1InFLoat64, _ := strconv.ParseFloat(strings.TrimSpace(longitude), 64)
 
 	uniqueDealCategories, _ := ds.ItemCategoryService.GetItemCategories()
 
 	for key, uniqueDealCategory := range uniqueDealCategories {
-		deals, totalDeal := ds.DealRepository.GetAllDealsForCategoryWithinValidRangeStartDateEndDateUserLimitAndQuota(userGUID, uniqueDealCategory.Name, latitude1InFLoat64, longitude1InFLoat64,
+		deals, totalDeal := ds.DealRepository.GetDealsForCategoryWithinRangeAndDateRangeAndUserLimitAndQuota(userGUID, uniqueDealCategory.Name, latitude1InFLoat64, longitude1InFLoat64,
 			currentDateInGMT8, "1", dealLimitPerCategory, relations)
 
 		if len(deals) > 0 {
@@ -408,15 +404,14 @@ func (ds *DealService) GetAvailableDealsByCategoryGroupBySubCategoryForRegistere
 
 	currentDateInGMT8 := time.Now().UTC().Add(time.Hour * 8).Format("2006-01-02")
 
-	// Convert Latitude and Longitude from string to float65
 	latitudeInFLoat64, _ := strconv.ParseFloat(strings.TrimSpace(latitude), 64)
 	longitudeInFLoat64, _ := strconv.ParseFloat(strings.TrimSpace(longitude), 64)
 
-	uniqueSubCategories := ds.DealRepository.GetUniqueSubCategoriesForDealsWithinValidRangeStartDateEndDateUserLimitSubCategoryAndQuota(userGUID, categoryGUID,
-		latitudeInFLoat64, longitudeInFLoat64, currentDateInGMT8, "", "", "")
+	uniqueSubCategories := ds.ItemSubCategoryRepository.GetSubCategoriesForCategoryThoseHaveDealsWithinRangeAndDateRangeAndUserLimitAndQuota(userGUID, categoryGUID,
+		currentDateInGMT8, latitudeInFLoat64, longitudeInFLoat64)
 
 	for key, uniqueSubCategory := range uniqueSubCategories {
-		deals, totalDeal := ds.DealRepository.GetAllDealsForSubCategoryWithinValidRangeStartDateEndDateUserLimitAndQuota(userGUID, uniqueSubCategory.GUID, latitudeInFLoat64, longitudeInFLoat64,
+		deals, totalDeal := ds.DealRepository.GetDealsForSubCategoryWithinRangeAndDateRangeAndUserLimitAndQuota(userGUID, uniqueSubCategory.GUID, latitudeInFLoat64, longitudeInFLoat64,
 			currentDateInGMT8, "1", dealLimitPerSubcategory, relations)
 
 		if len(deals) > 0 {
@@ -440,7 +435,7 @@ func (ds *DealService) GetAvailableDealsByCategoryForRegisteredUser(userGUID, ca
 	latitude1InFLoat64, _ := strconv.ParseFloat(strings.TrimSpace(latitude), 64)
 	longitude1InFLoat64, _ := strconv.ParseFloat(strings.TrimSpace(longitude), 64)
 
-	deals, totalDeal := ds.DealRepository.GetAllDealsForCategoryWithinValidRangeStartDateEndDateUserLimitAndQuota(userGUID, categoryName, latitude1InFLoat64, longitude1InFLoat64,
+	deals, totalDeal := ds.DealRepository.GetDealsForCategoryWithinRangeAndDateRangeAndUserLimitAndQuota(userGUID, categoryName, latitude1InFLoat64, longitude1InFLoat64,
 		currentDateInGMT8, pageNumber, pageLimit, relations)
 
 	deals = ds.SetAddTolistInfoAndItemsAndGrocerExclusiveForDeals(deals, userGUID)
@@ -458,19 +453,12 @@ func (ds *DealService) GetAvailableDealsForSubCategoryForRegisteredUser(userGUID
 	latitude1InFLoat64, _ := strconv.ParseFloat(strings.TrimSpace(latitude), 64)
 	longitude1InFLoat64, _ := strconv.ParseFloat(strings.TrimSpace(longitude), 64)
 
-	deals, totalDeal := ds.DealRepository.GetAllDealsForSubCategoryWithinValidRangeStartDateEndDateUserLimitAndQuota(userGUID, subCategoryGUID, latitude1InFLoat64, longitude1InFLoat64,
+	deals, totalDeal := ds.DealRepository.GetDealsForSubCategoryWithinRangeAndDateRangeAndUserLimitAndQuota(userGUID, subCategoryGUID, latitude1InFLoat64, longitude1InFLoat64,
 		currentDateInGMT8, pageNumber, pageLimit, relations)
 
 	deals = ds.SetAddTolistInfoAndItemsAndGrocerExclusiveForDeals(deals, userGUID)
 
 	return deals, totalDeal
-}
-
-// GetDealByGUID function used to retrieve deal by deal GUID.
-func (ds *DealService) GetDealByGUID(dealGUID string) *Deal {
-	deal := ds.DealRepository.GetDealByGUID(dealGUID)
-
-	return deal
 }
 
 // SetAddTolistInfoAndItemsAndGrocerExclusiveForDeal function used to set number of deal added to list by user,
@@ -487,7 +475,7 @@ func (ds *DealService) SetAddTolistInfoAndItemsAndGrocerExclusiveForDeal(deal *D
 	deal.NumberOfDealAddedToList = totalNumberOfDealAddedToList
 	deal.RemainingAddToList = deal.Perlimit - totalNumberOfDealAddedToList
 	deal.Items = ds.ItemRepository.GetByID(deal.ItemID, "Categories,Subcategories")
-	deal.Grocerexclusives = ds.GrocerRepository.GetByID(deal.GrocerExclusive, "")
+	deal.Grocerexclusives = ds.GrocerService.GetGrocerByID(deal.GrocerExclusive, "")
 
 	return deal
 }
@@ -507,7 +495,7 @@ func (ds *DealService) SetAddTolistInfoAndItemsAndGrocerExclusiveForDeals(deals 
 		deals[key].NumberOfDealAddedToList = totalNumberOfDealAddedToList
 		deals[key].RemainingAddToList = deal.Perlimit - totalNumberOfDealAddedToList
 		deals[key].Items = ds.ItemRepository.GetByID(deal.ItemID, "Categories,Subcategories")
-		deals[key].Grocerexclusives = ds.GrocerRepository.GetByID(deal.GrocerExclusive, "")
+		deals[key].Grocerexclusives = ds.GrocerService.GetGrocerByID(deal.GrocerExclusive, "")
 	}
 
 	return deals

@@ -50,7 +50,7 @@ type Deal struct {
 	Grocerexclusives *Grocer `json:"grocer_exclusives,omitempty" gorm:"ForeignKey:GrocerExclusive;AssociationForeignKey:ID"`
 
 	// Have Many Grocers
-	Grocers []*Grocer `json:"grocer_locations,omitempty" gorm:"many2many:ads_grocer;"`
+	Grocers []*Grocer `json:"grocers,omitempty" gorm:"many2many:ads_grocer;"`
 }
 
 // TableName function used to set Item table name to be `item`
@@ -96,14 +96,14 @@ type Ads struct {
 	UpdatedAt                 time.Time  `json:"updated_at"`
 	DeletedAt                 *time.Time `json:"deleted_at"`
 
-	// Grocer Exclusive
-	Grocerexclusives *Grocer `json:"grocer_exclusives,omitempty" gorm:"ForeignKey:GrocerExclusive;AssociationForeignKey:ID"`
-
 	// Has One Shopping List Item
 	Items *Item `json:"items,omitempty" gorm:"ForeignKey:ItemID;AssociationForeignKey:ID"`
 
 	// Has One Targeted Item Category
 	Category *ItemCategory `json:"category,omitempty" gorm:"ForeignKey:CategoryID;AssociationForeignKey:ID"`
+
+	// Grocer Exclusive
+	Grocerexclusives *Grocer `json:"grocer_exclusives,omitempty" gorm:"ForeignKey:GrocerExclusive;AssociationForeignKey:ID"`
 
 	// Have Many Grocers
 	Grocers []*Grocer `json:"grocers,omitempty" gorm:"many2many:ads_grocer;"`

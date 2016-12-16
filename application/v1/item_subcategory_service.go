@@ -8,6 +8,7 @@ type ItemSubCategoryServiceInterface interface {
 
 type ItemSubCategoryService struct {
 	ItemSubCategoryRepository ItemSubCategoryRepositoryInterface
+	DealRepository            DealRepositoryInterface
 }
 
 // GetItemSubCategoryByGUID function used to retrieve item subcategory by GUID.

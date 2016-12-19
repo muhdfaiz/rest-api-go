@@ -3,3 +3,4 @@ storages/*
 configs/*
 .vscode
 vendor
+.env

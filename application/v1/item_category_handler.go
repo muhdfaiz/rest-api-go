@@ -56,5 +56,5 @@ func (ich *ItemCategoryHandler) ViewGrocerCategoriesThoseHaveDealsIncludingDeals
 		return
 	}
 
-	context.JSON(http.StatusOK, grocerCategoriesIncludingDeals)
+	context.JSON(http.StatusOK, gin.H{"data": grocerCategoriesIncludingDeals})
 }

@@ -2,8 +2,9 @@ package v1
 
 import (
 	"mime/multipart"
-	"os"
 	"strings"
+
+	"os"
 
 	"bitbucket.org/cliqers/shoppermate-api/services/filesystem"
 	"bitbucket.org/cliqers/shoppermate-api/systems"
@@ -103,7 +104,7 @@ func (dcts *DealCashbackTransactionService) UploadReceipt(receiptImage *multipar
 		return nil, err1
 	}
 
-	localUploadPath := os.Getenv("GOPATH") + Config.Get("app.yaml", "storage_path", "src/bitbucket.org/cliqers/shoppermate-api/storages/")
+	localUploadPath := os.Getenv("GOPATH") + os.Getenv("STORAGE_PATH")
 	amazonS3UploadPath := "/deal_cashback_receipts/"
 
 	uploadedReceiptImage, err1 := dcts.AmazonS3FileSystem.Upload(image, localUploadPath, amazonS3UploadPath)
@@ -111,6 +112,8 @@ func (dcts *DealCashbackTransactionService) UploadReceipt(receiptImage *multipar
 	if err1 != nil {
 		return nil, err1
 	}
+
+	image.Close()
 
 	return uploadedReceiptImage, nil
 }

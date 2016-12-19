@@ -1,6 +1,10 @@
 package v1
 
-import "github.com/jinzhu/gorm"
+import (
+	"os"
+
+	"github.com/jinzhu/gorm"
+)
 
 type ItemSubCategoryRepositoryInterface interface {
 	GetByID(id int) *ItemSubCategory
@@ -89,7 +93,7 @@ func (iscr *ItemSubCategoryRepository) GetSubCategoriesForCategoryThoseHaveDeals
 	ORDER BY deal_created_time DESC`
 
 	iscr.DB.Raw(sqlQueryStatement, userGUID, latitude, longitude, latitude, currentDateInGMT8, currentDateInGMT8,
-		categoryGUID, 10).Scan(&uniqueSubCategories)
+		categoryGUID, os.Getenv("MAX_DEAL_RADIUS_IN_KM")).Scan(&uniqueSubCategories)
 
 	return uniqueSubCategories
 }

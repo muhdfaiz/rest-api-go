@@ -23,32 +23,25 @@ type Database struct {
 
 // SetConfigs will retrieve database info from config and initiliaze the config
 func (database *Database) setConfigs(environment string) {
-	configs := &Configs{}
-
 	switch environment {
 	case "test":
-		database.host = configs.Get("database.yaml", "db_test_host", "localhost")
-		database.port = configs.Get("database.yaml", "db_test_port", "3306")
-		database.username = configs.Get("database.yaml", "db_test_username", "root")
-		database.password = configs.Get("database.yaml", "db_test_password", "")
-		database.name = configs.Get("database.yaml", "db_test_name", "mcliq0621")
+		database.host = os.Getenv("TEST_DB_HOST")
+		database.port = os.Getenv("TEST_DB_PORT")
+		database.username = os.Getenv("TEST_DB_USERNAME")
+		database.password = os.Getenv("TEST_DB_PASSWORD")
+		database.name = os.Getenv("TEST_DB_NAME")
 	default:
-		database.host = configs.Get("database.yaml", "db_host", "localhost")
-		database.port = configs.Get("database.yaml", "db_port", "3306")
-		database.username = configs.Get("database.yaml", "db_username", "root")
-		database.password = configs.Get("database.yaml", "db_password", "")
-		database.name = configs.Get("database.yaml", "db_name", "shoppermate")
+		database.host = os.Getenv("DB_HOST")
+		database.port = os.Getenv("DB_PORT")
+		database.username = os.Getenv("DB_USERNAME")
+		database.password = os.Getenv("DB_PASSWORD")
+		database.name = os.Getenv("DB_NAME")
 	}
 }
 
 // Connect function will connect with the database
 func (database *Database) Connect(environment string) *gorm.DB {
-	switch environment {
-	case "test":
-		database.setConfigs("test")
-	default:
-		database.setConfigs("production")
-	}
+	database.setConfigs(environment)
 
 	db, err := gorm.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True",
 		database.username, database.password, database.host, database.port, database.name))
@@ -57,22 +50,33 @@ func (database *Database) Connect(environment string) *gorm.DB {
 		panic(err)
 	}
 
-	// Ping function to checks the database connectivity exist
 	err = db.DB().Ping()
 
 	if err != nil {
 		panic(err)
 	}
 
-	Config := &Configs{}
-	if Config.Get("app.yaml", "debug_database", "") == "true" {
+	db = database.SetLogger(db)
+	db = database.SetConnection(db, 0, 100)
+
+	return db
+}
+
+// SetConnection function used to set Database Connection.
+func (database *Database) SetConnection(db *gorm.DB, maxIdleConnection, maxOpenConnection int) *gorm.DB {
+	db.DB().SetMaxIdleConns(maxIdleConnection)
+	db.DB().SetMaxOpenConns(maxOpenConnection)
+
+	return db
+}
+
+// SetLogger function used to enable logging mode to stdout.
+func (database *Database) SetLogger(db *gorm.DB) *gorm.DB {
+	if os.Getenv("DEBUG_DATABASE") == "true" {
 		db.SetLogger(gorm.Logger{revel.TRACE})
 		db.SetLogger(log.New(os.Stdout, "\r\n", 0))
 		db.LogMode(true)
 	}
-
-	db.DB().SetMaxIdleConns(0)
-	db.DB().SetMaxOpenConns(300)
 
 	return db
 }

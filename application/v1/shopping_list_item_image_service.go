@@ -3,11 +3,12 @@ package v1
 import (
 	"mime/multipart"
 	"net/url"
-	"os"
 	"strings"
 
 	"bitbucket.org/cliqers/shoppermate-api/services/filesystem"
 	"bitbucket.org/cliqers/shoppermate-api/systems"
+
+	"os"
 
 	"github.com/jinzhu/gorm"
 )
@@ -101,7 +102,7 @@ func (sliis *ShoppingListItemImageService) UploadShoppingListItemImages(imagesTo
 	uploadedFiles := make([]map[string]string, len(imagesToUpload))
 
 	for key, image := range imagesToUpload {
-		localUploadPath := os.Getenv("GOPATH") + Config.Get("app.yaml", "storage_path", "src/bitbucket.org/cliqers/shoppermate-api/storages/")
+		localUploadPath := os.Getenv("GOPATH") + os.Getenv("STORAGE_PATH")
 
 		amazonS3UploadPath := "/item_images/"
 

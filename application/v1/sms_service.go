@@ -8,6 +8,8 @@ import (
 
 	"github.com/jinzhu/gorm"
 
+	"os"
+
 	"bitbucket.org/cliqers/shoppermate-api/systems"
 )
 
@@ -62,11 +64,11 @@ func (sf *SmsService) SendVerificationCode(phoneNo string, userGUID string) (int
 
 // Send SMS message
 func (sf *SmsService) send(message string, recipientNumber string) (map[string]string, *systems.ErrorData) {
-	apiURL := Config.Get("sms.yaml", "mocean_sms_url", "http://183.81.161.84:13016/cgi-bin/sendsms")
-	username := Config.Get("sms.yaml", "mocean_sms_username", "shoppermate-api")
-	password := Config.Get("sms.yaml", "mocean_sms_password", "s28Dua3p")
-	coding := Config.Get("sms.yaml", "mocean_sms_coding", "1")
-	subject := Config.Get("sms.yaml", "mocean_sms_subject", "Shopper Mate")
+	apiURL := os.Getenv("MOCEAN_SMS_URL")
+	username := os.Getenv("MOCEAN_SMS_USERNAME")
+	password := os.Getenv("MOCEAN_SMS_PASSWORD")
+	coding := os.Getenv("MOCEAN_SMS_CODING")
+	subject := os.Getenv("MCOEAN_SMS_SUBJECT")
 
 	// Send request to SMS Server for sending sms
 	req, err := http.NewRequest("GET", apiURL, nil)

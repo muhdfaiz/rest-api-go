@@ -6,6 +6,7 @@ type GrocerRepositoryInterface interface {
 	GetAll(pageNumber string, pageLimit string, relations string) ([]*Grocer, int)
 	GetAllGrocersThoseOnlyHaveDeal() []*Grocer
 	GetByID(id int, relations string) *Grocer
+	GetByGUID(grocerGUID, relations string) *Grocer
 }
 
 // GrocerRepository contain all function to retrieve list of grocer in database
@@ -48,6 +49,15 @@ func (gr *GrocerRepository) GetByID(id int, relations string) *Grocer {
 	grocer := &Grocer{}
 
 	gr.DB.Model(&Grocer{}).Where(&Grocer{ID: id}).First(&grocer)
+
+	return grocer
+}
+
+// GetByGUID function used to retrieve grocer by GUID in the database
+func (gr *GrocerRepository) GetByGUID(grocerGUID, relations string) *Grocer {
+	grocer := &Grocer{}
+
+	gr.DB.Model(&Grocer{}).Where(&Grocer{GUID: grocerGUID}).First(&grocer)
 
 	return grocer
 }

@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"os"
+
 	validator "gopkg.in/go-playground/validator.v8"
 )
 
@@ -126,14 +128,13 @@ func (e Error) GenericError(status string, code string, title string, key string
 
 // InternalServerError function used to format error message when internal server error happen(500) happen
 func (e Error) InternalServerError(errors interface{}, code string) *ErrorData {
-	config := Configs{}
 	errorFormat := &ErrorFormat{}
 	errorFormat.Status = strconv.Itoa(http.StatusInternalServerError)
 	errorFormat.Code = code
 	errorFormat.Title = TitleInternalServerError
 	errorFormat.Detail = errors
 
-	if config.Get("app.yaml", "debug", "") == "false" || errors == nil {
+	if os.Getenv("DEBUG") == "false" || errors == nil {
 		errorFormat.Detail = map[string]string{"message": ErrorInternalServer}
 	}
 
@@ -190,14 +191,13 @@ func (e Error) ResourceNotFoundError(resource string, attribute string, value st
 
 // DBError will return 500 sInternal Server Error
 func (e Error) DBError(errors interface{}) *ErrorData {
-	config := Configs{}
 	errorFormat := &ErrorFormat{}
 	errorFormat.Status = strconv.Itoa(http.StatusInternalServerError)
 	errorFormat.Code = DatabaseError
 	errorFormat.Title = TitleInternalServerError
 	errorFormat.Detail = errors
 
-	if config.Get("app.yaml", "debug", "") == "false" || errors == nil {
+	if os.Getenv("DEBUG") == "false" || errors == nil {
 		errorFormat.Detail = map[string]string{"message": ErrorInternalServer}
 	}
 
@@ -208,14 +208,13 @@ func (e Error) DBError(errors interface{}) *ErrorData {
 
 // BindingError will return 400 Bad Request Error
 func (e Error) BindingError(errors interface{}) *ErrorData {
-	config := Configs{}
 	errorFormat := &ErrorFormat{}
 	errorFormat.Status = strconv.Itoa(http.StatusUnprocessableEntity)
 	errorFormat.Code = BadRequest
 	errorFormat.Title = TitleBindingError
 	errorFormat.Detail = errors
 
-	if config.Get("app.yaml", "debug", "") == "false" || errors == nil {
+	if os.Getenv("DEBUG") == "false" || errors == nil {
 		errorFormat.Detail = map[string]string{"message": ErrorBinding}
 	}
 

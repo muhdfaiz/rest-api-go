@@ -1,12 +1,13 @@
 package application
 
 import (
+	"os"
+
 	"bitbucket.org/cliqers/shoppermate-api/application/v1"
 	"bitbucket.org/cliqers/shoppermate-api/middlewares"
 	"bitbucket.org/cliqers/shoppermate-api/services/facebook"
 	"bitbucket.org/cliqers/shoppermate-api/services/filesystem"
 	"bitbucket.org/cliqers/shoppermate-api/services/location"
-	"bitbucket.org/cliqers/shoppermate-api/systems"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 )
@@ -14,11 +15,10 @@ import (
 // InitializeObjectAndSetRoutes will initialize object and set all routes across the API
 func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 	// Amazon S3 Config
-	Config := &systems.Configs{}
-	accessKey := Config.Get("app.yaml", "aws_access_key_id", "")
-	secretKey := Config.Get("app.yaml", "aws_secret_access_key", "")
-	region := Config.Get("app.yaml", "aws_region_name", "")
-	bucketName := Config.Get("app.yaml", "aws_bucket_name", "")
+	accessKey := os.Getenv("AWS_ACCESS_KEY_ID")
+	secretKey := os.Getenv("AWS_SECRET_ACCESS_KEY")
+	region := os.Getenv("AWS_S3_REGION_NAME")
+	bucketName := os.Getenv("AWS_S3_BUCKET_NAME")
 
 	// Amazon S3 filesystem
 	fileSystem := &filesystem.FileSystem{}
@@ -49,8 +49,8 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 
 	// Facebook Service
 	facebookService := &facebook.FacebookService{
-		AppID:     Config.Get("app.yaml", "facebook_app_id", ""),
-		AppSecret: Config.Get("app.yaml", "facebook_app_secret", ""),
+		AppID:     os.Getenv("FACEBOOK_APP_ID"),
+		AppSecret: os.Getenv("FACEBOOK_APP_SECRET"),
 	}
 
 	// Occasion Objects
@@ -62,12 +62,6 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 	itemRepository := &v1.ItemRepository{DB: DB}
 	itemTransformer := &v1.ItemTransformer{}
 	itemService := &v1.ItemService{ItemRepository: itemRepository}
-
-	// Item Category Objects
-	itemCategoryRepository := &v1.ItemCategoryRepository{DB: DB}
-	itemCategoryTransformer := &v1.ItemCategoryTransformer{}
-	itemCategoryService := &v1.ItemCategoryService{ItemCategoryRepository: itemCategoryRepository,
-		ItemCategoryTransformer: itemCategoryTransformer}
 
 	// Deal Cashback Repository
 	dealCashbackRepository := &v1.DealCashbackRepository{DB: DB}
@@ -94,12 +88,23 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 	grocerRepository := &v1.GrocerRepository{DB: DB}
 	grocerService := &v1.GrocerService{GrocerRepository: grocerRepository, DealRepository: dealRepository}
 
+	// Item Category Objects
+	itemCategoryRepository := &v1.ItemCategoryRepository{DB: DB}
+	itemCategoryTransformer := &v1.ItemCategoryTransformer{}
+
 	shoppingListItemRepository := &v1.ShoppingListItemRepository{DB: DB}
 
+	// Deal Transformer
+	dealTransformer := &v1.DealTransformer{}
+
 	// Deal Service
-	dealService := &v1.DealService{DealRepository: dealRepository, LocationService: locationService, DealCashbackFactory: dealCashbackFactory,
-		DealCashbackRepository: dealCashbackRepository, ItemRepository: itemRepository, ItemCategoryService: itemCategoryService,
+	dealService := &v1.DealService{DealRepository: dealRepository, DealTransformer: dealTransformer, LocationService: locationService, DealCashbackFactory: dealCashbackFactory,
+		DealCashbackRepository: dealCashbackRepository, ItemRepository: itemRepository, ItemCategoryRepository: itemCategoryRepository,
 		ItemSubCategoryRepository: itemSubCategoryRepository, GrocerService: grocerService, ShoppingListItemRepository: shoppingListItemRepository}
+
+	itemCategoryService := &v1.ItemCategoryService{ItemCategoryRepository: itemCategoryRepository, DealService: dealService,
+		ItemCategoryTransformer: itemCategoryTransformer, GrocerRepository: grocerRepository, GrocerService: grocerService,
+		DealRepository: dealRepository}
 
 	// Default Shopping List Objects
 	defaultShoppingListRepository := &v1.DefaultShoppingListRepository{DB: DB}
@@ -107,9 +112,6 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 
 	defaultShoppingListItemRepository := &v1.DefaultShoppingListItemRepository{DB: DB}
 	defaultShoppingListItemService := &v1.DefaultShoppingListItemService{DefaultShoppingListItemRepository: defaultShoppingListItemRepository}
-
-	// Deal Transformer
-	dealTransformer := &v1.DealTransformer{}
 
 	// Shopping List Item Repository
 	shoppingListItemService := &v1.ShoppingListItemService{ShoppingListItemRepository: shoppingListItemRepository, ItemService: itemService,
@@ -131,7 +133,8 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 
 	// Deal Cashback Service
 	dealCashbackService := &v1.DealCashbackService{DealCashbackRepository: dealCashbackRepository,
-		DealCashbackFactory: dealCashbackFactory, ShoppingListItemService: shoppingListItemService}
+		DealCashbackFactory: dealCashbackFactory, ShoppingListItemService: shoppingListItemService,
+		DealRepository: dealRepository}
 
 	// Transaction Status
 	transactionStatusRepository := &v1.TransactionStatusRepository{DB: DB}
@@ -298,6 +301,8 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 			version1.GET("users/:guid/deals/categories/:category_guid/subcategories", dealHandler.ViewByCategoryAndGroupBySubCategory)
 			version1.GET("users/:guid/deals/subcategories/:subcategory_guid", dealHandler.ViewBySubCategory)
 			version1.GET("users/:guid/deals/grocers", grocerHandler.GetAllGrocersThatContainDeals)
+			version1.GET("users/:guid/deals/grocers/:grocer_guid/categories", itemCategoryHandler.ViewGrocerCategoriesThoseHaveDealsIncludingDeals)
+			version1.GET("users/:guid/deals/grocers/:grocer_guid/categories/:category_guid", dealHandler.ViewByGrocerAndCategory)
 
 			// Feature Deal (In Carousel) Handler
 			version1.GET("users/:guid/featured_deals", eventHandler.ViewAll)

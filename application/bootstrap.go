@@ -1,7 +1,8 @@
 package application
 
 import (
-	"bitbucket.org/cliqers/shoppermate-api/systems"
+	"os"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -9,9 +10,7 @@ import (
 func Bootstrap(router *gin.Engine) *gin.Engine {
 	gin.SetMode(gin.ReleaseMode)
 
-	config := systems.Configs{}
-
-	if config.Get("app.yaml", "debug", "") == "true" {
+	if os.Getenv("DEBUG") == "true" {
 		gin.SetMode(gin.DebugMode)
 	}
 

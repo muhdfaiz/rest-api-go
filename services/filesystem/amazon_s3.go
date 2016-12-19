@@ -37,8 +37,6 @@ func (asu *AmazonS3Upload) Upload(file multipart.File, localUploadPath string, a
 		return nil, Error.InternalServerError(err1.Error(), systems.CannotReadFile)
 	}
 
-	defer localFile.Close()
-
 	// Retrieve file size
 	fileInfo, _ := localFile.Stat()
 	fileSize := fileInfo.Size()
@@ -74,6 +72,8 @@ func (asu *AmazonS3Upload) Upload(file multipart.File, localUploadPath string, a
 	if err2 != nil {
 		return nil, Error.InternalServerError(err2.Error(), systems.CannotDeleteFile)
 	}
+
+	localFile.Close()
 
 	uploadedFile["path"] = fmt.Sprintf("https://s3-%s.amazonaws.com/%s%s%s", asu.Region,
 		asu.BucketName, amazonS3UploadPath, uploadedFile["name"])

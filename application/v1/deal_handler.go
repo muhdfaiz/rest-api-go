@@ -2,6 +2,7 @@ package v1
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -233,6 +234,14 @@ func (dh *DealHandler) ViewByCategory(context *gin.Context) {
 
 // ViewBySubCategory function used to retrieve all deals group by subcategory
 func (dh *DealHandler) ViewBySubCategory(context *gin.Context) {
+	tokenData := context.MustGet("Token").(map[string]string)
+	userGUID := context.Param("guid")
+
+	if tokenData["user_guid"] != userGUID {
+		context.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("view all deals by subcategory"))
+		return
+	}
+
 	queryStringValidationRules := map[string]string{
 		"page_number": "numeric",
 		"page_limit":  "numeric",
@@ -252,14 +261,6 @@ func (dh *DealHandler) ViewBySubCategory(context *gin.Context) {
 	pageNumber := context.Query("page_number")
 	pageLimit := context.Query("page_limit")
 
-	tokenData := context.MustGet("Token").(map[string]string)
-	userGUID := context.Param("guid")
-
-	if tokenData["user_guid"] != userGUID {
-		context.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("view all deals by subcategory"))
-		return
-	}
-
 	subCategoryGUID := context.Param("subcategory_guid")
 
 	dealSubCategory := dh.ItemSubCategoryRepository.GetByGUID(subCategoryGUID)
@@ -275,4 +276,48 @@ func (dh *DealHandler) ViewBySubCategory(context *gin.Context) {
 	result := dh.DealTransformer.transformCollection(context.Request, deals, totalDeal, pageLimit)
 
 	context.JSON(http.StatusOK, gin.H{"data": result})
+}
+
+// ViewByGrocerAndCategory function used to retrieve valid deals group by subcategory
+func (dh *DealHandler) ViewByGrocerAndCategory(context *gin.Context) {
+	tokenData := context.MustGet("Token").(map[string]string)
+	userGUID := context.Param("guid")
+
+	if tokenData["user_guid"] != userGUID {
+		context.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("view all deals by subcategory"))
+		return
+	}
+
+	queryStringValidationRules := map[string]string{
+		"page_number": "numeric",
+		"page_limit":  "numeric",
+		"latitude":    "required,latitude",
+		"longitude":   "required,longitude",
+	}
+
+	error := Validation.Validate(context.Request.URL.Query(), queryStringValidationRules)
+
+	if error != nil {
+		context.JSON(http.StatusUnprocessableEntity, error)
+		return
+	}
+
+	latitude := context.Query("latitude")
+	longitude := context.Query("longitude")
+	pageNumber := context.Query("page_number")
+	pageLimit := context.Query("page_limit")
+
+	grocerGUID := context.Param("grocer_guid")
+	categoryGUID := context.Param("category_guid")
+
+	dealResponse, error := dh.DealService.GetAvailableDealsForGrocerByCategory(context.Request, userGUID,
+		grocerGUID, categoryGUID, latitude, longitude, pageNumber, pageLimit, "")
+
+	if error != nil {
+		errorCode, _ := strconv.Atoi(error.Error.Status)
+		context.JSON(errorCode, error)
+		return
+	}
+
+	context.JSON(http.StatusOK, dealResponse)
 }

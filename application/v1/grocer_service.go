@@ -4,10 +4,13 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"bitbucket.org/cliqers/shoppermate-api/systems"
 )
 
 // GrocerServiceInterface is a contract that defines the method needed for Grocer Service.
 type GrocerServiceInterface interface {
+	CheckGrocerExistOrNotByGUID(grocerGUID string) (*Grocer, *systems.ErrorData)
 	GetGrocerByID(grocerID int, relations string) *Grocer
 	GetAllGrocers(pageNumber, pageLimit, relations string) ([]*Grocer, int)
 	GetAllGrocersIncludingDeals(userGUID, latitude, longitude string) []*Grocer
@@ -16,6 +19,18 @@ type GrocerServiceInterface interface {
 type GrocerService struct {
 	GrocerRepository GrocerRepositoryInterface
 	DealRepository   DealRepositoryInterface
+}
+
+// CheckGrocerExistOrNotByGUID function used to check grocer exist or not by checking
+// grocer GUID.
+func (gs *GrocerService) CheckGrocerExistOrNotByGUID(grocerGUID string) (*Grocer, *systems.ErrorData) {
+	grocer := gs.GrocerRepository.GetByGUID(grocerGUID, "")
+
+	if grocer.GUID == "" {
+		return nil, Error.ResourceNotFoundError("Grocer", "guid", grocerGUID)
+	}
+
+	return grocer, nil
 }
 
 // GetGrocerByID function used to retrieve grocer by grocer ID.

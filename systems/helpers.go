@@ -3,6 +3,7 @@ package systems
 import (
 	"bytes"
 	"fmt"
+
 	"os"
 
 	"github.com/elgs/gostrgen"
@@ -34,7 +35,7 @@ func (h *Helpers) GenerateUUID() string {
 
 // GenerateUniqueShortID function used to generate unique short id.
 func (h *Helpers) GenerateUniqueShortID() string {
-	shortIDSettings, _ := shortid.New(1, shortid.DefaultABC, 123)
+	shortIDSettings, _ := shortid.New(1, shortid.DEFAULT_ABC, 123)
 
 	shortID, _ := shortIDSettings.Generate()
 
@@ -83,8 +84,7 @@ func (h *Helpers) RandomString(strType string, length int, include string, exclu
 // StoragePath is a function to retrieve absolute storage path from config
 // Return absolute storage path in string
 func (h *Helpers) StoragePath() string {
-	config := Configs{}
-	return os.Getenv("GOPATH") + config.Get("app.yaml", "storage_path", "")
+	return os.Getenv("STORAGE_PATH")
 }
 
 // StringInSlice function used to check if string contain in slice.

@@ -3,10 +3,11 @@ package v1
 import (
 	"mime/multipart"
 	"net/url"
-	"os"
 	"strings"
 
 	"github.com/jinzhu/gorm"
+
+	"os"
 
 	"bitbucket.org/cliqers/shoppermate-api/services/filesystem"
 	"bitbucket.org/cliqers/shoppermate-api/systems"
@@ -76,7 +77,7 @@ func (us *UserService) UploadProfileImage(file multipart.File) (map[string]strin
 		return nil, error
 	}
 
-	localUploadPath := os.Getenv("GOPATH") + Config.Get("app.yaml", "storage_path", "src/bitbucket.org/cliqers/shoppermate-api/storages/")
+	localUploadPath := os.Getenv("GOPATH") + os.Getenv("STORAGE_PATH")
 	amazonS3UploadPath := "/profile_images/"
 	uploadedFile, error := us.AmazonS3FileSystem.Upload(file, localUploadPath, amazonS3UploadPath)
 

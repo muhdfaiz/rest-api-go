@@ -7,5 +7,4 @@ import (
 var (
 	Database = &systems.Database{}
 	Error    = &systems.Error{}
-	Config   = &systems.Configs{}
 )

@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 
+	"os"
+
 	"bitbucket.org/cliqers/shoppermate-api/application/v1"
 	"bitbucket.org/cliqers/shoppermate-api/systems"
 	jwt "github.com/dgrijalva/jwt-go"
@@ -19,7 +21,7 @@ type CustomClaims struct {
 }
 
 func Auth(DB *gorm.DB) gin.HandlerFunc {
-	jwtSecret := Config.Get("app.yaml", "jwt_token_secret", "secret")
+	jwtSecret := os.Getenv("JWT_TOKEN_SECRET")
 
 	return func(c *gin.Context) {
 		authorizationHeader := c.Request.Header["Authorization"]

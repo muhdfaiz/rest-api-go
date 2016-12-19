@@ -1,6 +1,7 @@
 package systems
 
 import (
+	"os"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -44,8 +45,7 @@ func (j *Jwt) GenerateToken(userGUID string, phoneNo string, deviceUUID string) 
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	config := Configs{}
-	jwtSecret := config.Get("app.yaml", "jwt_token_secret", "secret")
+	jwtSecret := os.Getenv("JWT_TOKEN_SECRET")
 
 	// Sign and get the complete encoded token as a string
 	tokenString, err := token.SignedString([]byte(jwtSecret))

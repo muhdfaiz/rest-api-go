@@ -8,7 +8,6 @@ import (
 )
 
 var (
-	Config = &systems.Configs{}
 	Error  = &systems.Error{}
 	Helper = &systems.Helpers{}
 )

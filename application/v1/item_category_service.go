@@ -1,5 +1,13 @@
 package v1
 
+import (
+	"strconv"
+	"strings"
+	"time"
+
+	"bitbucket.org/cliqers/shoppermate-api/systems"
+)
+
 // ItemCategoryServiceInterface is a contract that defines the method needed for ItemCategoryService.
 type ItemCategoryServiceInterface interface {
 	GetItemCategoryNames() ([]string, int)
@@ -7,11 +15,17 @@ type ItemCategoryServiceInterface interface {
 	GetItemCategoryByGUID(guid string) *ItemCategory
 	GetItemCategoryByID(itemCategoryID int) *ItemCategory
 	TransformItemCategories(data interface{}, totalData int) *ItemCategoryResponse
+	GetGrocerCategoriesThoseHaveDealsIncludingDeals(userGUID, grocerGUID,
+		latitude, longitude, dealLimitPerCategory, relations string) ([]*ItemCategory, *systems.ErrorData)
 }
 
 type ItemCategoryService struct {
 	ItemCategoryRepository  ItemCategoryRepositoryInterface
 	ItemCategoryTransformer ItemCategoryTransformerInterface
+	GrocerRepository        GrocerRepositoryInterface
+	GrocerService           GrocerServiceInterface
+	DealRepository          DealRepositoryInterface
+	DealService             DealServiceInterface
 }
 
 // GetItemCategoryNames function used to retrieve name for all item category in database.
@@ -40,4 +54,35 @@ func (ics *ItemCategoryService) GetItemCategoryByID(itemCategoryID int) *ItemCat
 
 func (ics *ItemCategoryService) TransformItemCategories(data interface{}, totalData int) *ItemCategoryResponse {
 	return ics.ItemCategoryTransformer.TransformCollection(data, totalData)
+}
+
+func (ics *ItemCategoryService) GetGrocerCategoriesThoseHaveDealsIncludingDeals(userGUID, grocerGUID,
+	latitude, longitude, dealLimitPerCategory, relations string) ([]*ItemCategory, *systems.ErrorData) {
+
+	_, error := ics.GrocerService.CheckGrocerExistOrNotByGUID(grocerGUID)
+
+	if error != nil {
+		return nil, error
+	}
+
+	currentDateInGMT8 := time.Now().UTC().Add(time.Hour * 8).Format("2006-01-02")
+
+	latitudeInFLoat64, _ := strconv.ParseFloat(strings.TrimSpace(latitude), 64)
+	longitudeInFLoat64, _ := strconv.ParseFloat(strings.TrimSpace(longitude), 64)
+
+	grocer := ics.GrocerRepository.GetByGUID(grocerGUID, "")
+
+	categories := ics.ItemCategoryRepository.GetGrocerCategoriesForThoseHaveDealsWithinRangeAndDateRangeAndUserLimitAndQuota(userGUID, grocer.ID,
+		currentDateInGMT8, latitudeInFLoat64, longitudeInFLoat64)
+
+	for key, category := range categories {
+		deals, _ := ics.DealRepository.GetDealsForGrocerWithinRangeAndDateRangeAndUserLimitAndQuotaAndCategory(userGUID, category.GUID,
+			grocer.ID, latitudeInFLoat64, longitudeInFLoat64, currentDateInGMT8, "1", dealLimitPerCategory, "")
+
+		deals = ics.DealService.SetAddTolistInfoAndItemsAndGrocerExclusiveForDeals(deals, userGUID)
+
+		categories[key].Deals = deals
+	}
+
+	return categories, nil
 }

@@ -42,7 +42,7 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 
 	// Sms Objects
 	smsHistoryRepository := &v1.SmsHistoryRepository{DB: DB}
-	smsService := &v1.SmsService{DB: DB}
+	smsService := &v1.SmsService{DB: DB, SmsHistoryRepository: smsHistoryRepository}
 
 	// Auth Service
 	authService := &v1.AuthService{UserService: userService, SmsService: smsService, DeviceService: deviceService}

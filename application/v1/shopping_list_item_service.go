@@ -349,8 +349,6 @@ func (slis *ShoppingListItemService) SetShoppingListItemCategoryAndSubcategory(s
 func (slis *ShoppingListItemService) GetAndSetDealForShoppingListItems(dealsCollection []*Deal, userGUID string, shoppingListGUID string,
 	userShoppingListItems []*ShoppingListItem, latitude string, longitude string) ([]*ShoppingListItem, []*Deal) {
 
-	dealsCollection = []*Deal{}
-
 	for key, userShoppingListItem := range userShoppingListItems {
 
 		if userShoppingListItem.AddedFromDeal == 0 && userShoppingListItem.AddedToCart == 0 && latitude != "" && longitude != "" {

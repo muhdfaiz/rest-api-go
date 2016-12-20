@@ -246,15 +246,21 @@ func (slis *ShoppingListItemService) GetAllUserShoppingListItem(userGUID string,
 
 	uniqueSubCategories := slis.ShoppingListItemRepository.GetUniqueSubCategoryFromAllUserShoppingListItem(userGUID, shoppingListGUID)
 
+	dealsCollection := []*Deal{}
+
 	for _, uniqueSubCategory := range uniqueSubCategories {
 		userShoppingListItems := slis.ShoppingListItemRepository.GetByUserGUIDAndShoppingListGUIDAndSubCategory(userGUID, shoppingListGUID,
 			uniqueSubCategory.SubCategory, relations)
 
 		if latitude != "" && longitude != "" {
-			userShoppingListItems = slis.GetAndSetDealForShoppingListItems(userGUID, shoppingListGUID, userShoppingListItems, latitude, longitude)
-		}
+			userShoppingListItems, deals := slis.GetAndSetDealForShoppingListItems(dealsCollection, userGUID, shoppingListGUID, userShoppingListItems, latitude, longitude)
 
-		userShoppingListItemsGroupBySubCategory[uniqueSubCategory.SubCategory] = userShoppingListItems
+			dealsCollection = append(dealsCollection, deals...)
+
+			userShoppingListItemsGroupBySubCategory[uniqueSubCategory.SubCategory] = userShoppingListItems
+		} else {
+			userShoppingListItemsGroupBySubCategory[uniqueSubCategory.SubCategory] = userShoppingListItems
+		}
 	}
 
 	return userShoppingListItemsGroupBySubCategory
@@ -268,13 +274,21 @@ func (slis *ShoppingListItemService) GetUserShoppingListItemsNotAddedToCart(user
 
 	uniqueSubCategories := slis.ShoppingListItemRepository.GetUniqueSubCategoryFromUserShoppingListItem(userGUID, shoppingListGUID, 0)
 
+	dealsCollection := []*Deal{}
+
 	for _, uniqueSubCategory := range uniqueSubCategories {
 		userShoppingListItems := slis.ShoppingListItemRepository.GetByUserGUIDAndShoppingListGUIDAndAddedToCartAndSubCategory(userGUID, shoppingListGUID, 0,
 			uniqueSubCategory.SubCategory, relations)
 
-		userShoppingListItems = slis.GetAndSetDealForShoppingListItems(userGUID, shoppingListGUID, userShoppingListItems, latitude, longitude)
+		if latitude != "" && longitude != "" {
+			userShoppingListItems, deals := slis.GetAndSetDealForShoppingListItems(dealsCollection, userGUID, shoppingListGUID, userShoppingListItems, latitude, longitude)
 
-		userShoppingListItemsGroupBySubCategory[uniqueSubCategory.SubCategory] = userShoppingListItems
+			dealsCollection = append(dealsCollection, deals...)
+
+			userShoppingListItemsGroupBySubCategory[uniqueSubCategory.SubCategory] = userShoppingListItems
+		} else {
+			userShoppingListItemsGroupBySubCategory[uniqueSubCategory.SubCategory] = userShoppingListItems
+		}
 	}
 
 	return userShoppingListItemsGroupBySubCategory
@@ -332,17 +346,23 @@ func (slis *ShoppingListItemService) SetShoppingListItemCategoryAndSubcategory(s
 
 // GetAndSetDealForShoppingListItems function used to find deals for shopping list items and set the deals to the shopping
 // shopping list items.
-func (slis *ShoppingListItemService) GetAndSetDealForShoppingListItems(userGUID string, shoppingListGUID string, userShoppingListItems []*ShoppingListItem,
-	latitude string, longitude string) []*ShoppingListItem {
+func (slis *ShoppingListItemService) GetAndSetDealForShoppingListItems(dealsCollection []*Deal, userGUID string, shoppingListGUID string,
+	userShoppingListItems []*ShoppingListItem, latitude string, longitude string) ([]*ShoppingListItem, []*Deal) {
 
-	dealsCollection := []*Deal{}
+	dealsCollection = []*Deal{}
 
 	for key, userShoppingListItem := range userShoppingListItems {
 
 		if userShoppingListItem.AddedFromDeal == 0 && userShoppingListItem.AddedToCart == 0 && latitude != "" && longitude != "" {
 			deals := slis.DealService.GetDealsBasedOnUserShoppingListItem(userGUID, shoppingListGUID, userShoppingListItem, latitude, longitude, dealsCollection)
 
+			deals = slis.DealService.FilteredDealMustBeUniquePerShoppingList(deals, dealsCollection, userGUID)
+
 			dealsCollection = append(dealsCollection, deals...)
+
+			if len(deals) == 0 {
+				deals = nil
+			}
 
 			userShoppingListItems[key].Deals = deals
 		}
@@ -353,5 +373,5 @@ func (slis *ShoppingListItemService) GetAndSetDealForShoppingListItems(userGUID 
 		}
 	}
 
-	return userShoppingListItems
+	return userShoppingListItems, dealsCollection
 }

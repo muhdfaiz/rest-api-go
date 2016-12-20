@@ -31,8 +31,8 @@ type ShoppingListItemServiceInterface interface {
 	CheckUserShoppingListItemExistOrNot(shoppingListItemGUID string, userGUID string,
 		shoppingListGUID string) (*ShoppingListItem, *systems.ErrorData)
 	SetShoppingListItemCategoryAndSubcategory(shoppingListItemName string) (string, string)
-	GetAndSetDealForShoppingListItems(userGUID string, shoppingListGUID string, userShoppingListItems []*ShoppingListItem,
-		latitude string, longitude string) []*ShoppingListItem
+	GetAndSetDealForShoppingListItems(dealsCollection []*Deal, userGUID string, shoppingListGUID string,
+		userShoppingListItems []*ShoppingListItem, latitude string, longitude string) ([]*ShoppingListItem, []*Deal)
 }
 
 // ShoppingListItemRepositoryInterface is a contract that defines the method needed for Shopping List Item Repository.

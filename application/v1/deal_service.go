@@ -50,13 +50,13 @@ func (ds *DealService) GetDealsBasedOnUserShoppingListItem(userGUID, shoppingLis
 		return nil
 	}
 
-	filteredDealsUniqueForEachShoppingList := ds.FilteredDealMustBeUniqueForEachOfShoppingListItem(deals, dealsCollection, userGUID)
+	// filteredDealsUniqueForEachShoppingList := ds.FilteredDealMustBeUniqueForEachOfShoppingListItem(deals, dealsCollection, userGUID)
 
-	if len(filteredDealsUniqueForEachShoppingList) < 1 {
-		return nil
-	}
+	// if len(filteredDealsUniqueForEachShoppingList) < 1 {
+	// 	return nil
+	// }
 
-	filteredDealsByStartAndEndTime := ds.FilteredDealMustBeWithinStartAndEndTime(filteredDealsUniqueForEachShoppingList, currentDateInGMT8, currentTimeInGMT8)
+	filteredDealsByStartAndEndTime := ds.FilteredDealMustBeWithinStartAndEndTime(deals, currentDateInGMT8, currentTimeInGMT8)
 
 	if len(filteredDealsByStartAndEndTime) < 1 {
 		return nil
@@ -68,13 +68,23 @@ func (ds *DealService) GetDealsBasedOnUserShoppingListItem(userGUID, shoppingLis
 		return nil
 	}
 
-	filteredDealsNotAddedToList := ds.FilteredDealsNotAddedTolist(filteredDealsByPositiveTags, userGUID, shoppingListGUID)
+	filteredDealsByNegativeTags := ds.FilteredDealByNegativeTag(filteredDealsByPositiveTags, shoppingListItem.Name)
+
+	if len(filteredDealsByNegativeTags) < 1 {
+		return nil
+	}
+
+	filteredDealsNotAddedToList := ds.FilteredDealsNotAddedTolist(filteredDealsByNegativeTags, userGUID, shoppingListGUID)
 
 	if len(filteredDealsNotAddedToList) < 1 {
 		return nil
 	}
 
-	return filteredDealsNotAddedToList
+	firstThreeDeals := ds.GetFirstThreeDeals(filteredDealsNotAddedToList)
+
+	fmt.Println("Number of deals")
+	fmt.Println(len(firstThreeDeals))
+	return firstThreeDeals
 }
 
 // GetDealsBasedOnSampleShoppingListItem function used to retrieve deals for each of sample shopping list items.
@@ -108,13 +118,13 @@ func (ds *DealService) GetDealsBasedOnSampleShoppingListItem(defaultShoppingList
 		return nil
 	}
 
-	filteredDealsUniqueForEachShoppingList := ds.FilteredDealMustBeUniqueForEachOfShoppingListItem(deals, dealsCollection, "")
+	// filteredDealsUniqueForEachShoppingList := ds.FilteredDealMustBeUniqueForEachOfShoppingListItem(deals, dealsCollection, "")
 
-	if len(filteredDealsUniqueForEachShoppingList) < 1 {
-		return nil
-	}
+	// if len(filteredDealsUniqueForEachShoppingList) < 1 {
+	// 	return nil
+	// }
 
-	filteredDealsByStartAndEndTime := ds.FilteredDealMustBeWithinStartAndEndTime(filteredDealsUniqueForEachShoppingList, currentDateInGMT8, currentTimeInGMT8)
+	filteredDealsByStartAndEndTime := ds.FilteredDealMustBeWithinStartAndEndTime(deals, currentDateInGMT8, currentTimeInGMT8)
 
 	if len(filteredDealsByStartAndEndTime) < 1 {
 		return nil
@@ -132,11 +142,13 @@ func (ds *DealService) GetDealsBasedOnSampleShoppingListItem(defaultShoppingList
 		return nil
 	}
 
-	return filteredDealsByNegativeTags
+	firstThreeDeals := ds.GetFirstThreeDeals(filteredDealsByNegativeTags)
+
+	return firstThreeDeals
 }
 
-// FilteredDealMustBeUniqueForEachOfShoppingListItem function used to set the deal must be unique for each of shopping lists items.
-func (ds *DealService) FilteredDealMustBeUniqueForEachOfShoppingListItem(deals []*Deal, dealsCollection []*Deal, userGUID string) []*Deal {
+// FilteredDealMustBeUniquePerShoppingList function used to set the deal must be unique for each of shopping lists items.
+func (ds *DealService) FilteredDealMustBeUniquePerShoppingList(deals []*Deal, dealsCollection []*Deal, userGUID string) []*Deal {
 	filteredDealsUniqueForEachShoppingList := []*Deal{}
 
 	for _, deal := range deals {
@@ -152,17 +164,7 @@ func (ds *DealService) FilteredDealMustBeUniqueForEachOfShoppingListItem(deals [
 		if dealAlreadyExistInOtherItem == false {
 
 			if userGUID != "" {
-				deal.CanAddTolist = 1
-
-				// Check If deal quota still available for the user.
-				totalNumberOfDealAddedToList := ds.DealCashbackRepository.CountByDealGUIDAndUserGUID(deal.GUID, userGUID)
-
-				if totalNumberOfDealAddedToList >= deal.Perlimit {
-					deal.CanAddTolist = 0
-				}
-
-				deal.NumberOfDealAddedToList = totalNumberOfDealAddedToList
-				deal.RemainingAddToList = deal.Perlimit - totalNumberOfDealAddedToList
+				deal = ds.SetAddTolistInfoAndItemsAndGrocerExclusiveForDeal(deal, userGUID)
 			}
 
 			filteredDealsUniqueForEachShoppingList = append(filteredDealsUniqueForEachShoppingList, deal)
@@ -263,8 +265,7 @@ func (ds *DealService) FilteredDealsNotAddedTolist(deals []*Deal, userGUID, shop
 	filteredDealsNotAddedTolist := []*Deal{}
 
 	for _, deal := range deals {
-		fmt.Println("Deal GUID")
-		fmt.Println(deal.GUID)
+
 		dealCashback := ds.DealCashbackRepository.GetByUserGUIDAndShoppingListGUIDAndDealGUID(userGUID, shoppingListGUID, deal.GUID)
 
 		if dealCashback.GUID == "" {
@@ -273,6 +274,19 @@ func (ds *DealService) FilteredDealsNotAddedTolist(deals []*Deal, userGUID, shop
 	}
 
 	return filteredDealsNotAddedTolist
+}
+
+// GetFirstThreeDeals will retrieve first 3 deal only from deal collection.
+func (ds *DealService) GetFirstThreeDeals(deals []*Deal) []*Deal {
+	firstThreeDeals := []*Deal{}
+
+	for key, deal := range deals {
+		if key <= 2 {
+			firstThreeDeals = append(firstThreeDeals, deal)
+		}
+	}
+
+	return firstThreeDeals
 }
 
 // RemoveDealCashbackAndSetItemDealExpired function used to soft delete deal cashback that already expired and set the item deal expired.

@@ -17,10 +17,11 @@ type DealServiceInterface interface {
 		longitude string, dealsCollection []*Deal) []*Deal
 	GetDealsBasedOnSampleShoppingListItem(defaultShoppingListItem *DefaultShoppingListItem, latitude,
 		longitude string, dealsCollection []*Deal) []*Deal
-	FilteredDealMustBeUniqueForEachOfShoppingListItem(deals []*Deal, dealsCollection []*Deal, userGUID string) []*Deal
+	FilteredDealMustBeUniquePerShoppingList(deals []*Deal, dealsCollection []*Deal, userGUID string) []*Deal
 	FilteredDealMustBeWithinStartAndEndTime(deals []*Deal, currentDateInGMT8, currentTimeInGMT8 string) []*Deal
 	FilteredDealByPositiveTag(deals []*Deal, shoppingListItemName string) []*Deal
 	FilteredDealsNotAddedTolist(deals []*Deal, userGUID, shoppingListGUID string) []*Deal
+	GetFirstThreeDeals(deals []*Deal) []*Deal
 	RemoveDealCashbackAndSetItemDealExpired(userGUID, shoppingListGUID, dealGUID string) *systems.ErrorData
 	ViewDealDetails(dealGUID, relations string) *Ads
 	GetAvailableDealsForGuestUser(latitude, longitude, pageNumber, pageLimit, relations string) ([]*Deal, int)

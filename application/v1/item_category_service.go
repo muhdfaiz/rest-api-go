@@ -8,17 +8,6 @@ import (
 	"bitbucket.org/cliqers/shoppermate-api/systems"
 )
 
-// ItemCategoryServiceInterface is a contract that defines the method needed for ItemCategoryService.
-type ItemCategoryServiceInterface interface {
-	GetItemCategoryNames() ([]string, int)
-	GetItemCategories() ([]*ItemCategory, int)
-	GetItemCategoryByGUID(guid string) *ItemCategory
-	GetItemCategoryByID(itemCategoryID int) *ItemCategory
-	TransformItemCategories(data interface{}, totalData int) *ItemCategoryResponse
-	GetGrocerCategoriesThoseHaveDealsIncludingDeals(userGUID, grocerGUID,
-		latitude, longitude, dealLimitPerCategory, relations string) ([]*ItemCategory, *systems.ErrorData)
-}
-
 type ItemCategoryService struct {
 	ItemCategoryRepository  ItemCategoryRepositoryInterface
 	ItemCategoryTransformer ItemCategoryTransformerInterface

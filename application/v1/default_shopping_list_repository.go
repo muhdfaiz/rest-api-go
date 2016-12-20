@@ -2,12 +2,6 @@ package v1
 
 import "github.com/jinzhu/gorm"
 
-// DefaultShoppingListRepositoryInterface is a contract that defines the method needed for Default Shopping
-// List Repository.
-type DefaultShoppingListRepositoryInterface interface {
-	GetAll(relations string) []*DefaultShoppingList
-}
-
 // DefaultShoppingListRepository will handle all task related to CRUD
 type DefaultShoppingListRepository struct {
 	DB *gorm.DB

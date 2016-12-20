@@ -13,10 +13,6 @@ type DealResponse struct {
 	Data           interface{} `json:"data"`
 }
 
-type DealTransformerInterface interface {
-	transformCollection(currentURI *http.Request, data interface{}, totalData int, limit string) *DealResponse
-}
-
 type DealTransformer struct{}
 
 func (dt *DealTransformer) transformCollection(request *http.Request, data interface{}, totalData int, limit string) *DealResponse {

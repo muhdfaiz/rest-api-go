@@ -6,26 +6,16 @@ import (
 	"bitbucket.org/cliqers/shoppermate-api/systems"
 )
 
-type DealCashbackServiceInterface interface {
-	CountTotalNumberOfDealUserAddedToList(userGUID string, dealGUID string) int
-	SumTotalAmountOfDealAddedTolistByUser(userGUID string) float64
-	GetDealCashbacksByTransactionGUIDAndGroupByShoppingList(dealCashbackTrasnactionGUID string) []*DealCashback
-	CreateDealCashbackAndShoppingListItem(userGUID string, dealCashbackData CreateDealCashback) *systems.ErrorData
-	GetUserDealCashbackForUserShoppingList(userGUID string, shoppingListGUID string, transactionStatus string,
-		pageNumber string, pageLimit string, relations string) ([]*DealCashback, int)
-}
-
 type DealCashbackService struct {
 	ShoppingListItemService    ShoppingListItemServiceInterface
 	ShoppingListItemRepository ShoppingListItemRepositoryInterface
 	DealCashbackRepository     DealCashbackRepositoryInterface
-	DealCashbackFactory        DealCashbackFactoryInterface
 	DealRepository             DealRepositoryInterface
 }
 
 // CreateDealCashbackAndShoppingListItem function used to create deal cashback and store new shopping list item based on deal item
 func (dcs *DealCashbackService) CreateDealCashbackAndShoppingListItem(userGUID string, dealCashbackData CreateDealCashback) *systems.ErrorData {
-	_, err := dcs.DealCashbackFactory.Create(userGUID, dealCashbackData)
+	_, err := dcs.DealCashbackRepository.Create(userGUID, dealCashbackData)
 
 	if err != nil {
 		return err
@@ -114,7 +104,7 @@ func (dcs *DealCashbackService) RemoveDealCashbackAndSetItemDealExpired(userGUID
 	deal := dcs.DealRepository.GetDealByGUIDAndValidStartEndDate(dealGUID, currentDateInGMT8)
 
 	if deal.GUID == "" {
-		error := dcs.DealCashbackFactory.DeleteByUserGUIDShoppingListGUIDAndDealGUID(userGUID, shoppingListGUID, dealGUID)
+		error := dcs.DealCashbackRepository.DeleteByUserGUIDAndShoppingListGUIDAndDealGUID(userGUID, shoppingListGUID, dealGUID)
 
 		if error != nil {
 			return error

@@ -2,13 +2,6 @@ package v1
 
 import "github.com/jinzhu/gorm"
 
-type GrocerRepositoryInterface interface {
-	GetAll(pageNumber string, pageLimit string, relations string) ([]*Grocer, int)
-	GetAllGrocersThoseOnlyHaveDeal() []*Grocer
-	GetByID(id int, relations string) *Grocer
-	GetByGUID(grocerGUID, relations string) *Grocer
-}
-
 // GrocerRepository contain all function to retrieve list of grocer in database
 type GrocerRepository struct {
 	DB *gorm.DB

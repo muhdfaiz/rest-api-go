@@ -1,11 +1,5 @@
 package v1
 
-// ItemServiceInterface is a contract that defines the methods needed for Item Service
-type ItemServiceInterface interface {
-	GetItemByName(itemName, relations string) *Item
-	GetItemByID(itemID int, relations string) *Item
-}
-
 type ItemService struct {
 	ItemRepository ItemRepositoryInterface
 }

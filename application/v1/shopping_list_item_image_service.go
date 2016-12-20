@@ -13,24 +13,6 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-// ShoppingListItemImageServiceInterface is a contract that defines the methods needed for Shopping List Item Image Service
-type ShoppingListItemImageServiceInterface interface {
-	ViewUserShoppingListItemImage(userGUID string, shoppingListGUID string, shoppingListItemGUID string,
-		shoppingListItemImageGUID string, relations string) (*ShoppingListItemImage, *systems.ErrorData)
-	CreateUserShoppingListItemImage(userGUID string, shoppingListGUID string, shoppingListItemGUID string,
-		imagesToUpload []*multipart.FileHeader) ([]*ShoppingListItemImage, *systems.ErrorData)
-	UploadShoppingListItemImages(imagesToUpload []multipart.File) ([]map[string]string, *systems.ErrorData)
-	ValidateShoppingListItemImages(imagesToUpload []*multipart.FileHeader) ([]multipart.File, *systems.ErrorData)
-	DeleteImagesForShoppingList(shoppingListGUID string) *systems.ErrorData
-	DeleteImagesForShoppingListItem(shoppingListItemGUID string) *systems.ErrorData
-	DeleteShoppingListItemImages(userGUID string, shoppingListGUID string, shoppingListItemGUID string,
-		shoppingListItemImageGUIDs string) *systems.ErrorData
-	CheckUserShoppingListItemImageExistOrNot(userGUID string, shoppingListGUID string,
-		shoppingListItemGUID string, shoppingListItemImageGUID string) (*ShoppingListItemImage, *systems.ErrorData)
-	CheckMultipleUserShoppingListItemImageExistOrNot(userGUID string, shoppingListGUID string,
-		shoppingListItemGUID string, shoppingListItemImageGUIDs []string) ([]*ShoppingListItemImage, *systems.ErrorData)
-}
-
 // ShoppingListItemImageService will handle all CRUD task, upload and delete image from cloud storage like Amazon S3.
 type ShoppingListItemImageService struct {
 	DB                              *gorm.DB

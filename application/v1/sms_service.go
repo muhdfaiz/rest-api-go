@@ -13,24 +13,17 @@ import (
 	"bitbucket.org/cliqers/shoppermate-api/systems"
 )
 
-type SmsServiceInterface interface {
-	SendVerificationCode(phoneNo string, userGUID string) (interface{}, *systems.ErrorData)
-	send(message string, recipientNumber string) (map[string]string, *systems.ErrorData)
-}
-
 type SmsService struct {
-	DB *gorm.DB
+	DB                   *gorm.DB
+	SmsHistoryRepository SmsHistoryRepositoryInterface
 }
 
 // SendVerificationCode function handle sending sms contain verification code during registration & login
 func (sf *SmsService) SendVerificationCode(phoneNo string, userGUID string) (interface{}, *systems.ErrorData) {
-	// Generate randomverification code 6 character (lower & digit)
 	smsVerificationCode := Helper.RandomString("Digit", 4, "", "")
 
-	// Set Sms Text
 	smsText := fmt.Sprintf("Your verification code is %s - Shoppermate", smsVerificationCode)
 
-	// Send Sms
 	smsResponse, err := sf.send(smsText, phoneNo)
 
 	if err != nil {
@@ -41,25 +34,23 @@ func (sf *SmsService) SendVerificationCode(phoneNo string, userGUID string) (int
 		return nil, Error.InternalServerError(smsResponse["message"], systems.FailedToSendSMS)
 	}
 
-	// Store SMS History
-	m := make(map[string]string)
-	m["guid"] = Helper.GenerateUUID()
-	m["user_guid"] = userGUID
-	m["provider"] = "moceansms"
-	m["sms_id"] = smsResponse["sms_id"]
-	m["text"] = smsText
-	m["recipient_no"] = phoneNo
-	m["verification_code"] = smsVerificationCode
-	m["status"] = "0"
+	smsHistory := make(map[string]string)
+	smsHistory["guid"] = Helper.GenerateUUID()
+	smsHistory["user_guid"] = userGUID
+	smsHistory["provider"] = "moceansms"
+	smsHistory["sms_id"] = smsResponse["sms_id"]
+	smsHistory["text"] = smsText
+	smsHistory["recipient_no"] = phoneNo
+	smsHistory["verification_code"] = smsVerificationCode
+	smsHistory["status"] = "0"
 
-	smsHistoryFactory := SmsHistoryFactory{DB: sf.DB}
-	sentSmsData, err := smsHistoryFactory.CreateSmsHistory(m)
+	result, err := sf.SmsHistoryRepository.Create(smsHistory)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return sentSmsData, nil
+	return result, nil
 }
 
 // Send SMS message

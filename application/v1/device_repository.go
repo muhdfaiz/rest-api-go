@@ -6,16 +6,7 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-type DeviceRepositoryInterface interface {
-	Create(data CreateDevice) (*Device, *systems.ErrorData)
-	Update(uuid string, data UpdateDevice) *systems.ErrorData
-	SetDeletedAtToNull(deviceGUID string) *systems.ErrorData
-	Delete(attribute string, value string) *systems.ErrorData
-	GetByUUID(uuid string) *Device
-	GetByUUIDAndUserGUID(uuid string, userGUID string) *Device
-	GetByUUIDUnscoped(uuid string) *Device
-}
-
+// DeviceRepository will handle all CRUD function for Device resource.
 type DeviceRepository struct {
 	DB *gorm.DB
 }

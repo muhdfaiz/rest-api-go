@@ -1,11 +1,5 @@
 package v1
 
-// DefaultShoppingListItemServiceInterface is a contract that defines the method needed
-// for Default Shopping List Item Service.
-type DefaultShoppingListItemServiceInterface interface {
-	GetAllDefaultShoppingListItems() []*DefaultShoppingListItem
-}
-
 type DefaultShoppingListItemService struct {
 	DefaultShoppingListItemRepository DefaultShoppingListItemRepositoryInterface
 }

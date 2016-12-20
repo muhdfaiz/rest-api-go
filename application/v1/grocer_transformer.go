@@ -15,10 +15,6 @@ type GrocerResponse struct {
 	Data           interface{} `json:"data"`
 }
 
-type GrocerTransformerInterface interface {
-	transformCollection(currentURI *http.Request, data interface{}, totalData int, limit string) *GrocerResponse
-}
-
 type GrocerTransformer struct{}
 
 func (gt *GrocerTransformer) transformCollection(request *http.Request, data interface{}, totalData int, limit string) *GrocerResponse {

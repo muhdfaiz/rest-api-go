@@ -1,12 +1,5 @@
 package v1
 
-// TransactionStatusServiceInterface is a contract that defines the method needed
-// for Transaction Status Service.
-type TransactionStatusServiceInterface interface {
-	GetTransactionStatusByGUID(transactionStatusGUID string) *TransactionStatus
-	GetTransactionStatusBySlug(transactionStatusSlug string) *TransactionStatus
-}
-
 type TransactionStatusService struct {
 	TransactionStatusRepository TransactionStatusRepositoryInterface
 }

@@ -5,18 +5,6 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-// ShoppingListItemImageRepositoryInterface is a contract that defines the methods needed for Shopping List Item Image Repository.
-type ShoppingListItemImageRepositoryInterface interface {
-	Create(userGUID string, shoppingListGUID string, shoppingListItemGUID string,
-		images []map[string]string) ([]*ShoppingListItemImage, *systems.ErrorData)
-	Delete(attribute string, value string) *systems.ErrorData
-	GetByUserGUIDAndShoppingListGUIDAndItemGUIDAndImageGUID(userGUID string, shoppingListGUID string,
-		shoppingListItemGUID string, shoppingListItemImageGUID string, relations string) *ShoppingListItemImage
-	GetByItemGUID(shoppingListItemGUID string, relations string) []*ShoppingListItemImage
-	GetByShoppingListGUID(shoppingListGUID string, relations string) []*ShoppingListItemImage
-	GetByUserGUID(useerGUID string, relations string) []*ShoppingListItemImage
-}
-
 // ShoppingListItemImageRepository will handle all CRUD task for shopping list item image resource.
 type ShoppingListItemImageRepository struct {
 	DB *gorm.DB

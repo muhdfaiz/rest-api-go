@@ -11,40 +11,10 @@ import (
 	"bitbucket.org/cliqers/shoppermate-api/systems"
 )
 
-// DealServiceInterface is contract the defines the method needed for Deal Service.
-type DealServiceInterface interface {
-	GetDealsBasedOnUserShoppingListItem(userGUID, shoppingListGUID string, shopppingListItems *ShoppingListItem, latitude,
-		longitude string, dealsCollection []*Deal) []*Deal
-	GetDealsBasedOnSampleShoppingListItem(defaultShoppingListItem *DefaultShoppingListItem, latitude,
-		longitude string, dealsCollection []*Deal) []*Deal
-	FilteredDealMustBeUniqueForEachOfShoppingListItem(deals []*Deal, dealsCollection []*Deal, userGUID string) []*Deal
-	FilteredDealMustBeWithinStartAndEndTime(deals []*Deal, currentDateInGMT8, currentTimeInGMT8 string) []*Deal
-	FilteredDealByPositiveTag(deals []*Deal, shoppingListItemName string) []*Deal
-	FilteredDealsNotAddedTolist(deals []*Deal, userGUID, shoppingListGUID string) []*Deal
-	RemoveDealCashbackAndSetItemDealExpired(userGUID, shoppingListGUID, dealGUID string) *systems.ErrorData
-	ViewDealDetails(dealGUID, relations string) *Ads
-	GetAvailableDealsForGuestUser(latitude, longitude, pageNumber, pageLimit, relations string) ([]*Deal, int)
-	GetAvailableDealsForRegisteredUser(userGUID, name, latitude, longitude, pageNumber, pageLimit,
-		relations string) ([]*Deal, int)
-	GetAvailableDealsGroupByCategoryForRegisteredUser(userGUID, latitude, longitude, dealLimitPerCategory,
-		relations string) []*ItemCategory
-	GetAvailableDealsByCategoryGroupBySubCategoryForRegisteredUser(userGUID, categoryGUID, latitude, longitude,
-		dealLimitPerSubcategory, relations string) []*ItemSubCategory
-	GetAvailableDealsByCategoryForRegisteredUser(userGUID, category, latitude, longitude, pageNumber, pageLimit,
-		relations string) ([]*Deal, int)
-	GetAvailableDealsForSubCategoryForRegisteredUser(userGUID, category, latitude, longitude, pageNumber, pageLimit,
-		relations string) ([]*Deal, int)
-	GetAvailableDealsForGrocerByCategory(request *http.Request, userGUID, grocerGUID, categoryGUID, latitude, longitude,
-		pageNumber, pageLimit, relations string) (*DealResponse, *systems.ErrorData)
-	SetAddTolistInfoAndItemsAndGrocerExclusiveForDeal(deal *Deal, userGUID string) *Deal
-	SetAddTolistInfoAndItemsAndGrocerExclusiveForDeals(deals []*Deal, userGUID string) []*Deal
-}
-
 type DealService struct {
 	DealRepository             DealRepositoryInterface
 	DealTransformer            DealTransformerInterface
 	LocationService            location.LocationServiceInterface
-	DealCashbackFactory        DealCashbackFactoryInterface
 	DealCashbackRepository     DealCashbackRepositoryInterface
 	ShoppingListItemRepository ShoppingListItemRepositoryInterface
 	ItemRepository             ItemRepositoryInterface
@@ -312,7 +282,7 @@ func (ds *DealService) RemoveDealCashbackAndSetItemDealExpired(userGUID, shoppin
 	deal := ds.DealRepository.GetDealByGUIDAndValidStartEndDate(dealGUID, currentDateInGMT8)
 
 	if deal.GUID == "" {
-		error := ds.DealCashbackFactory.DeleteByUserGUIDShoppingListGUIDAndDealGUID(userGUID, shoppingListGUID, dealGUID)
+		error := ds.DealCashbackRepository.DeleteByUserGUIDAndShoppingListGUIDAndDealGUID(userGUID, shoppingListGUID, dealGUID)
 
 		if error != nil {
 			return error

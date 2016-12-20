@@ -2,14 +2,12 @@ package v1
 
 import "github.com/jinzhu/gorm"
 
-type EventRepositoryInterface interface {
-	GetAllIncludingRelations(todayDateInGMT8 string) []*Event
-}
 
 type EventRepository struct {
 	DB *gorm.DB
 }
 
+// GetAllIncludingRelations function used to retrieve all event including other relations.
 func (er *EventRepository) GetAllIncludingRelations(todayDateInGMT8 string) []*Event {
 	events := []*Event{}
 

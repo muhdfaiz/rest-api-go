@@ -1,15 +1,40 @@
 package v1
 
-import "github.com/jinzhu/gorm"
+import (
+	"bitbucket.org/cliqers/shoppermate-api/systems"
+	"github.com/jinzhu/gorm"
+)
 
-type DealCashbackTransactionRepositoryInterface interface {
-	CountByUserGUID(userGUID string) *int
-}
-
+// DealCashbackTransactionRepository will handle all CRUD function for Deal Cashback Transaction resource.
 type DealCashbackTransactionRepository struct {
 	DB *gorm.DB
 }
 
+// Create function used to create new deal cashback transaction and store in database.
+func (dctr *DealCashbackTransactionRepository) Create(userGUID string, transactionGUID, receiptURL string) (*DealCashbackTransaction, *systems.ErrorData) {
+	createdDealCashbackTransaction := &DealCashbackTransaction{}
+
+	dealCashbackTransaction := &DealCashbackTransaction{
+		GUID:            Helper.GenerateUUID(),
+		UserGUID:        userGUID,
+		TransactionGUID: transactionGUID,
+		ReceiptURL:      receiptURL,
+		RemarkTitle:     nil,
+		RemarkBody:      nil,
+	}
+
+	result := dctr.DB.Create(dealCashbackTransaction)
+
+	if result.Error != nil || result.RowsAffected == 0 {
+		return nil, Error.InternalServerError(result.Error, systems.DatabaseError)
+	}
+
+	createdDealCashbackTransaction = result.Value.(*DealCashbackTransaction)
+
+	return createdDealCashbackTransaction, nil
+}
+
+// CountByUserGUID function used to count total number of deal cashback transaction made by user via user GUID.
 func (dctr *DealCashbackTransactionRepository) CountByUserGUID(userGUID string) *int {
 	var totalDealCashback *int
 

@@ -7,10 +7,6 @@ type ItemCategoryResponse struct {
 	Data interface{} `json:"data"`
 }
 
-type ItemCategoryTransformerInterface interface {
-	TransformCollection(data interface{}, totalData int) *ItemCategoryResponse
-}
-
 type ItemCategoryTransformer struct{}
 
 func (ict *ItemCategoryTransformer) TransformCollection(data interface{}, totalData int) *ItemCategoryResponse {

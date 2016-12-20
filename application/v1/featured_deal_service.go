@@ -2,13 +2,10 @@ package v1
 
 import "time"
 
-type EventServiceInterface interface {
-	GetAllIncludingDeals(userGUID string) []*Event
-}
-
 type EventService struct {
 	EventRepository        EventRepositoryInterface
 	DealCashbackRepository DealCashbackRepositoryInterface
+	DealService            DealServiceInterface
 }
 
 func (es *EventService) GetAllIncludingDeals(userGUID string) []*Event {
@@ -32,25 +29,9 @@ func (es *EventService) GetAllIncludingDeals(userGUID string) []*Event {
 			}
 		}
 
-		filteredDealsUserLimit := []*Deal{}
+		deal := es.DealService.SetAddTolistInfoAndItemsAndGrocerExclusiveForDeals(filteredDealsQuota, userGUID)
 
-		for _, deal := range filteredDealsQuota {
-			totalNumberOfUserCashback := es.DealCashbackRepository.CountByDealGUIDAndUserGUID(deal.GUID, userGUID)
-
-			if totalNumberOfUserCashback < deal.Perlimit {
-				deal.CanAddTolist = 1
-
-				if totalNumberOfUserCashback >= deal.Perlimit {
-					deal.CanAddTolist = 0
-				}
-
-				deal.NumberOfDealAddedToList = totalNumberOfUserCashback
-				deal.RemainingAddToList = deal.Perlimit - totalNumberOfUserCashback
-				filteredDealsUserLimit = append(filteredDealsUserLimit, deal)
-			}
-		}
-
-		event.Deals = filteredDealsUserLimit
+		event.Deals = deal
 
 	}
 

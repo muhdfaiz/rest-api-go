@@ -2,20 +2,6 @@ package v1
 
 import "bitbucket.org/cliqers/shoppermate-api/systems"
 
-// ShoppingListServiceInterface is a contract that defines the methods needed for Shopping List Service
-type ShoppingListServiceInterface interface {
-	CreateUserShoppingList(userGUID string, createData CreateShoppingList) (*ShoppingList, *systems.ErrorData)
-	UpdateUserShoppingList(userGUID string, shoppingListGUID string, updateData UpdateShoppingList) (*ShoppingList, *systems.ErrorData)
-	DeleteUserShoppingListIncludingItemsAndImages(userGUID string, shoppingListGUID string) *systems.ErrorData
-	GetUserShoppingLists(userGUID string, relations string) ([]*ShoppingList, *systems.ErrorData)
-	ViewShoppingListByGUID(shoppingListGUID string, relations string) *ShoppingList
-	CheckUserShoppingListDuplicate(userGUID string, shoppingListName string, occasionGUID string) *systems.ErrorData
-	CheckUserShoppingListExistOrNot(userGUID string, shoppingListGUID string) (*ShoppingList, *systems.ErrorData)
-	GetShoppingListIncludingDealCashbacks(shoppingListGUID string, dealCashbackTransactionGUID string) *ShoppingList
-	CreateSampleShoppingListsAndItemsForUser(userGUID string) *systems.ErrorData
-	createSampleShoppingListItems(userGUID string, shoppingListGUID string) *systems.ErrorData
-}
-
 type ShoppingListService struct {
 	ShoppingListRepository         ShoppingListRepositoryInterface
 	OccasionService                OccasionServiceInterface

@@ -3,21 +3,39 @@ package v1
 import (
 	"time"
 
+	"bitbucket.org/cliqers/shoppermate-api/systems"
+
 	"github.com/jinzhu/gorm"
 )
 
-type SmsHistoryRepositoryInterface interface {
-	Count(conditionAttribute string, conditionValue string) int64
-	GetByRecipientNo(recipientNo string) *SmsHistory
-	CalculateIntervalBetweenCurrentTimeAndLastSmsSentTime(smsSentTime time.Time) int
-	VerifyVerificationCode(phoneNo string, verificationCode string) *SmsHistory
-}
-
+// SmsHistoryRepository will handle all CRUD function for Sms History resources.
 type SmsHistoryRepository struct {
 	DB *gorm.DB
 }
 
-func (shr *SmsHistoryRepository) Count(conditionAttribute string, conditionValue string) int64 {
+// Create function used to create new sms history and store in database.
+func (shr *SmsHistoryRepository) Create(data map[string]string) (interface{}, *systems.ErrorData) {
+	smsHistory := &SmsHistory{
+		GUID:             data["guid"],
+		UserGUID:         data["user_guid"],
+		Provider:         data["provider"],
+		Text:             data["text"],
+		SmsID:            data["sms_id"],
+		RecipientNo:      data["recipient_no"],
+		VerificationCode: data["verification_code"],
+		Status:           data["status"],
+	}
+
+	result := shr.DB.Create(smsHistory)
+
+	if result.Error != nil || result.RowsAffected == 0 {
+		return nil, Error.InternalServerError(result.Error, systems.DatabaseError)
+	}
+
+	return result.Value, nil
+}
+
+func (shr *SmsHistoryRepository) CountAll(conditionAttribute string, conditionValue string) int64 {
 	var count int64
 	shr.DB.Model(&SmsHistory{}).Where(conditionAttribute+" = ?", conditionValue).Count(&count)
 	return count

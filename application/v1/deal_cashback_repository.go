@@ -1,24 +1,65 @@
 package v1
 
-import "github.com/jinzhu/gorm"
+import (
+	"bitbucket.org/cliqers/shoppermate-api/systems"
+	"github.com/jinzhu/gorm"
+)
 
-// DealCashbackRepositoryInterface is a contract that defines the method needed for deal cashback repository.
-type DealCashbackRepositoryInterface interface {
-	GetByGUID(GUID string) *DealCashback
-	GetByDealGUIDAndUserGUID(dealGUID, userGUID string) *DealCashback
-	GetByDealCashbackTransactionGUIDAndGroupByShoppingListGUID(dealCashbackTransactionGUID *string) []*DealCashback
-	GetByDealCashbackTransactionGUIDAndShoppingListGUID(dealCashbackTransactionGUID *string,
-		shoppingListGUID, relations string) []*DealCashback
-	GetByUserGUIDAndShoppingListGUIDAndDealGUID(userGUID, shoppingListGUID, dealGUID string) *DealCashback
-	CountByDealGUIDAndUserGUID(dealGUID, userGUID string) int
-	CountByDealGUID(dealGUID string) int
-	CalculateTotalCashbackAmountFromDealCashbackAddedTolist(userGUID string) float64
-	GetByUserGUIDShoppingListGUIDAndTransactionStatus(userGUID, shoppingListGUID, transactionStatus, pageNumber,
-		pageLimit, relations string) ([]*DealCashback, int)
-}
-
+// DealCashbackRepository will handle all CRUD function for Deal Cashback resource.
 type DealCashbackRepository struct {
 	DB *gorm.DB
+}
+
+// Create function used to create user deal cashback and store in database.
+func (dcr *DealCashbackRepository) Create(userGUID string, data CreateDealCashback) (*DealCashback, *systems.ErrorData) {
+	dealCashback := &DealCashback{
+		GUID:             Helper.GenerateUUID(),
+		UserGUID:         userGUID,
+		ShoppingListGUID: data.ShoppingListGUID,
+		DealGUID:         data.DealGUID,
+	}
+
+	result := dcr.DB.Create(dealCashback)
+
+	if result.Error != nil || result.RowsAffected == 0 {
+		return nil, Error.InternalServerError(result.Error, systems.DatabaseError)
+	}
+
+	return result.Value.(*DealCashback), nil
+}
+
+// UpdateDealCashbackTransactionGUID function used to update Deal Cashback Transaction GUID for multiple deal cashback by GUID.
+func (dcr *DealCashbackRepository) UpdateDealCashbackTransactionGUID(dealCashbackGUIDs []string, dealCashbackTransactionGUID string) *systems.ErrorData {
+	result := dcr.DB.Model(&DealCashback{}).Where("guid IN (?)", dealCashbackGUIDs).
+		Updates(map[string]interface{}{"deal_cashback_transaction_guid": dealCashbackTransactionGUID})
+
+	if result.Error != nil {
+		return Error.InternalServerError(result.Error, systems.DatabaseError)
+	}
+
+	return nil
+}
+
+// DeleteByUserGUIDAndDealGUID function used to soft delete Deal Cashback by User GUID and Deal GUID.
+func (dcr *DealCashbackRepository) DeleteByUserGUIDAndDealGUID(userGUID string, dealGUID string) *systems.ErrorData {
+	result := dcr.DB.Model(&DealCashback{}).Where(&DealCashback{UserGUID: userGUID, DealGUID: dealGUID}).Delete(&DealCashback{})
+
+	if result.Error != nil {
+		return Error.InternalServerError(result.Error, systems.DatabaseError)
+	}
+
+	return nil
+}
+
+// DeleteByUserGUIDAndShoppingListGUIDAndDealGUID function used to soft delete deal cashback by user GUID, shopping list GUID and deal GUID.
+func (dcr *DealCashbackRepository) DeleteByUserGUIDAndShoppingListGUIDAndDealGUID(userGUID string, shoppingListGUID string, dealGUID string) *systems.ErrorData {
+	result := dcr.DB.Model(&DealCashback{}).Where(&DealCashback{UserGUID: userGUID, ShoppingListGUID: shoppingListGUID, DealGUID: dealGUID}).Delete(&DealCashback{})
+
+	if result.Error != nil {
+		return Error.InternalServerError(result.Error, systems.DatabaseError)
+	}
+
+	return nil
 }
 
 // GetByGUID function used to retrieve deal cashback by deal cashback GUID.
@@ -107,6 +148,8 @@ func (dcr *DealCashbackRepository) CalculateTotalCashbackAmountFromDealCashbackA
 	return dealCashback.TotalAmountOfCashback
 }
 
+// GetByUserGUIDShoppingListGUIDAndTransactionStatus function used to retrieve deal cashback by user GUID, shopping list GUID
+// and transaction status slug.
 func (dcr *DealCashbackRepository) GetByUserGUIDShoppingListGUIDAndTransactionStatus(userGUID, shoppingListGUID, transactionStatus,
 	pageNumber, pageLimit, relations string) ([]*DealCashback, int) {
 

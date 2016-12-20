@@ -12,10 +12,6 @@ type OccasionResponse struct {
 	Data       interface{} `json:"data"`
 }
 
-type OccasionTransformerInterface interface {
-	TransformCollection(data interface{}, totalData int) *OccasionResponse
-}
-
 type OccasionTransformer struct{}
 
 func (ot *OccasionTransformer) TransformCollection(data interface{}, totalData int) *OccasionResponse {

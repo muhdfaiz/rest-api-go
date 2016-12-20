@@ -2,13 +2,6 @@ package v1
 
 import "bitbucket.org/cliqers/shoppermate-api/systems"
 
-// OccasionServiceInterface is a contract that defines the methods needed for Occasion Service.
-type OccasionServiceInterface interface {
-	CheckOccassionExistOrNot(occasionGUID string) (*Occasion, *systems.ErrorData)
-	GetLatestOccasionAfterLastSyncDate(lastSyncDate string) *OccasionResponse
-	GetAllOccasions() *OccasionResponse
-}
-
 type OccasionService struct {
 	OccasionRepository  OccasionRepositoryInterface
 	OccasionTransformer OccasionTransformerInterface

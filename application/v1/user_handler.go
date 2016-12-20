@@ -16,7 +16,6 @@ import (
 type UserHandler struct {
 	UserRepository             UserRepositoryInterface
 	UserService                UserServiceInterface
-	UserFactory                UserFactoryInterface
 	ReferralCashbackRepository ReferralCashbackRepositoryInterface
 	SmsService                 SmsServiceInterface
 	FacebookService            facebook.FacebookServiceInterface
@@ -139,7 +138,7 @@ func (uh *UserHandler) Create(c *gin.Context) {
 	}
 
 	// Store new user in database
-	result, err := uh.UserFactory.Create(userData)
+	result, err := uh.UserRepository.Create(userData)
 
 	if err != nil {
 		errorCode, _ := strconv.Atoi(err.Error.Status)
@@ -231,7 +230,7 @@ func (uh *UserHandler) Update(c *gin.Context) {
 	}
 
 	// Update User
-	err := uh.UserFactory.Update(userGUID, structs.Map(&userData))
+	err := uh.UserRepository.Update(userGUID, structs.Map(&userData))
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err)

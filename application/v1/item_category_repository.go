@@ -6,15 +6,6 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-type ItemCategoryRepositoryInterface interface {
-	GetAll() ([]*ItemCategory, int)
-	GetAllCategoryNames() ([]string, int)
-	GetByID(ID int) *ItemCategory
-	GetByGUID(GUID string) *ItemCategory
-	GetGrocerCategoriesForThoseHaveDealsWithinRangeAndDateRangeAndUserLimitAndQuota(userGUID string, grocerID int,
-		currentDateInGMT8 string, latitude, longitude float64) []*ItemCategory
-}
-
 type ItemCategoryRepository struct {
 	DB *gorm.DB
 }

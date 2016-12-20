@@ -5,16 +5,6 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-// TransactionRepositoryInterface is a contract that define the methods needed for Transaction Repository
-type TransactionRepositoryInterface interface {
-	Create(createTransactionData *CreateTransaction) (*Transaction, *systems.ErrorData)
-	UpdateReadStatus(transactionGUID string, readStatus int) *systems.ErrorData
-	GetByGUID(GUID string, relations string) *Transaction
-	GetByUserGUID(userGUID string, relations string) []*Transaction
-	SumTotalAmountOfUserPendingTransactions(userGUID string) float64
-	SumTotalAmountOfUserCashoutTransaction(userGUID string) float64
-}
-
 // TransactionRepository contains all function that can be used for CRUD operations.
 type TransactionRepository struct {
 	DB                          *gorm.DB

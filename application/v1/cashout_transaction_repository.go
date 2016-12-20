@@ -5,15 +5,15 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-type CashoutTransactionRepositoryInterface interface {
-	Create(userGUID string, transactionGUID string, cashoutTransactionData *CreateCashoutTransaction) (*CashoutTransaction, *systems.ErrorData)
-}
-
+// CashoutTransactionRepository will handle all task related to Cashout Transaction CRUD.
 type CashoutTransactionRepository struct {
 	DB *gorm.DB
 }
 
-func (ctr *CashoutTransactionRepository) Create(userGUID string, transactionGUID string, cashoutTransactionData *CreateCashoutTransaction) (*CashoutTransaction, *systems.ErrorData) {
+// Create function used to new Cashout Transaction and store in database.
+func (ctr *CashoutTransactionRepository) Create(userGUID, transactionGUID string,
+	cashoutTransactionData *CreateCashoutTransaction) (*CashoutTransaction, *systems.ErrorData) {
+
 	cashoutTransaction := &CashoutTransaction{
 		GUID:                  Helper.GenerateUUID(),
 		UserGUID:              userGUID,

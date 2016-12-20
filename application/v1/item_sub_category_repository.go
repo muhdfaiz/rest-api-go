@@ -6,13 +6,6 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-type ItemSubCategoryRepositoryInterface interface {
-	GetByID(id int) *ItemSubCategory
-	GetByGUID(guid string) *ItemSubCategory
-	GetSubCategoriesForCategoryThoseHaveDealsWithinRangeAndDateRangeAndUserLimitAndQuota(userGUID, categoryGUID, currentDateInGMT8 string, latitude,
-		longitude float64) []*ItemSubCategory
-}
-
 type ItemSubCategoryRepository struct {
 	DB *gorm.DB
 }

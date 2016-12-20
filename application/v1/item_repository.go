@@ -2,14 +2,6 @@ package v1
 
 import "github.com/jinzhu/gorm"
 
-type ItemRepositoryInterface interface {
-	GetAll(pageNumber string, pageLimit string, relations string) ([]*Item, int)
-	GetLatestUpdate(lastSyncDate string, pageNumber string, pageLimit string, relations string) ([]*Item, int)
-	GetByID(id int, relations string) *Item
-	GetByName(name string, relations string) *Item
-	GetUniqueCategories(relations string) ([]string, int)
-}
-
 // ItemRepository will handle task related to retrieve and search shopping list items in database
 type ItemRepository struct {
 	DB *gorm.DB

@@ -2,19 +2,6 @@ package v1
 
 import "bitbucket.org/cliqers/shoppermate-api/systems"
 
-// DeviceServiceInterface is a contract that defines the method needed for Device Service.
-type DeviceServiceInterface interface {
-	CheckDuplicateDevice(deviceUUID string) *systems.ErrorData
-	CreateDevice(deviceData CreateDevice) (*Device, *systems.ErrorData)
-	UpdateDevice(deviceUUID string, deviceData UpdateDevice) (*Device, *systems.ErrorData)
-	UpdateByDeviceUUID(deviceUUID string, deviceData UpdateDevice) (*Device, *systems.ErrorData)
-	ReactivateDevice(deviceGUID string) *systems.ErrorData
-	DeleteDeviceByUUID(deviceUUID string) *systems.ErrorData
-	ViewDeviceByUUID(deviceUUID string) *Device
-	ViewDeviceByUUIDandUserGUID(deviceUUID string, userGUID string) *Device
-	ViewDeviceByUUIDIncludingSoftDelete(deviceUUID string) *Device
-}
-
 type DeviceService struct {
 	DeviceRepository DeviceRepositoryInterface
 	UserService      UserServiceInterface

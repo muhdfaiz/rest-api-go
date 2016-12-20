@@ -16,7 +16,6 @@ import (
 // SmsHandler Struct
 type SmsHandler struct {
 	UserRepository       UserRepositoryInterface
-	UserFactory          UserFactoryInterface
 	SmsService           SmsServiceInterface
 	SmsHistoryRepository SmsHistoryRepositoryInterface
 	DeviceService        DeviceServiceInterface
@@ -167,7 +166,7 @@ func (sh *SmsHandler) Verify(c *gin.Context) {
 	}
 
 	// Set user status to verified
-	err := sh.UserFactory.Update(smsHistory.UserGUID, map[string]interface{}{"verified": 1})
+	err := sh.UserRepository.Update(smsHistory.UserGUID, map[string]interface{}{"verified": 1})
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err)

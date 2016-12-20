@@ -13,10 +13,6 @@ type DealCashbackResponse struct {
 	Data           interface{} `json:"data"`
 }
 
-type DealCashbackTransformerInterface interface {
-	transformCollection(currentURI *http.Request, data interface{}, totalData int, limit string) *DealCashbackResponse
-}
-
 type DealCashbackTransformer struct{}
 
 func (dt *DealCashbackTransformer) transformCollection(request *http.Request, data interface{}, totalData int, limit string) *DealCashbackResponse {

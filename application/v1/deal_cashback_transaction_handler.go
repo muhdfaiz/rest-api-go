@@ -11,17 +11,13 @@ import (
 
 type DealCashbackTransactionHandler struct {
 	DealCashbackTransactionService DealCashbackTransactionServiceInterface
-	DealCashbackFactory            DealCashbackFactoryInterface
-	DealCashbackRepository         DealCashbackRepositoryInterface
 }
 
 func (dcth *DealCashbackTransactionHandler) Create(c *gin.Context) {
 	tokenData := c.MustGet("Token").(map[string]string)
 
-	// Retrieve user guid in url
 	userGUID := c.Param("guid")
 
-	// If user GUID not match user GUID inside the token return error message
 	if tokenData["user_guid"] != userGUID {
 		c.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("create deal cashback transaction"))
 		return
@@ -29,23 +25,19 @@ func (dcth *DealCashbackTransactionHandler) Create(c *gin.Context) {
 
 	createDealCashbackTransaction := &CreateDealCashbackTransaction{}
 
-	// Bind request based on content type and validate request data
 	if err := Binding.Bind(createDealCashbackTransaction, c); err != nil {
 		c.JSON(http.StatusUnprocessableEntity, err)
 		return
 	}
 
-	// Retrieve images in post body
 	receipt := c.Request.MultipartForm.File["receipt_image"]
 
-	// If shopping list item images not exist in post data return error message
 	if len(receipt) < 1 {
 		err := &systems.Error{}
 		c.JSON(http.StatusUnprocessableEntity, err.FileRequireErrors("receipt_image"))
 		return
 	}
 
-	// Retrieve shopping list item image guid in url
 	dealCashbackGUIDs := createDealCashbackTransaction.DealCashbackGuids
 
 	relations := "transactiontypes,transactionstatuses,dealcashbacktransactions,dealcashbacktransactions.dealcashbacks,dealcashbacktransactions.dealcashbacks.deals"

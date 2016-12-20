@@ -15,10 +15,6 @@ type ItemResponse struct {
 	Data           interface{} `json:"data"`
 }
 
-type ItemTransformerInterface interface {
-	transformCollection(currentURI *http.Request, data interface{}, totalData int, limit string) *ItemResponse
-}
-
 type ItemTransformer struct{}
 
 func (it *ItemTransformer) transformCollection(request *http.Request, data interface{}, totalData int, limit string) *ItemResponse {

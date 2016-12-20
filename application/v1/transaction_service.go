@@ -9,18 +9,6 @@ import (
 	"bitbucket.org/cliqers/shoppermate-api/systems"
 )
 
-// TransactionServiceInterface is a contract that defines the methods needed for Transaction Service
-type TransactionServiceInterface interface {
-	CreateTransaction(userGUID string, transactionTypeGUID string, amount float64) (*Transaction, *systems.ErrorData)
-	ViewTransactionDetails(transactionGUID string, relations string) *Transaction
-	ViewDealCashbackTransactionAndUpdateReadStatus(userGUID string, transactionGUID string) (*Transaction, *systems.ErrorData)
-	ViewCashoutTransactionAndUpdateReadStatus(userGUID string, transactionGUID string) (*Transaction, *systems.ErrorData)
-	GetUserTransactions(request *http.Request, userGUID string, transactionStatus string,
-		isRead string, pageNumber string, pageLimit string) *TransactionResponse
-	SumTotalAmountOfUserPendingTransaction(userGUID string) float64
-	SumTotalAmountOfUserCashoutTransaction(userGUID string) float64
-}
-
 // TransactionService used to encapsulates semantic gap domain layer (Transaction Handler) and persistence layer (Transaction Repository)
 type TransactionService struct {
 	TransactionRepository    TransactionRepositoryInterface

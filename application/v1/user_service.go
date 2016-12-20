@@ -13,20 +13,11 @@ import (
 	"bitbucket.org/cliqers/shoppermate-api/systems"
 )
 
-type UserServiceInterface interface {
-	CheckUserExistOrNot(userGUID string) *systems.ErrorData
-	CheckUserPhoneNumberValidOrNot(phoneNo string) (*User, *systems.ErrorData)
-	CheckUserFacebookIDValidOrNot(facebookID string) (*User, *systems.ErrorData)
-	UploadProfileImage(file multipart.File) (map[string]string, *systems.ErrorData)
-	GiveReferralCashback(referrerGUID string, referentGUID string) (interface{}, *systems.ErrorData)
-	GenerateReferralCode(name string) string
-	DeleteImage(ImageURL string) *systems.ErrorData
-}
-
 type UserService struct {
-	DB                 *gorm.DB
-	AmazonS3FileSystem *filesystem.AmazonS3Upload
-	UserRepository     UserRepositoryInterface
+	DB                         *gorm.DB
+	AmazonS3FileSystem         *filesystem.AmazonS3Upload
+	UserRepository             UserRepositoryInterface
+	ReferralCashbackRepository ReferralCashbackRepositoryInterface
 }
 
 // CheckUserExistOrNot function used to check user exist or not in database by checking the user GUID.
@@ -90,8 +81,7 @@ func (us *UserService) UploadProfileImage(file multipart.File) (map[string]strin
 
 // GiveReferralCashback function used to give cashback to user that refer by another user during registration
 func (us *UserService) GiveReferralCashback(referrerGUID string, referentGUID string) (interface{}, *systems.ErrorData) {
-	ReferralCashbackFactory := &ReferralCashbackFactory{DB: us.DB}
-	referralCashbackCreated, error := ReferralCashbackFactory.CreateReferralCashbackFactory(referrerGUID, referentGUID)
+	referralCashbackCreated, error := us.ReferralCashbackRepository.Create(referrerGUID, referentGUID)
 
 	if error != nil {
 		return nil, error

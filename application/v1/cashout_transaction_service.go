@@ -2,18 +2,14 @@ package v1
 
 import "bitbucket.org/cliqers/shoppermate-api/systems"
 
-type CashoutTransactionServiceInterface interface {
-	CreateCashoutTransaction(userGUID string, cashoutTransactionData *CreateCashoutTransaction) (*Transaction, *systems.ErrorData)
-}
-
 type CashoutTransactionService struct {
 	CashoutTransactionRepository CashoutTransactionRepositoryInterface
 	TransactionService           TransactionServiceInterface
 	UserRepository               UserRepositoryInterface
 	TransactionTypeRepository    TransactionTypeRepositoryInterface
-	UserFactory                  UserFactoryInterface
 }
 
+// CreateCashoutTransaction function used to create cashout transaction through CashoutTransactionRepository.
 func (cts *CashoutTransactionService) CreateCashoutTransaction(userGUID string, cashoutTransactionData *CreateCashoutTransaction) (*Transaction, *systems.ErrorData) {
 	user := cts.UserRepository.GetByGUID(userGUID, "")
 	availableCashoutAmount := user.Wallet
@@ -36,7 +32,7 @@ func (cts *CashoutTransactionService) CreateCashoutTransaction(userGUID string, 
 		return nil, error
 	}
 
-	error = cts.UserFactory.UpdateUserWallet(userGUID, availableCashoutAmount-cashoutTransactionData.Amount)
+	error = cts.UserRepository.UpdateUserWallet(userGUID, availableCashoutAmount-cashoutTransactionData.Amount)
 
 	if error != nil {
 		return nil, error

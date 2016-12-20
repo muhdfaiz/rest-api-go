@@ -8,14 +8,6 @@ import (
 	"bitbucket.org/cliqers/shoppermate-api/systems"
 )
 
-// GrocerServiceInterface is a contract that defines the method needed for Grocer Service.
-type GrocerServiceInterface interface {
-	CheckGrocerExistOrNotByGUID(grocerGUID string) (*Grocer, *systems.ErrorData)
-	GetGrocerByID(grocerID int, relations string) *Grocer
-	GetAllGrocers(pageNumber, pageLimit, relations string) ([]*Grocer, int)
-	GetAllGrocersIncludingDeals(userGUID, latitude, longitude string) []*Grocer
-}
-
 type GrocerService struct {
 	GrocerRepository GrocerRepositoryInterface
 	DealRepository   DealRepositoryInterface

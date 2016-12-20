@@ -2,13 +2,6 @@ package v1
 
 import "github.com/jinzhu/gorm"
 
-// TransactionStatusRepositoryInterface is a contract that defines the method needed
-// for Transaction Status Repository.
-type TransactionStatusRepositoryInterface interface {
-	GetBySlug(slug string) *TransactionStatus
-	GetByGUID(transactionStatusGUID string) *TransactionStatus
-}
-
 type TransactionStatusRepository struct {
 	DB *gorm.DB
 }

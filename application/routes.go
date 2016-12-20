@@ -28,10 +28,13 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 	amazonS3FileSystem.Region = region
 	amazonS3FileSystem.BucketName = bucketName
 
+	// Referral Cashback Objects
+	referralCashbackRepository := &v1.ReferralCashbackRepository{DB: DB}
+
 	// User Objects
 	userRepository := &v1.UserRepository{DB: DB}
-	userFactory := &v1.UserFactory{DB: DB}
-	userService := &v1.UserService{DB: DB, AmazonS3FileSystem: amazonS3FileSystem, UserRepository: userRepository}
+	userService := &v1.UserService{DB: DB, AmazonS3FileSystem: amazonS3FileSystem, UserRepository: userRepository,
+		ReferralCashbackRepository: referralCashbackRepository}
 
 	// Device Objects
 	deviceRepository := &v1.DeviceRepository{DB: DB}
@@ -43,9 +46,6 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 
 	// Auth Service
 	authService := &v1.AuthService{UserService: userService, SmsService: smsService, DeviceService: deviceService}
-
-	// Referral Cashback Objects
-	referralCashbackRepository := &v1.ReferralCashbackRepository{DB: DB}
 
 	// Facebook Service
 	facebookService := &facebook.FacebookService{
@@ -82,8 +82,6 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 	itemSubCategoryRepository := &v1.ItemSubCategoryRepository{DB: DB}
 	itemSubCategoryService := &v1.ItemSubCategoryService{ItemSubCategoryRepository: itemSubCategoryRepository, DealRepository: dealRepository}
 
-	dealCashbackFactory := &v1.DealCashbackFactory{DB: DB}
-
 	// Grocer Objects
 	grocerRepository := &v1.GrocerRepository{DB: DB}
 	grocerService := &v1.GrocerService{GrocerRepository: grocerRepository, DealRepository: dealRepository}
@@ -98,7 +96,7 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 	dealTransformer := &v1.DealTransformer{}
 
 	// Deal Service
-	dealService := &v1.DealService{DealRepository: dealRepository, DealTransformer: dealTransformer, LocationService: locationService, DealCashbackFactory: dealCashbackFactory,
+	dealService := &v1.DealService{DealRepository: dealRepository, DealTransformer: dealTransformer, LocationService: locationService,
 		DealCashbackRepository: dealCashbackRepository, ItemRepository: itemRepository, ItemCategoryRepository: itemCategoryRepository,
 		ItemSubCategoryRepository: itemSubCategoryRepository, GrocerService: grocerService, ShoppingListItemRepository: shoppingListItemRepository}
 
@@ -133,8 +131,7 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 
 	// Deal Cashback Service
 	dealCashbackService := &v1.DealCashbackService{DealCashbackRepository: dealCashbackRepository,
-		DealCashbackFactory: dealCashbackFactory, ShoppingListItemService: shoppingListItemService,
-		DealRepository: dealRepository}
+		ShoppingListItemService: shoppingListItemService, DealRepository: dealRepository}
 
 	// Transaction Status
 	transactionStatusRepository := &v1.TransactionStatusRepository{DB: DB}
@@ -152,12 +149,10 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 		TransactionTypeService: transactionTypeService, TransactionStatusService: transactionStatusService}
 
 	//Deal Cashback Transaction
-	//dealCashbackTransactionRepository := &v1.DealCashbackTransactionRepository{DB: DB}
-	dealCashbackTransactionFactory := &v1.DealCashbackTransactionFactory{DB: DB}
+	dealCashbackTransactionRepository := &v1.DealCashbackTransactionRepository{DB: DB}
 	dealCashbackTransactionService := &v1.DealCashbackTransactionService{AmazonS3FileSystem: amazonS3FileSystem,
-		DealCashbackFactory: dealCashbackFactory, DealCashbackRepository: dealCashbackRepository,
-		DealCashbackTransactionFactory: dealCashbackTransactionFactory, DealRepository: dealRepository,
-		TransactionTypeRepository: transactionTypeRepository, TransactionRepository: transactionRepository}
+		DealCashbackRepository: dealCashbackRepository, DealCashbackTransactionRepository: dealCashbackTransactionRepository,
+		DealRepository: dealRepository, TransactionTypeRepository: transactionTypeRepository, TransactionRepository: transactionRepository}
 
 	// Generic Objects
 	genericRepository := &v1.GenericRepository{DB: DB}
@@ -166,20 +161,19 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 
 	// Event Objects
 	eventRepository := &v1.EventRepository{DB: DB}
-	eventService := &v1.EventService{EventRepository: eventRepository, DealCashbackRepository: dealCashbackRepository}
+	eventService := &v1.EventService{EventRepository: eventRepository, DealCashbackRepository: dealCashbackRepository, DealService: dealService}
 
 	//Cashout Transaction Object
 	cashoutTransactionRepository := &v1.CashoutTransactionRepository{DB: DB}
 	cashoutTransactionService := &v1.CashoutTransactionService{CashoutTransactionRepository: cashoutTransactionRepository,
-		TransactionService: transactionService, UserRepository: userRepository, TransactionTypeRepository: transactionTypeRepository,
-		UserFactory: userFactory}
+		TransactionService: transactionService, UserRepository: userRepository, TransactionTypeRepository: transactionTypeRepository}
 
 	// Sms Handler
-	smsHandler := v1.SmsHandler{UserRepository: userRepository, UserFactory: userFactory, SmsService: smsService,
+	smsHandler := v1.SmsHandler{UserRepository: userRepository, SmsService: smsService,
 		SmsHistoryRepository: smsHistoryRepository, DeviceService: deviceService}
 
 	// User Handler
-	userHandler := v1.UserHandler{UserRepository: userRepository, UserService: userService, UserFactory: userFactory,
+	userHandler := v1.UserHandler{UserRepository: userRepository, UserService: userService,
 		DeviceService: deviceService, ReferralCashbackRepository: referralCashbackRepository, SmsService: smsService,
 		FacebookService: facebookService, TransactionService: transactionService, DealCashbackService: dealCashbackService}
 
@@ -220,8 +214,7 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 	eventHandler := v1.EventHandler{EventService: eventService}
 
 	// Deal Cashback Transaction Handler
-	dealCashbackTransactionHandler := v1.DealCashbackTransactionHandler{DealCashbackTransactionService: dealCashbackTransactionService,
-		DealCashbackFactory: dealCashbackFactory, DealCashbackRepository: dealCashbackRepository}
+	dealCashbackTransactionHandler := v1.DealCashbackTransactionHandler{DealCashbackTransactionService: dealCashbackTransactionService}
 
 	transactionHandler := v1.TransactionHandler{TransactionService: transactionService}
 

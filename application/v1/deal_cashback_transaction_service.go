@@ -10,22 +10,17 @@ import (
 	"bitbucket.org/cliqers/shoppermate-api/systems"
 )
 
-type DealCashbackTransactionServiceInterface interface {
-	CreateTransaction(receipt *multipart.FileHeader, userGUID string, dealCashbackGUIDs string,
-		relations string) (*Transaction, *systems.ErrorData)
-	UploadReceipt(images *multipart.FileHeader) (map[string]string, *systems.ErrorData)
-}
-
 type DealCashbackTransactionService struct {
-	AmazonS3FileSystem             *filesystem.AmazonS3Upload
-	DealCashbackFactory            DealCashbackFactoryInterface
-	DealCashbackRepository         DealCashbackRepositoryInterface
-	DealCashbackTransactionFactory DealCashbackTransactionFactoryInterface
-	TransactionTypeRepository      TransactionTypeRepositoryInterface
-	DealRepository                 DealRepositoryInterface
-	TransactionRepository          TransactionRepositoryInterface
+	AmazonS3FileSystem                *filesystem.AmazonS3Upload
+	DealCashbackRepository            DealCashbackRepositoryInterface
+	DealCashbackTransactionRepository DealCashbackTransactionRepositoryInterface
+	TransactionTypeRepository         TransactionTypeRepositoryInterface
+	DealRepository                    DealRepositoryInterface
+	TransactionRepository             TransactionRepositoryInterface
 }
 
+// CreateTransaction function used to upload receipt image to Amazon S3 and create new transaction
+// through DealCashbackTransactionRepository.
 func (dcts *DealCashbackTransactionService) CreateTransaction(receipt *multipart.FileHeader, userGUID string,
 	dealCashbackGUIDs string, relations string) (*Transaction, *systems.ErrorData) {
 
@@ -67,15 +62,14 @@ func (dcts *DealCashbackTransactionService) CreateTransaction(receipt *multipart
 		return nil, err
 	}
 
-	result, err := dcts.DealCashbackTransactionFactory.Create(userGUID, transaction.GUID, uploadedReceipt["path"])
+	result, err := dcts.DealCashbackTransactionRepository.Create(userGUID, transaction.GUID, uploadedReceipt["path"])
 
 	if err != nil {
 		return nil, err
 	}
 
-	err = dcts.DealCashbackFactory.SetDealCashbackTransactionGUID(splitDealCashbackGUID, result.GUID)
+	err = dcts.DealCashbackRepository.UpdateDealCashbackTransactionGUID(splitDealCashbackGUID, result.GUID)
 
-	//Return error message if failed to store uploaded shopping list item image into database
 	if err != nil {
 		return nil, err
 	}
@@ -85,6 +79,9 @@ func (dcts *DealCashbackTransactionService) CreateTransaction(receipt *multipart
 	return transaction, nil
 }
 
+// UploadReceipt function used to upload receipt image to Amazon S3.
+// Allowed file types are jpg, jpeg, png and gif.
+// Maximum file size allow is 5MB.
 func (dcts *DealCashbackTransactionService) UploadReceipt(receiptImage *multipart.FileHeader) (map[string]string, *systems.ErrorData) {
 	image, err := receiptImage.Open()
 
@@ -92,13 +89,11 @@ func (dcts *DealCashbackTransactionService) UploadReceipt(receiptImage *multipar
 		return nil, Error.InternalServerError(err.Error(), systems.CannotReadFile)
 	}
 
-	// Validate file type is image
 	err1 := FileValidation.ValidateFileType([]string{"jpg", "jpeg", "png", "gif"}, image)
 	if err1 != nil {
 		return nil, err1
 	}
 
-	// Validate file size
 	_, err1 = FileValidation.ValidateFileSize(image, 5000000, "receipt_image")
 	if err1 != nil {
 		return nil, err1

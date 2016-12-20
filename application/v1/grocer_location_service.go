@@ -5,10 +5,6 @@ import (
 	"strings"
 )
 
-type GrocerLocationServiceInterface interface {
-	GetGrocersFromConvertionLocation(convertionLocation string) []*GrocerLocation
-}
-
 type GrocerLocationService struct {
 	GrocerLocationRepository GrocerLocationRepositoryInterface
 }

@@ -1,12 +1,5 @@
 package v1
 
-// TransactionTypeServiceInterface is a contract that defines the method needed
-// for Transaction Type Service.
-type TransactionTypeServiceInterface interface {
-	GetTransactionTypeByGUID(transactionTypeGUID string) *TransactionType
-	GetTransactionTypeBySlug(transactionTypeSlug string) *TransactionType
-}
-
 type TransactionTypeService struct {
 	TransactionTypeRepository TransactionTypeRepositoryInterface
 }

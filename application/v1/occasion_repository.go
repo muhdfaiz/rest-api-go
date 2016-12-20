@@ -6,12 +6,6 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-type OccasionRepositoryInterface interface {
-	GetAll() ([]*Occasion, int)
-	GetLatestUpdate(lastSyncDate string) ([]*Occasion, int)
-	GetByGUID(guid string) *Occasion
-}
-
 // OccasionRepository will handle task related to retrieve and search shopping list occasion in database
 type OccasionRepository struct {
 	DB *gorm.DB

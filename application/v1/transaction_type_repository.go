@@ -2,13 +2,6 @@ package v1
 
 import "github.com/jinzhu/gorm"
 
-// TransactionTypeRepositoryInterface ia a contradt that defines the method needed
-// for Transaction Type Repository.
-type TransactionTypeRepositoryInterface interface {
-	GetBySlug(transactionTypeSlug string) *TransactionType
-	GetByGUID(transactionTypeGUID string) *TransactionType
-}
-
 // TransactionTypeRepository will handle all CRUD function for Transaction Type.
 type TransactionTypeRepository struct {
 	DB *gorm.DB

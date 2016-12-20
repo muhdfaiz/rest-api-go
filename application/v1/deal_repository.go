@@ -6,31 +6,6 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-type DealRepositoryInterface interface {
-	SumCashbackAmount(dealGUIDs []string) float64
-	GetDealsByCategoryAndValidStartEndDate(todayDateInGMT8 string, shoppingListItem *ShoppingListItem) []*Deal
-	GetDealsByValidStartEndDate(todayDateInGMT8 string) []*Deal
-	GetDealByGUID(dealGUID string) *Deal
-	GetDealByIDWithRelations(dealID int, relations string) *Ads
-	GetDealsWithinRangeAndDateRangeAndQuota(latitude, longitude float64, currentDateInGMT8,
-		pageNumber, pageLimit, relations string) ([]*Deal, int)
-	GetDealsWithinRangeAndDateRangeAndUserLimitAndQuotaAndName(userGUID, name string, latitude, longitude float64,
-		currentDateInGMT8, pageNumber, pageLimit, relations string) ([]*Deal, int)
-	GetDealsForCategoryWithinDateRangeAndQuota(category, currentDateInGMT8,
-		pageNumber, pageLimit, relations string) ([]*Deal, int)
-	GetDealsForCategoryWithinRangeAndDateRangeAndQuota(category string, latitude, longitude float64,
-		currentDateInGMT8, pageNumber, pageLimit, relations string) ([]*Deal, int)
-	GetDealsForCategoryWithinRangeAndDateRangeAndUserLimitAndQuota(userGUID, category string, latitude, longitude float64,
-		currentDateInGMT8, pageNumber, pageLimit, relations string) ([]*Deal, int)
-	GetDealsForGrocerWithinRangeAndDateRangeAndUserLimitAndQuotaAndCategory(userGUID, categoryGUID string, grocerID int,
-		latitude, longitude float64, currentDateInGMT8, pageNumber, pageLimit, relations string) ([]*Deal, int)
-	CountDealsForGrocerWithinRangeAndDateRangeAndUserLimitAndQuota(userGUID string, grocerID int,
-		latitude, longitude float64, currentDateInGMT8 string) int
-	GetDealsForSubCategoryWithinRangeAndDateRangeAndUserLimitAndQuota(userGUID, subCategoryGUID string, latitude, longitude float64,
-		currentDateInGMT8, pageNumber, pageLimit, relations string) ([]*Deal, int)
-	GetDealByGUIDAndValidStartEndDate(dealGUID, todayDateInGMT8 string) *Deal
-}
-
 type DealRepository struct {
 	DB                    *gorm.DB
 	GrocerLocationService GrocerLocationServiceInterface

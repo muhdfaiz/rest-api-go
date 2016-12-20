@@ -6,37 +6,7 @@ import (
 	"github.com/serenize/snaker"
 )
 
-type ShoppingListItemRepositoryInterface interface {
-	Create(data CreateShoppingListItem) (*ShoppingListItem, *systems.ErrorData)
-	UpdateByUserGUIDShoppingListGUIDAndShoppingListItemGUID(userGUID string, shoppingListGUID string, shoppingListItemGUID string,
-		data map[string]interface{}) *systems.ErrorData
-	UpdateByUserGUIDAndShoppingListGUID(userGUID string, shoppingListGUID string, data map[string]interface{}) *systems.ErrorData
-	UpdateByUserGUIDAndDealGUID(userGUID string, dealGUID string, data map[string]interface{}) *systems.ErrorData
-	UpdateByUserGUIDShoppingListGUIDAndDealGUID(userGUID string, shoppingListGUID string, dealGUID string,
-		data map[string]interface{}) *systems.ErrorData
-	SetDealExpired(dealGUID string) *systems.ErrorData
-	DeleteByGUID(shoppingListItemGUID string) *systems.ErrorData
-	DeleteByShoppingListGUID(shoppingListGUID string) *systems.ErrorData
-	DeleteByUserGUIDAndShoppingListGUID(userGUID string, shoppingListGUID string) *systems.ErrorData
-	DeleteByGUIDAndUserGUIDAndShoppingListGUID(shoppingListItemGUID string,
-		userGUID string, shoppingListGUID string) *systems.ErrorData
-	DeleteItemsHasBeenAddedToCartByUserGUIDAndShoppingListGUID(userGUID string, shoppingListGUID string) *systems.ErrorData
-	DeleteItemsHasNotBeenAddedToCartByUserGUIDAndShoppingListGUID(userGUID string, shoppingListGUID string) *systems.ErrorData
-	GetByName(name string, relations string) *ShoppingListItem
-	GetByGUID(guid string, relations string) *ShoppingListItem
-	GetByGUIDUserGUIDAndShoppingListGUID(userGUID string, shoppingListGUID string,
-		shoppingListItemGUID string, relations string) *ShoppingListItem
-	GetByUserGUIDAndShoppingListGUID(userGUID string, shoppingListGUID string, relations string) []*ShoppingListItem
-	GetByUserGUIDAndShoppingListGUIDAndSubCategory(userGUID string, shoppingListGUID string,
-		subcategory string, relations string) []*ShoppingListItem
-	GetByUserGUIDAndShoppingListGUIDAndAddedToCartAndSubCategory(userGUID string, shoppingListGUID string,
-		addedToCart int, subcategory string, relations string) []*ShoppingListItem
-	GetUniqueSubCategoryFromAllUserShoppingListItem(userGUID string, shoppingListGUID string) []*ShoppingListItem
-	GetUniqueSubCategoryFromUserShoppingListItem(userGUID string, shoppingListGUID string,
-		addedToCart int) []*ShoppingListItem
-}
-
-// ShoppingListItemRepository used to handle all task related to viewing, retrieving shopping list item
+// ShoppingListItemRepository will handle all CRUD functions related to Shopping List resource.
 type ShoppingListItemRepository struct {
 	DB *gorm.DB
 }

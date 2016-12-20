@@ -6,17 +6,6 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-type ShoppingListRepositoryInterface interface {
-	Create(userGUID string, data CreateShoppingList) (*ShoppingList, *systems.ErrorData)
-	Update(userGUID string, shoppingListGUID string, data UpdateShoppingList) *systems.ErrorData
-	Delete(attribute string, value string) *systems.ErrorData
-	GetByUserGUID(userGUID string, relations string) []*ShoppingList
-	GetByGUID(GUID string, relations string) *ShoppingList
-	GetByGUIDPreloadWithDealCashbacks(GUID string, dealCashbackTransactionGUID string, relations string) *ShoppingList
-	GetByGUIDAndUserGUID(GUID string, userGUID string, relations string) *ShoppingList
-	GetByUserGUIDOccasionGUIDAndName(userGUID string, name string, occasionGUID string, relations string) *ShoppingList
-}
-
 // ShoppingListRepository used to retrieve user shopping list.
 type ShoppingListRepository struct {
 	DB *gorm.DB

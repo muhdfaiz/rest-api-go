@@ -8,7 +8,7 @@ type DefaultShoppingListItem struct {
 	ShoppingListGUID string     `json:"shopping_list_guid"`
 	Name             string     `json:"name"`
 	Category         string     `json:"category"`
-	SubCategory      string     `json:"sub_category"`
+	Subcategory      string     `json:"subcategory"`
 	Quantity         int        `json:"quantity"`
 	Remark           string     `json:"remark"`
 	AddedToCart      int        `json:"added_to_cart"`

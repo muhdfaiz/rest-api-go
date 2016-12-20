@@ -159,6 +159,11 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 		DealCashbackTransactionFactory: dealCashbackTransactionFactory, DealRepository: dealRepository,
 		TransactionTypeRepository: transactionTypeRepository, TransactionRepository: transactionRepository}
 
+	// Generic Objects
+	genericRepository := &v1.GenericRepository{DB: DB}
+	genericService := &v1.GenericService{GenericRepository: genericRepository}
+	genericTransformer := &v1.GenericTransformer{}
+
 	// Event Objects
 	eventRepository := &v1.EventRepository{DB: DB}
 	eventService := &v1.EventService{EventRepository: eventRepository, DealCashbackRepository: dealCashbackRepository}
@@ -225,6 +230,9 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 	defaultShoppingListHandler := v1.DefaultShoppingListHandler{DefaultShoppingListService: defaultShoppingListService}
 
 	grocerHandler := v1.GrocerHandler{GrocerService: grocerService}
+
+	genericHandler := v1.GenericHandler{GenericService: genericService, GenericTransformer: genericTransformer}
+
 	// V1 Routes
 	version1 := router.Group("/v1")
 	{
@@ -253,6 +261,9 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 		// Shopping List Item Categories Routes
 		version1.GET("/shopping_lists/items/categories", itemCategoryHandler.ViewAll)
 
+		// Generic Category Routes
+		version1.GET("generics", genericHandler.ViewAll)
+
 		// Deal Route
 		version1.GET("deals", dealHandler.ViewAllForGuestUser)
 
@@ -273,13 +284,13 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 			version1.GET("/auth/refresh", authHandler.Refresh)
 			version1.GET("/auth/logout", authHandler.Logout)
 
-			// Shopping List Routes
+			// User Shopping List Routes
 			version1.GET("users/:guid/shopping_lists", shoppingListHandler.View)
 			version1.POST("users/:guid/shopping_lists", shoppingListHandler.Create)
 			version1.PATCH("users/:guid/shopping_lists/:shopping_list_guid", shoppingListHandler.Update)
 			version1.DELETE("users/:guid/shopping_lists/:shopping_list_guid", shoppingListHandler.Delete)
 
-			// Shopping List Item Routes
+			// User Shopping List Item Routes
 			version1.GET("users/:guid/shopping_lists/:shopping_list_guid/items/:item_guid", shoppingListItemHandler.View)
 			version1.GET("users/:guid/shopping_lists/:shopping_list_guid/items", shoppingListItemHandler.ViewAll)
 			version1.POST("users/:guid/shopping_lists/:shopping_list_guid/items", shoppingListItemHandler.Create)
@@ -288,7 +299,7 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 			version1.DELETE("users/:guid/shopping_lists/:shopping_list_guid/items/:item_guid", shoppingListItemHandler.Delete)
 			version1.DELETE("users/:guid/shopping_lists/:shopping_list_guid/items", shoppingListItemHandler.DeleteAll)
 
-			// Shopping List Item Image Routes
+			// User Shopping List Item Image Routes
 			version1.GET("users/:guid/shopping_lists/:shopping_list_guid/items/:item_guid/images/:image_guid", shoppingListItemImageHandler.View)
 			version1.POST("users/:guid/shopping_lists/:shopping_list_guid/items/:item_guid/images", shoppingListItemImageHandler.Create)
 			version1.DELETE("users/:guid/shopping_lists/:shopping_list_guid/items/:item_guid/images/:image_guids", shoppingListItemImageHandler.Delete)

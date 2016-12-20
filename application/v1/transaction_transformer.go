@@ -27,7 +27,7 @@ func (tt *TransactionTransformer) transformCollection(request *http.Request, dat
 	if limit != "" {
 		limitInt, _ := strconv.Atoi(limit)
 
-		if limitInt != -1 {
+		if limitInt != -1 && limitInt != 0 {
 			transactionResponse.Links = PaginationReponse.BuildPaginationLinks(request, totalData)
 		}
 	}

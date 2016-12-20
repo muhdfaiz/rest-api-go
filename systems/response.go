@@ -54,7 +54,7 @@ func (pr *PaginationResponse) BuildPaginationLinks(request *http.Request, totalD
 	pr.PageNumber = pageNumber
 
 	// Set Page Number default as 1 if query string page[number] doesn't exist in the request URI
-	if pr.QueryStrings.Get("page_number") == "" {
+	if pr.QueryStrings.Get("page_number") == "" || pr.QueryStrings.Get("page_number") == "0" {
 		pr.PageNumber = 1
 	}
 

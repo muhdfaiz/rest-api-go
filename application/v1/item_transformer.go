@@ -30,7 +30,7 @@ func (it *ItemTransformer) transformCollection(request *http.Request, data inter
 
 	limitInt, _ := strconv.Atoi(limit)
 
-	if limitInt != -1 {
+	if limitInt != -1 && limitInt != 0 {
 		itemResponse.Links = PaginationReponse.BuildPaginationLinks(request, totalData)
 	}
 

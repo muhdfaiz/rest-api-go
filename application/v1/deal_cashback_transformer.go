@@ -27,7 +27,7 @@ func (dt *DealCashbackTransformer) transformCollection(request *http.Request, da
 	if limit != "" {
 		limitInt, _ := strconv.Atoi(limit)
 
-		if limitInt != -1 {
+		if limitInt != -1 && limitInt != 0 {
 			dealCashbackResponse.Links = PaginationReponse.BuildPaginationLinks(request, totalData)
 		}
 	}

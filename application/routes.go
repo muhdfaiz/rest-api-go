@@ -48,10 +48,7 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 	authService := &v1.AuthService{UserService: userService, SmsService: smsService, DeviceService: deviceService}
 
 	// Facebook Service
-	facebookService := &facebook.FacebookService{
-		AppID:     os.Getenv("FACEBOOK_APP_ID"),
-		AppSecret: os.Getenv("FACEBOOK_APP_SECRET"),
-	}
+	facebookService := &facebook.FacebookService{}
 
 	// Occasion Objects
 	occasionRepository := &v1.OccasionRepository{DB: DB}
@@ -323,7 +320,7 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 			// Deal Cashback Handler
 			version1.POST("users/:guid/deal_cashbacks", dealCashbackHandler.Create)
 			version1.GET("users/:guid/deal_cashbacks/shopping_lists/:shopping_list_guid", dealCashbackHandler.ViewByShoppingList)
-			version1.GET("users/:guid/deal_cashbacks/deals/:deal_guid", dealCashbackHandler.ViewByUserAndDeal)
+			version1.GET("users/:guid/deal_cashbacks/deals/:deal_guid", dealCashbackHandler.ViewByUserAndDealGroupByShoppingList)
 
 			// Deal Cashback Transaction
 			version1.POST("users/:guid/transactions/deal_cashback_transactions", dealCashbackTransactionHandler.Create)

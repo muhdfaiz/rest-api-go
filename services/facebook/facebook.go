@@ -2,6 +2,7 @@ package facebook
 
 import (
 	"fmt"
+	"os"
 
 	"bitbucket.org/cliqers/shoppermate-api/systems"
 	fb "github.com/huandu/facebook"
@@ -13,21 +14,17 @@ var (
 )
 
 type FacebookServiceInterface interface {
-	IDIsValid(facebookID string) bool
-	GetAccessToken() string
+	IDIsValid(facebookID string, debug int) bool
+	GetAccessToken(debug int) string
 }
 
 // FacebookService type
-type FacebookService struct {
-	AppID     string
-	AppSecret string
-}
+type FacebookService struct{}
 
 // IDIsValid function used to  verify Facebook ID valid or not
 // Return true if valid otherwise return false
-func (fs *FacebookService) IDIsValid(facebookID string) bool {
-	// If facebook App ID or Secret empty, retrieve App ID & Secret from config
-	fbAccessToken := fs.GetAccessToken()
+func (fs *FacebookService) IDIsValid(facebookID string, debug int) bool {
+	fbAccessToken := fs.GetAccessToken(debug)
 
 	result, _ := fb.Get(fmt.Sprintf("/%s", facebookID), fb.Params{
 		"access_token": fbAccessToken,
@@ -41,8 +38,16 @@ func (fs *FacebookService) IDIsValid(facebookID string) bool {
 }
 
 // GetAccessToken function used to retrieve access token
-func (fs *FacebookService) GetAccessToken() string {
-	fbApp := fb.New(fs.AppID, fs.AppSecret)
+func (fs *FacebookService) GetAccessToken(debug int) string {
+	appID := os.Getenv("FACEBOOK_APP_ID")
+	appSecret := os.Getenv("FACEBOOK_APP_SECRET")
+
+	if debug == 1 {
+		appID = os.Getenv("DEBUG_FACEBOOK_APP_ID")
+		appSecret = os.Getenv("DEBUG_FACEBOOK_APP_SECRET")
+	}
+
+	fbApp := fb.New(appID, appSecret)
 
 	return fbApp.AppAccessToken()
 }

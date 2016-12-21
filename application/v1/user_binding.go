@@ -7,6 +7,7 @@ type CreateUser struct {
 	PhoneNo        string `form:"phone_no" json:"phone_no" binding:"required,numeric,min=11,max=13"`
 	ProfilePicture string `form:"profile_picture" json:"profile_picture" binding:"omitempty"`
 	ReferralCode   string `form:"referral_code" json:"referral_code" binding:"omitempty,alphanum,max=8"`
+	Debug          int    `form:"debug" json:"debug" binding:"omitempty"`
 }
 
 type UpdateUser struct {

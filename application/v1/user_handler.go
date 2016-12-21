@@ -77,10 +77,8 @@ func (uh *UserHandler) Create(c *gin.Context) {
 
 	// If facebook_id exist in request data
 	if userData.FacebookID != "" {
-		// Validate facebook_id valid or not
-		fbIDValid := uh.FacebookService.IDIsValid(userData.FacebookID)
+		fbIDValid := uh.FacebookService.IDIsValid(userData.FacebookID, userData.Debug)
 
-		// If facebook_id not valid return error message
 		if !fbIDValid {
 			mesg := fmt.Sprintf(systems.ErrorFacebookIDNotValid, userData.FacebookID)
 			c.JSON(http.StatusBadRequest, Error.GenericError(strconv.Itoa(http.StatusBadRequest),

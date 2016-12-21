@@ -101,8 +101,9 @@ func (dch *DealCashbackHandler) ViewByShoppingList(context *gin.Context) {
 	context.JSON(http.StatusOK, gin.H{"data": dealCashbackResponse})
 }
 
-// ViewByUser function used to retrieve all deal cashbacks for user by user GUID.
-func (dch *DealCashbackHandler) ViewByUserAndDeal(context *gin.Context) {
+// ViewByUserAndDealGroupByShoppingList function used to retrieve all deal cashbacks by user GUID and deal GUID
+// including shopping list and group the result by Shopping List.
+func (dch *DealCashbackHandler) ViewByUserAndDealGroupByShoppingList(context *gin.Context) {
 	tokenData := context.MustGet("Token").(map[string]string)
 
 	userGUID := context.Param("guid")
@@ -136,9 +137,8 @@ func (dch *DealCashbackHandler) ViewByUserAndDeal(context *gin.Context) {
 
 	pageNumber := context.Query("page_number")
 	pageLimit := context.Query("page_limit")
-	relations := context.Query("include")
 
-	dealCashbacks, totalDealCashbacks := dch.DealCashbackService.GetUserDealCashbacksByDealGUID(userGUID, dealGUID, pageNumber, pageLimit, relations)
+	dealCashbacks, totalDealCashbacks := dch.DealCashbackService.GetUserDealCashbacksByDealGUID(userGUID, dealGUID, pageNumber, pageLimit, "shoppinglists")
 
 	dealCashbackResponse := dch.DealCashbackTransformer.transformCollection(context.Request, dealCashbacks, totalDealCashbacks, pageLimit)
 

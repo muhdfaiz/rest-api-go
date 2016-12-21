@@ -17,8 +17,10 @@ type DealCashbackServiceInterface interface {
 	SumTotalAmountOfDealAddedTolistByUser(userGUID string) float64
 	GetDealCashbacksByTransactionGUIDAndGroupByShoppingList(dealCashbackTrasnactionGUID string) []*DealCashback
 	CreateDealCashbackAndShoppingListItem(userGUID string, dealCashbackData CreateDealCashback) *systems.ErrorData
-	GetUserDealCashbackForUserShoppingList(userGUID string, shoppingListGUID string, transactionStatus string,
+	GetUserDealCashbacksByDealGUID(userGUID, dealGUID, pageNumber, pageLimit, relations string) ([]*DealCashback, int)
+	GetUserDealCashbacksByShoppingList(userGUID string, shoppingListGUID string, transactionStatus string,
 		pageNumber string, pageLimit string, relations string) ([]*DealCashback, int)
+	RemoveDealCashbackAndSetItemDealExpired(userGUID, shoppingListGUID, dealGUID string) *systems.ErrorData
 }
 
 // DealCashbackRepositoryInterface is a contract that defines the method needed for deal cashback repository.
@@ -28,7 +30,7 @@ type DealCashbackRepositoryInterface interface {
 	DeleteByUserGUIDAndDealGUID(userGUID string, dealGUID string) *systems.ErrorData
 	DeleteByUserGUIDAndShoppingListGUIDAndDealGUID(userGUID string, shoppingListGUID string, dealGUID string) *systems.ErrorData
 	GetByGUID(GUID string) *DealCashback
-	GetByDealGUIDAndUserGUID(dealGUID, userGUID string) *DealCashback
+	GetByUserGUIDAndDealGUIDGroupByShoppingList(userGUID, dealGUID, pageNumber, pageLimit, relations string) ([]*DealCashback, int)
 	GetByDealCashbackTransactionGUIDAndGroupByShoppingListGUID(dealCashbackTransactionGUID *string) []*DealCashback
 	GetByDealCashbackTransactionGUIDAndShoppingListGUID(dealCashbackTransactionGUID *string,
 		shoppingListGUID, relations string) []*DealCashback

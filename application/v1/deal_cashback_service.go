@@ -57,12 +57,19 @@ func (dcs *DealCashbackService) SumTotalAmountOfDealAddedTolistByUser(userGUID s
 }
 
 func (dcs *DealCashbackService) GetDealCashbacksByTransactionGUIDAndGroupByShoppingList(dealCashbackTransactionGUID string) []*DealCashback {
-	dealsCashbacksGroupByShoppingList := dcs.DealCashbackRepository.GetByDealCashbackTransactionGUIDAndGroupByShoppingListGUID(&dealCashbackTransactionGUID)
+	dealCashbacksGroupByShoppingList := dcs.DealCashbackRepository.GetByDealCashbackTransactionGUIDAndGroupByShoppingListGUID(&dealCashbackTransactionGUID)
 
-	return dealsCashbacksGroupByShoppingList
+	return dealCashbacksGroupByShoppingList
 }
 
-func (dcs *DealCashbackService) GetUserDealCashbackForUserShoppingList(userGUID string, shoppingListGUID string, transactionStatus string, pageNumber string,
+// GetUserDealCashbacksByDealGUID function used to retrieve all deal cashback for user through Deal Cashback Repository.
+func (dcs *DealCashbackService) GetUserDealCashbacksByDealGUID(userGUID, dealGUID, pageNumber, pageLimit, relations string) ([]*DealCashback, int) {
+	dealCashbacks, totalDealCashbacks := dcs.DealCashbackRepository.GetByUserGUIDAndDealGUIDGroupByShoppingList(userGUID, dealGUID, pageNumber, pageLimit, relations)
+
+	return dealCashbacks, totalDealCashbacks
+}
+
+func (dcs *DealCashbackService) GetUserDealCashbacksByShoppingList(userGUID string, shoppingListGUID string, transactionStatus string, pageNumber string,
 	pageLimit string, relations string) ([]*DealCashback, int) {
 
 	userDealCashbacks, totalUserDealCashbacks := dcs.DealCashbackRepository.GetByUserGUIDShoppingListGUIDAndTransactionStatus(userGUID, shoppingListGUID,

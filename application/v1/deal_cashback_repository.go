@@ -71,13 +71,37 @@ func (dcr *DealCashbackRepository) GetByGUID(GUID string) *DealCashback {
 	return dealCashback
 }
 
-// GetByDealGUIDAndUserGUID function used to retrieve deal cashback by deal cashback GUID and user GUID.
-func (dcr *DealCashbackRepository) GetByDealGUIDAndUserGUID(dealGUID, userGUID string) *DealCashback {
-	dealCashback := &DealCashback{}
+// GetByUserGUIDAndDealGUIDGroupByShoppingList function used to retrieve deal cashbacks by user GUID.
+func (dcr *DealCashbackRepository) GetByUserGUIDAndDealGUIDGroupByShoppingList(userGUID, dealGUID, pageNumber, pageLimit, relations string) ([]*DealCashback, int) {
+	dealCashbacks := []*DealCashback{}
 
-	dcr.DB.Model(&DealCashback{}).Where(DealCashback{DealGUID: dealGUID, UserGUID: userGUID}).Find(&dealCashback)
+	DB := dcr.DB.Model(&DealCashback{})
 
-	return dealCashback
+	offset := SetOffsetValue(pageNumber, pageLimit)
+
+	if relations != "" {
+		DB = LoadRelations(DB, relations)
+	}
+
+	if pageLimit != "" {
+		totalDealCashbacks := []*DealCashback{}
+
+		DB.Joins("left join shopping_lists on shopping_lists.guid = deal_cashbacks.shopping_list_guid").
+			Where(&DealCashback{UserGUID: userGUID, DealGUID: dealGUID}).Group("shopping_lists.guid").
+			Find(&totalDealCashbacks)
+
+		DB.Joins("left join shopping_lists on shopping_lists.guid = deal_cashbacks.shopping_list_guid").
+			Where(&DealCashback{UserGUID: userGUID, DealGUID: dealGUID}).Group("shopping_lists.guid").
+			Offset(offset).Limit(pageLimit).Find(&dealCashbacks)
+
+		return dealCashbacks, len(totalDealCashbacks)
+	}
+
+	DB.Joins("left join shopping_lists on shopping_lists.guid = deal_cashbacks.shopping_list_guid").
+		Where(&DealCashback{UserGUID: userGUID, DealGUID: dealGUID}).Group("shopping_lists.guid").
+		Find(&dealCashbacks)
+
+	return dealCashbacks, len(dealCashbacks)
 }
 
 // GetByDealCashbackTransactionGUIDAndGroupByShoppingListGUID function used to retrieve deal cashback by

@@ -13,6 +13,7 @@ type DealCashbackHandler struct {
 	ShoppingListRepository  ShoppingListRepositoryInterface
 	DealCashbackService     DealCashbackServiceInterface
 	DealCashbackTransformer DealCashbackTransformerInterface
+	DealService             DealServiceInterface
 }
 
 // Create function used to create new deal cashback and store in database and create shopping list item based on deal info.
@@ -56,6 +57,15 @@ func (dch *DealCashbackHandler) Create(context *gin.Context) {
 
 // ViewByShoppingList function used to retrieve deal cashback by Shopping List GUID.
 func (dch *DealCashbackHandler) ViewByShoppingList(context *gin.Context) {
+	tokenData := context.MustGet("Token").(map[string]string)
+
+	userGUID := context.Param("guid")
+
+	if tokenData["user_guid"] != userGUID {
+		context.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("view deal cashbacks in shopping list"))
+		return
+	}
+
 	queryStringValidationRules := map[string]string{
 		"page_number": "numeric",
 		"page_limit":  "numeric",
@@ -65,15 +75,6 @@ func (dch *DealCashbackHandler) ViewByShoppingList(context *gin.Context) {
 
 	if error != nil {
 		context.JSON(http.StatusUnprocessableEntity, error)
-		return
-	}
-
-	tokenData := context.MustGet("Token").(map[string]string)
-
-	userGUID := context.Param("guid")
-
-	if tokenData["user_guid"] != userGUID {
-		context.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("view your deal cashbacks"))
 		return
 	}
 
@@ -92,11 +93,55 @@ func (dch *DealCashbackHandler) ViewByShoppingList(context *gin.Context) {
 
 	transactionStatus := context.Query("transaction_status")
 
-	userDealCashbacks, totalUserDealCashback := dch.DealCashbackService.GetUserDealCashbackForUserShoppingList(userGUID, shoppingListGUID,
+	userDealCashbacks, totalUserDealCashback := dch.DealCashbackService.GetUserDealCashbacksByShoppingList(userGUID, shoppingListGUID,
 		transactionStatus, pageNumber, pageLimit, relations)
 
 	dealCashbackResponse := dch.DealCashbackTransformer.transformCollection(context.Request, userDealCashbacks, totalUserDealCashback, pageLimit)
 
 	context.JSON(http.StatusOK, gin.H{"data": dealCashbackResponse})
+}
+
+// ViewByUser function used to retrieve all deal cashbacks for user by user GUID.
+func (dch *DealCashbackHandler) ViewByUserAndDeal(context *gin.Context) {
+	tokenData := context.MustGet("Token").(map[string]string)
+
+	userGUID := context.Param("guid")
+
+	if tokenData["user_guid"] != userGUID {
+		context.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("view deal cashbacks"))
+		return
+	}
+
+	queryStringValidationRules := map[string]string{
+		"page_number": "numeric",
+		"page_limit":  "numeric",
+	}
+
+	error := Validation.Validate(context.Request.URL.Query(), queryStringValidationRules)
+
+	if error != nil {
+		context.JSON(http.StatusUnprocessableEntity, error)
+		return
+	}
+
+	dealGUID := context.Param("deal_guid")
+
+	_, error = dch.DealService.CheckDealExistOrNotByGUID(dealGUID)
+
+	if error != nil {
+		errorCode, _ := strconv.Atoi(error.Error.Status)
+		context.JSON(errorCode, error)
+		return
+	}
+
+	pageNumber := context.Query("page_number")
+	pageLimit := context.Query("page_limit")
+	relations := context.Query("include")
+
+	dealCashbacks, totalDealCashbacks := dch.DealCashbackService.GetUserDealCashbacksByDealGUID(userGUID, dealGUID, pageNumber, pageLimit, relations)
+
+	dealCashbackResponse := dch.DealCashbackTransformer.transformCollection(context.Request, dealCashbacks, totalDealCashbacks, pageLimit)
+
+	context.JSON(http.StatusOK, dealCashbackResponse)
 
 }

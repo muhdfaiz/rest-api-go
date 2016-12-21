@@ -23,6 +23,17 @@ type DealService struct {
 	ShoppingListService        ShoppingListServiceInterface
 }
 
+// CheckDealExistOrNotByGUID function used to check deal exist or not by checking the deal GUID.
+func (ds *DealService) CheckDealExistOrNotByGUID(dealGUID string) (*Deal, *systems.ErrorData) {
+	deal := ds.DealRepository.GetDealByGUID(dealGUID)
+
+	if deal.GUID == "" {
+		return nil, Error.ResourceNotFoundError("Deal", "guid", dealGUID)
+	}
+
+	return deal, nil
+}
+
 // GetDealsBasedOnUserShoppingListItem function used to retrieve deals for each of user shopping list items.
 // Maximum 3 deals for each of shopping list items.
 // The deal is valid if item category must be same with shopping list item category.

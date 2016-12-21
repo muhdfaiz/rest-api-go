@@ -13,6 +13,7 @@ type DealTransformerInterface interface {
 
 // DealServiceInterface is a contract the defines the method needed for Deal Service.
 type DealServiceInterface interface {
+	CheckDealExistOrNotByGUID(dealGUID string) (*Deal, *systems.ErrorData)
 	GetDealsBasedOnUserShoppingListItem(userGUID, shoppingListGUID string, shopppingListItems *ShoppingListItem, latitude,
 		longitude string) []*Deal
 	GetDealsBasedOnSampleShoppingListItem(defaultShoppingListItem *DefaultShoppingListItem, latitude,

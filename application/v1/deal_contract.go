@@ -14,9 +14,9 @@ type DealTransformerInterface interface {
 // DealServiceInterface is a contract the defines the method needed for Deal Service.
 type DealServiceInterface interface {
 	GetDealsBasedOnUserShoppingListItem(userGUID, shoppingListGUID string, shopppingListItems *ShoppingListItem, latitude,
-		longitude string, dealsCollection []*Deal) []*Deal
+		longitude string) []*Deal
 	GetDealsBasedOnSampleShoppingListItem(defaultShoppingListItem *DefaultShoppingListItem, latitude,
-		longitude string, dealsCollection []*Deal) []*Deal
+		longitude string) []*Deal
 	FilteredDealMustBeUniquePerShoppingList(deals []*Deal, dealsCollection []*Deal, userGUID string) []*Deal
 	FilteredDealMustBeWithinStartAndEndTime(deals []*Deal, currentDateInGMT8, currentTimeInGMT8 string) []*Deal
 	FilteredDealByPositiveTag(deals []*Deal, shoppingListItemName string) []*Deal

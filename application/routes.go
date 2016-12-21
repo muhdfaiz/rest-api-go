@@ -168,6 +168,10 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 	cashoutTransactionService := &v1.CashoutTransactionService{CashoutTransactionRepository: cashoutTransactionRepository,
 		TransactionService: transactionService, UserRepository: userRepository, TransactionTypeRepository: transactionTypeRepository}
 
+	// Setting Objects
+	settingRepository := &v1.SettingRepository{DB: DB}
+	settingService := &v1.SettingService{SettingRepository: settingRepository}
+
 	// Sms Handler
 	smsHandler := v1.SmsHandler{UserRepository: userRepository, SmsService: smsService,
 		SmsHistoryRepository: smsHistoryRepository, DeviceService: deviceService}
@@ -226,6 +230,8 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 
 	genericHandler := v1.GenericHandler{GenericService: genericService, GenericTransformer: genericTransformer}
 
+	settingHandler := v1.SettingHandler{SettingService: settingService}
+
 	// V1 Routes
 	version1 := router.Group("/v1")
 	{
@@ -262,6 +268,9 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 
 		// Default Shopping List Route
 		version1.GET("/shopping_list_samples", defaultShoppingListHandler.ViewAll)
+
+		// Setting  Route
+		version1.GET("/settings", settingHandler.ViewAll)
 
 		// Protected Routes
 		version1.Use(middlewares.Auth(DB))

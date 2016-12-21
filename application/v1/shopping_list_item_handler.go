@@ -27,7 +27,7 @@ func (slih *ShoppingListItemHandler) View(context *gin.Context) {
 	relations := context.Query("include")
 
 	if tokenData["user_guid"] != userGUID {
-		context.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("view shopping list"))
+		context.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("view shopping list item"))
 		return
 	}
 
@@ -57,7 +57,7 @@ func (slih *ShoppingListItemHandler) ViewAll(context *gin.Context) {
 	userGUID := context.Param("guid")
 
 	if tokenData["user_guid"] != userGUID {
-		context.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("update shopping list item"))
+		context.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("view all shopping list items"))
 		return
 	}
 
@@ -106,7 +106,7 @@ func (slih *ShoppingListItemHandler) Create(context *gin.Context) {
 	shoppingListGUID := context.Param("shopping_list_guid")
 
 	if tokenData["user_guid"] != userGUID {
-		context.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("update shopping list"))
+		context.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("create shopping list item"))
 		return
 	}
 
@@ -143,7 +143,7 @@ func (slih *ShoppingListItemHandler) Update(context *gin.Context) {
 	userGUID := context.Param("guid")
 
 	if tokenData["user_guid"] != userGUID {
-		context.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("update shopping list"))
+		context.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("update shopping list item"))
 		return
 	}
 
@@ -183,7 +183,7 @@ func (slih *ShoppingListItemHandler) UpdateAll(context *gin.Context) {
 	userGUID := context.Param("guid")
 
 	if tokenData["user_guid"] != userGUID {
-		context.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("update shopping list"))
+		context.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("update shopping list items"))
 		return
 	}
 
@@ -223,7 +223,7 @@ func (slih *ShoppingListItemHandler) DeleteAll(context *gin.Context) {
 	userGUID := context.Param("guid")
 
 	if tokenData["user_guid"] != userGUID {
-		context.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("update shopping list"))
+		context.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("delete all shopping list items"))
 		return
 	}
 
@@ -272,7 +272,7 @@ func (slih *ShoppingListItemHandler) Delete(context *gin.Context) {
 	userGUID := context.Param("guid")
 
 	if tokenData["user_guid"] != userGUID {
-		context.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("delete shopping list"))
+		context.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("delete shopping list item"))
 		return
 	}
 

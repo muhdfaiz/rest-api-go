@@ -1,7 +1,6 @@
 package v1
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -35,7 +34,7 @@ type DealService struct {
 // If deal positive tag not empty, the deal is valid if the item name contain any of the positive tag keyword.
 // If deal negative tag not empty, the deal is not valid if the item name contain any of the negative tag keyword.
 func (ds *DealService) GetDealsBasedOnUserShoppingListItem(userGUID, shoppingListGUID string, shoppingListItem *ShoppingListItem,
-	latitude, longitude string, dealsCollection []*Deal) []*Deal {
+	latitude, longitude string) []*Deal {
 
 	currentDateInGMT8 := time.Now().UTC().Add(time.Hour * 8).Format("2006-01-02")
 	currentTimeInGMT8 := time.Now().UTC().Add(time.Hour * 8).Format("15:04")
@@ -49,12 +48,6 @@ func (ds *DealService) GetDealsBasedOnUserShoppingListItem(userGUID, shoppingLis
 	if len(deals) < 1 {
 		return nil
 	}
-
-	// filteredDealsUniqueForEachShoppingList := ds.FilteredDealMustBeUniqueForEachOfShoppingListItem(deals, dealsCollection, userGUID)
-
-	// if len(filteredDealsUniqueForEachShoppingList) < 1 {
-	// 	return nil
-	// }
 
 	filteredDealsByStartAndEndTime := ds.FilteredDealMustBeWithinStartAndEndTime(deals, currentDateInGMT8, currentTimeInGMT8)
 
@@ -82,8 +75,6 @@ func (ds *DealService) GetDealsBasedOnUserShoppingListItem(userGUID, shoppingLis
 
 	firstThreeDeals := ds.GetFirstThreeDeals(filteredDealsNotAddedToList)
 
-	fmt.Println("Number of deals")
-	fmt.Println(len(firstThreeDeals))
 	return firstThreeDeals
 }
 
@@ -97,7 +88,7 @@ func (ds *DealService) GetDealsBasedOnUserShoppingListItem(userGUID, shoppingLis
 // If deal positive tag not empty, the deal is valid if the item name contain any of the positive tag keyword.
 // If deal negative tag not empty, the deal is not valid if the item name contain any of the negative tag keyword.
 func (ds *DealService) GetDealsBasedOnSampleShoppingListItem(defaultShoppingListItem *DefaultShoppingListItem, latitude,
-	longitude string, dealsCollection []*Deal) []*Deal {
+	longitude string) []*Deal {
 
 	currentDateInGMT8 := time.Now().UTC().Add(time.Hour * 8).Format("2006-01-02")
 	currentTimeInGMT8 := time.Now().UTC().Add(time.Hour * 8).Format("15:04")
@@ -117,12 +108,6 @@ func (ds *DealService) GetDealsBasedOnSampleShoppingListItem(defaultShoppingList
 	if len(deals) < 1 {
 		return nil
 	}
-
-	// filteredDealsUniqueForEachShoppingList := ds.FilteredDealMustBeUniqueForEachOfShoppingListItem(deals, dealsCollection, "")
-
-	// if len(filteredDealsUniqueForEachShoppingList) < 1 {
-	// 	return nil
-	// }
 
 	filteredDealsByStartAndEndTime := ds.FilteredDealMustBeWithinStartAndEndTime(deals, currentDateInGMT8, currentTimeInGMT8)
 
@@ -482,6 +467,10 @@ func (ds *DealService) GetAvailableDealsForGrocerByCategory(request *http.Reques
 // SetAddTolistInfoAndItemsAndGrocerExclusiveForDeal function used to set number of deal added to list by user,
 // remaining time user can add to list, and can add to list status to tell user allow to add the deal or not.
 func (ds *DealService) SetAddTolistInfoAndItemsAndGrocerExclusiveForDeal(deal *Deal, userGUID string) *Deal {
+	if userGUID == "" {
+		return deal
+	}
+
 	deal.CanAddTolist = 1
 
 	totalNumberOfDealAddedToList := ds.DealCashbackRepository.CountByDealGUIDAndUserGUID(deal.GUID, userGUID)

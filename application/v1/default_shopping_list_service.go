@@ -25,7 +25,9 @@ func (dsls *DefaultShoppingListService) GetAllDefaultShoppingListsIncludingItems
 	for key, defaultShoppingList := range defaultShoppingLists {
 		for key1, defaultShoppingListItem := range defaultShoppingList.Items {
 
-			deals := dsls.DealService.GetDealsBasedOnSampleShoppingListItem(defaultShoppingListItem, latitude, longitude, dealsCollection)
+			deals := dsls.DealService.GetDealsBasedOnSampleShoppingListItem(defaultShoppingListItem, latitude, longitude)
+
+			deals = dsls.DealService.FilteredDealMustBeUniquePerShoppingList(deals, dealsCollection, "")
 
 			dealsCollection = append(dealsCollection, deals...)
 

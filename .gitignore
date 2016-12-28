@@ -6,3 +6,6 @@ vendor
 .env
 key.pem
 cert.pem
+fullchain.pem
+privkey.pem
+chain.pem

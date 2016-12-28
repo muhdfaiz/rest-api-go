@@ -135,25 +135,6 @@ func (sh *SmsHandler) Verify(c *gin.Context) {
 
 	debug := c.Query("debug")
 
-	if debug == "1" {
-		// Retrieve user by phone no
-		user = sh.UserRepository.GetByPhoneNo(smsData.PhoneNo, "")
-
-		jwt := &systems.Jwt{}
-		jwtToken, err := jwt.GenerateToken(user.GUID, smsData.PhoneNo, smsData.DeviceUUID)
-
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, err)
-		}
-
-		response := make(map[string]interface{})
-		response["user"] = user
-		response["access_token"] = jwtToken
-
-		c.JSON(http.StatusOK, gin.H{"data": response})
-		return
-	}
-
 	if debug != "1" {
 		// Verify Sms verification code
 		smsHistory := sh.SmsHistoryRepository.VerifyVerificationCode(smsData.PhoneNo, strings.ToLower(smsData.VerificationCode))

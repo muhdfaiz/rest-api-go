@@ -154,19 +154,21 @@ func (sh *SmsHandler) Verify(c *gin.Context) {
 		return
 	}
 
-	// Verify Sms verification code
-	smsHistory := sh.SmsHistoryRepository.VerifyVerificationCode(smsData.PhoneNo, strings.ToLower(smsData.VerificationCode))
+	if debug != "1" {
+		// Verify Sms verification code
+		smsHistory := sh.SmsHistoryRepository.VerifyVerificationCode(smsData.PhoneNo, strings.ToLower(smsData.VerificationCode))
 
-	// If sms history record not found return error message
-	if smsHistory == nil {
-		errorMesg := Error.GenericError(strconv.Itoa(http.StatusBadRequest), systems.VerificationCodeInvalid,
-			systems.TitleVerificationCodeInvalid, "", fmt.Sprintf(systems.ErrorVerificationCodeInvalid, smsData.VerificationCode))
-		c.JSON(http.StatusBadRequest, errorMesg)
-		return
+		// If sms history record not found return error message
+		if smsHistory == nil {
+			errorMesg := Error.GenericError(strconv.Itoa(http.StatusBadRequest), systems.VerificationCodeInvalid,
+				systems.TitleVerificationCodeInvalid, "", fmt.Sprintf(systems.ErrorVerificationCodeInvalid, smsData.VerificationCode))
+			c.JSON(http.StatusBadRequest, errorMesg)
+			return
+		}
 	}
 
 	// Set user status to verified
-	err := sh.UserRepository.Update(smsHistory.UserGUID, map[string]interface{}{"verified": 1})
+	err := sh.UserRepository.Update(user.GUID, map[string]interface{}{"verified": 1})
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err)
@@ -182,7 +184,7 @@ func (sh *SmsHandler) Verify(c *gin.Context) {
 	}
 
 	jwt := &systems.Jwt{}
-	jwtToken, err := jwt.GenerateToken(smsHistory.UserGUID, smsHistory.RecipientNo, smsData.DeviceUUID)
+	jwtToken, err := jwt.GenerateToken(user.GUID, smsData.PhoneNo, smsData.DeviceUUID)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err)

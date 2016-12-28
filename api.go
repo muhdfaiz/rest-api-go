@@ -27,9 +27,15 @@ func main() {
 	DB := Database.Connect("production")
 
 	// Initialize Router
-	router := gin.New()
-	router.Use(gin.Recovery())
-	application.Bootstrap(application.InitializeObjectAndSetRoutes(router, DB)).Run(":8080")
+	routerWithSSL := gin.New()
+	routerWithSSL.Use(gin.Recovery())
+
+	routerWithoutSSL := gin.New()
+	routerWithoutSSL.Use(gin.Recovery())
+
+	go application.Bootstrap(application.InitializeObjectAndSetRoutes(routerWithoutSSL, DB)).Run(os.Getenv("API_URL") + ":8080")
+
+	application.Bootstrap(application.InitializeObjectAndSetRoutes(routerWithSSL, DB)).RunTLS(os.Getenv("API_URL")+":8081", os.Getenv("FULLCHAIN_KEY"), os.Getenv("PRIVATE_KEY"))
 }
 
 type defaultValidator struct {

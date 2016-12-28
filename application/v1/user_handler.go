@@ -151,13 +151,17 @@ func (uh *UserHandler) Create(c *gin.Context) {
 		createdUser.ProfilePicture = profileImage["path"]
 	}
 
-	// Send SMS verification code
-	_, err = uh.SmsService.SendVerificationCode(createdUser.PhoneNo, createdUser.GUID)
+	debug := c.Query("debug")
 
-	if err != nil {
-		errorCode, _ := strconv.Atoi(err.Error.Status)
-		c.JSON(errorCode, err)
-		return
+	if debug != "1" {
+		// Send SMS verification code
+		_, err = uh.SmsService.SendVerificationCode(createdUser.PhoneNo, createdUser.GUID)
+
+		if err != nil {
+			errorCode, _ := strconv.Atoi(err.Error.Status)
+			c.JSON(errorCode, err)
+			return
+		}
 	}
 
 	// Give cashback to user if referral code validate

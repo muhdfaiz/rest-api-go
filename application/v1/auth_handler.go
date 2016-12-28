@@ -20,7 +20,9 @@ func (ah *AuthHandler) LoginViaPhone(context *gin.Context) {
 		return
 	}
 
-	user, error := ah.AuthService.AuthenticateUserViaPhoneNumber(authData.PhoneNo)
+	debug := context.Query("debug")
+
+	user, error := ah.AuthService.AuthenticateUserViaPhoneNumber(authData.PhoneNo, debug)
 
 	if error != nil {
 		errorCode, _ := strconv.Atoi(error.Error.Status)

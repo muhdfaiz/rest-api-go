@@ -9,17 +9,19 @@ type AuthService struct {
 }
 
 // AuthenticateUserViaPhoneNumber function used to login user using phone number.
-func (as *AuthService) AuthenticateUserViaPhoneNumber(phoneNo string) (*User, *systems.ErrorData) {
+func (as *AuthService) AuthenticateUserViaPhoneNumber(phoneNo string, debug string) (*User, *systems.ErrorData) {
 	user, error := as.UserService.CheckUserPhoneNumberValidOrNot(phoneNo)
 
 	if error != nil {
 		return nil, error
 	}
 
-	_, error = as.SmsService.SendVerificationCode(phoneNo, user.GUID)
+	if debug != "1" {
+		_, error = as.SmsService.SendVerificationCode(phoneNo, user.GUID)
 
-	if error != nil {
-		return nil, error
+		if error != nil {
+			return nil, error
+		}
 	}
 
 	return user, nil

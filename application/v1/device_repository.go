@@ -42,7 +42,7 @@ func (dr *DeviceRepository) Update(uuid string, data UpdateDevice) *systems.Erro
 		}
 	}
 
-	result := dr.DB.Model(&Device{}).Where(&Device{UUID: uuid}).Updates(updateData)
+	result := dr.DB.Unscoped().Model(&Device{}).Where(&Device{UUID: uuid}).Updates(updateData)
 
 	if result.Error != nil {
 		return Error.InternalServerError(result.Error, systems.DatabaseError)

@@ -13,8 +13,6 @@ type TransactionRepository struct {
 
 // Create function used to create transaction and store in Database
 func (tr *TransactionRepository) Create(createTransactionData *CreateTransaction) (*Transaction, *systems.ErrorData) {
-	pendingTransactionStatusGUID := tr.TransactionStatusRepository.GetBySlug("pending").GUID
-
 	createdTransaction := &Transaction{}
 
 	transaction := &Transaction{
@@ -22,7 +20,7 @@ func (tr *TransactionRepository) Create(createTransactionData *CreateTransaction
 		ReferenceID:           Helper.GenerateUniqueShortID(),
 		UserGUID:              createTransactionData.UserGUID,
 		TransactionTypeGUID:   createTransactionData.TransactionTypeGUID,
-		TransactionStatusGUID: pendingTransactionStatusGUID,
+		TransactionStatusGUID: createTransactionData.TransactionStatusGUID,
 		TotalAmount:           createTransactionData.Amount,
 		ApprovedAmount:        nil,
 		RejectedAmount:        nil,
@@ -67,7 +65,6 @@ func (tr *TransactionRepository) GetByGUID(GUID string, relations string) *Trans
 
 // GetByUserGUID function used to retrieve transactions by user GUID.
 func (tr *TransactionRepository) GetByUserGUID(userGUID string, relations string) []*Transaction {
-
 	transactions := []*Transaction{}
 
 	DB := tr.DB.Model(&Transaction{})
@@ -77,6 +74,21 @@ func (tr *TransactionRepository) GetByUserGUID(userGUID string, relations string
 	}
 
 	DB.Where(&Transaction{UserGUID: userGUID}).Find(&transactions)
+
+	return transactions
+}
+
+// GetByTransactionTypeGUIDAndTransactionStatusGUID function used to retrieve transactions by Transaction Type GUID and Transaction Status GUID.
+func (tr *TransactionRepository) GetByUserGUIDAndTransactionTypeGUIDAndTransactionStatusGUID(userGUID, transactionTypeGUID, transactionStatusGUID, relations string) []*Transaction {
+	transactions := []*Transaction{}
+
+	DB := tr.DB.Model(&Transaction{})
+
+	if relations != "" {
+		DB = LoadRelations(DB, relations)
+	}
+
+	DB.Where(&Transaction{UserGUID: userGUID, TransactionTypeGUID: transactionTypeGUID, TransactionStatusGUID: transactionStatusGUID}).Find(&transactions)
 
 	return transactions
 }

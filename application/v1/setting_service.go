@@ -11,3 +11,11 @@ func (ss *SettingService) GetAllSettings() []*Setting {
 
 	return settings
 }
+
+// GetSettingBySlug function used to retrieve setting by slug from database through
+// Setting Repository.
+func (ss *SettingService) GetSettingBySlug(slug string) *Setting {
+	setting := ss.SettingRepository.GetBySlug(slug)
+
+	return setting
+}

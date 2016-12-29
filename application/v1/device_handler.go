@@ -10,6 +10,7 @@ import (
 // DeviceHandler will handle all request related to device endpoint.
 type DeviceHandler struct {
 	DeviceService DeviceServiceInterface
+	UserService   UserServiceInterface
 }
 
 // Create function used to create new device and store in database.
@@ -19,6 +20,16 @@ func (dh *DeviceHandler) Create(context *gin.Context) {
 	if error := Binding.Bind(&deviceData, context); error != nil {
 		context.JSON(http.StatusUnprocessableEntity, error)
 		return
+	}
+
+	if deviceData.UserGUID != "" {
+		error := dh.UserService.CheckUserGUIDExistOrNot(deviceData.UserGUID)
+
+		if error != nil {
+			errorCode, _ := strconv.Atoi(error.Error.Status)
+			context.JSON(errorCode, error)
+			return
+		}
 	}
 
 	device, error := dh.DeviceService.CreateDevice(deviceData)
@@ -36,9 +47,19 @@ func (dh *DeviceHandler) Create(context *gin.Context) {
 func (dh *DeviceHandler) Update(context *gin.Context) {
 	deviceData := UpdateDevice{}
 
-	if err := Binding.Bind(&deviceData, context); err != nil {
-		context.JSON(http.StatusUnprocessableEntity, err)
+	if error := Binding.Bind(&deviceData, context); error != nil {
+		context.JSON(http.StatusUnprocessableEntity, error)
 		return
+	}
+
+	if deviceData.UserGUID != "" {
+		error := dh.UserService.CheckUserGUIDExistOrNot(deviceData.UserGUID)
+
+		if error != nil {
+			errorCode, _ := strconv.Atoi(error.Error.Status)
+			context.JSON(errorCode, error)
+			return
+		}
 	}
 
 	deviceUUID := context.Param("uuid")

@@ -14,7 +14,6 @@ type DealCashbackTransactionService struct {
 	AmazonS3FileSystem                *filesystem.AmazonS3Upload
 	DealCashbackRepository            DealCashbackRepositoryInterface
 	DealCashbackTransactionRepository DealCashbackTransactionRepositoryInterface
-	TransactionTypeRepository         TransactionTypeRepositoryInterface
 	DealRepository                    DealRepositoryInterface
 	TransactionRepository             TransactionRepositoryInterface
 }
@@ -29,8 +28,6 @@ func (dcts *DealCashbackTransactionService) CreateTransaction(receipt *multipart
 	if err != nil {
 		return nil, err
 	}
-
-	dealCashbackTransactionTypeGUID := dcts.TransactionTypeRepository.GetBySlug("deal_redemption").GUID
 
 	// Split on comma.
 	splitDealCashbackGUID := strings.Split(dealCashbackGUIDs, ",")
@@ -50,10 +47,11 @@ func (dcts *DealCashbackTransactionService) CreateTransaction(receipt *multipart
 	totalCashbackAmount := dcts.DealRepository.SumCashbackAmount(dealGUIDs)
 
 	transactionData := &CreateTransaction{
-		UserGUID:            userGUID,
-		TransactionTypeGUID: dealCashbackTransactionTypeGUID,
-		Amount:              totalCashbackAmount,
-		ReferenceID:         Helper.GenerateUniqueShortID(),
+		UserGUID:              userGUID,
+		TransactionTypeGUID:   "8def67d0-fe5a-5d5e-806c-5b395a45396c",
+		TransactionStatusGUID: "0f9e1582-d618-590c-bd7c-6850555ef8bb",
+		Amount:                totalCashbackAmount,
+		ReferenceID:           Helper.GenerateUniqueShortID(),
 	}
 
 	transaction, err := dcts.TransactionRepository.Create(transactionData)

@@ -19,7 +19,6 @@ func (us *UserRepository) Create(data CreateUser) (*User, *systems.ErrorData) {
 		registerBy = "facebook"
 	}
 
-	userService := &UserService{DB: us.DB}
 	user := &User{
 		GUID:           Helper.GenerateUUID(),
 		FacebookID:     data.FacebookID,
@@ -28,7 +27,7 @@ func (us *UserRepository) Create(data CreateUser) (*User, *systems.ErrorData) {
 		PhoneNo:        data.PhoneNo,
 		ProfilePicture: data.ProfilePicture,
 		RegisterBy:     registerBy,
-		ReferralCode:   userService.GenerateReferralCode(data.Name),
+		ReferralCode:   data.ReferralCode,
 		Verified:       0,
 	}
 

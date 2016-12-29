@@ -15,3 +15,12 @@ func (sr *SettingRepository) GetAll() []*Setting {
 
 	return settings
 }
+
+// GetBySlug function used to retrieve setting by slug from database.
+func (sr *SettingRepository) GetBySlug(slug string) *Setting {
+	setting := &Setting{}
+
+	sr.DB.Model(&Setting{}).Where(&Setting{Slug: slug}).Find(&setting)
+
+	return setting
+}

@@ -9,6 +9,7 @@ import (
 
 type CashoutTransactionHandler struct {
 	CashoutTransactionService CashoutTransactionServiceInterface
+	TransactionService        TransactionServiceInterface
 }
 
 func (cth CashoutTransactionHandler) Create(context *gin.Context) {
@@ -18,6 +19,14 @@ func (cth CashoutTransactionHandler) Create(context *gin.Context) {
 
 	if tokenData["user_guid"] != userGUID {
 		context.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("create cashout transaction"))
+		return
+	}
+
+	error := cth.TransactionService.CheckIfUserHasPendingCashoutTransaction(userGUID)
+
+	if error != nil {
+		errorCode, _ := strconv.Atoi(error.Error.Status)
+		context.JSON(errorCode, error)
 		return
 	}
 
@@ -35,6 +44,6 @@ func (cth CashoutTransactionHandler) Create(context *gin.Context) {
 		context.JSON(errorCode, error)
 		return
 	}
-    
+
 	context.JSON(http.StatusOK, gin.H{"data": transaction})
 }

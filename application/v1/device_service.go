@@ -4,7 +4,6 @@ import "bitbucket.org/cliqers/shoppermate-api/systems"
 
 type DeviceService struct {
 	DeviceRepository DeviceRepositoryInterface
-	UserService      UserServiceInterface
 }
 
 // CheckDuplicateDevice function used to check if the device already exist in database.
@@ -38,14 +37,6 @@ func (ds *DeviceService) CreateDevice(deviceData CreateDevice) (*Device, *system
 		return nil, error
 	}
 
-	if deviceData.UserGUID != "" {
-		error = ds.UserService.CheckUserExistOrNot(deviceData.UserGUID)
-
-		if error != nil {
-			return nil, error
-		}
-	}
-
 	device, error := ds.DeviceRepository.Create(deviceData)
 
 	if error != nil {
@@ -61,14 +52,6 @@ func (ds *DeviceService) UpdateDevice(deviceUUID string, deviceData UpdateDevice
 
 	if error != nil {
 		return nil, error
-	}
-
-	if deviceData.UserGUID != "" {
-		error = ds.UserService.CheckUserExistOrNot(deviceData.UserGUID)
-
-		if error != nil {
-			return nil, error
-		}
 	}
 
 	device, error := ds.UpdateByDeviceUUID(deviceUUID, deviceData)

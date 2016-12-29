@@ -8,13 +8,21 @@ import (
 
 // UserServiceInterface is a contract that defines the method needed for User Service.
 type UserServiceInterface interface {
-	CheckUserExistOrNot(userGUID string) *systems.ErrorData
-	CheckUserPhoneNumberValidOrNot(phoneNo string) (*User, *systems.ErrorData)
-	CheckUserFacebookIDValidOrNot(facebookID string) (*User, *systems.ErrorData)
-	UploadProfileImage(file multipart.File) (map[string]string, *systems.ErrorData)
-	GiveReferralCashback(referrerGUID string, referentGUID string) (interface{}, *systems.ErrorData)
+	ViewUser(userGUID, relations string) *User
+	CreateUser(userData CreateUser, profilePicture multipart.File, referralSettings map[string]string,
+		debug string) (*User, *systems.ErrorData)
+	UpdateUser(userGUID, deviceUUID string, userData UpdateUser,
+		profilePicture multipart.File) (*User, *systems.ErrorData)
+	CheckUserGUIDExistOrNot(userGUID string) *systems.ErrorData
+	CheckUserPhoneNumberDuplicate(phoneNo string) *systems.ErrorData
+	CheckUserPhoneNumberExistOrNot(phoneNo string) (*User, *systems.ErrorData)
+	CheckUserReferralCodeExistOrNot(referralCode string, referralSettings map[string]string) (*User, *systems.ErrorData)
+	CheckUserFacebookIDExistOrNot(facebookID string) (*User, *systems.ErrorData)
+	CheckUserFacebookIDValidOrNot(facebookID string, debug int) *systems.ErrorData
+	UploadUserProfilePicture(file multipart.File) (map[string]string, *systems.ErrorData)
 	GenerateReferralCode(name string) string
-	DeleteImage(ImageURL string) *systems.ErrorData
+	DeleteProfilePicture(profilePictureURL string) *systems.ErrorData
+	CalculateAllTimeAmountAndPendingAmount(user *User) *User
 }
 
 // UserRepositoryInterface is a contract that defines the method needed for User Repository

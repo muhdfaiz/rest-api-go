@@ -12,10 +12,10 @@ type User struct {
 	PhoneNo           string     `json:"phone_no"`
 	ProfilePicture    string     `json:"profile_picture"`
 	ReferralCode      string     `json:"referral_code"`
-	BankCountry       string     `json:"bank_country"`
-	BankName          string     `json:"bank_name"`
-	BankAccountName   string     `json:"bank_account_name"`
-	BankAccountNumber string     `json:"bank_account_number"`
+	BankCountry       *string    `json:"bank_country"`
+	BankName          *string    `json:"bank_name"`
+	BankAccountName   *string    `json:"bank_account_name"`
+	BankAccountNumber *string    `json:"bank_account_number"`
 	RegisterBy        string     `json:"register_by"`
 	AllTimeAmount     *float64   `sql:"-" json:"all_time_amount"`
 	Wallet            float64    `json:"available_cashback_amount"`

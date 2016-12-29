@@ -28,24 +28,16 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 	amazonS3FileSystem.Region = region
 	amazonS3FileSystem.BucketName = bucketName
 
-	// Referral Cashback Objects
-	referralCashbackRepository := &v1.ReferralCashbackRepository{DB: DB}
-
-	// User Objects
-	userRepository := &v1.UserRepository{DB: DB}
-	userService := &v1.UserService{DB: DB, AmazonS3FileSystem: amazonS3FileSystem, UserRepository: userRepository,
-		ReferralCashbackRepository: referralCashbackRepository}
-
 	// Device Objects
 	deviceRepository := &v1.DeviceRepository{DB: DB}
-	deviceService := &v1.DeviceService{DeviceRepository: deviceRepository, UserService: userService}
+	deviceService := &v1.DeviceService{DeviceRepository: deviceRepository}
 
 	// Sms Objects
 	smsHistoryRepository := &v1.SmsHistoryRepository{DB: DB}
 	smsService := &v1.SmsService{DB: DB, SmsHistoryRepository: smsHistoryRepository}
 
 	// Auth Service
-	authService := &v1.AuthService{UserService: userService, SmsService: smsService, DeviceService: deviceService}
+	authService := &v1.AuthService{SmsService: smsService, DeviceService: deviceService}
 
 	// Facebook Service
 	facebookService := &facebook.FacebookService{}
@@ -145,11 +137,21 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 		DealCashbackService: dealCashbackService, ShoppingListService: shoppingListService, DealService: dealService,
 		TransactionTypeService: transactionTypeService, TransactionStatusService: transactionStatusService}
 
+	// Referral Cashback Transaction Objects
+	referralCashbackTransactionRepository := &v1.ReferralCashbackTransactionRepository{DB: DB}
+	referralCashbackTransactionService := &v1.ReferralCashbackTransactionService{ReferralCashbackTransactionRepository: referralCashbackTransactionRepository}
+
+	// User Objects
+	userRepository := &v1.UserRepository{DB: DB}
+	userService := &v1.UserService{UserRepository: userRepository, TransactionService: transactionService, DealCashbackService: dealCashbackService,
+		FacebookService: facebookService, SmsService: smsService, DeviceService: deviceService, ReferralCashbackTransactionService: referralCashbackTransactionService,
+		AmazonS3FileSystem: amazonS3FileSystem}
+
 	//Deal Cashback Transaction
 	dealCashbackTransactionRepository := &v1.DealCashbackTransactionRepository{DB: DB}
 	dealCashbackTransactionService := &v1.DealCashbackTransactionService{AmazonS3FileSystem: amazonS3FileSystem,
 		DealCashbackRepository: dealCashbackRepository, DealCashbackTransactionRepository: dealCashbackTransactionRepository,
-		DealRepository: dealRepository, TransactionTypeRepository: transactionTypeRepository, TransactionRepository: transactionRepository}
+		DealRepository: dealRepository, TransactionRepository: transactionRepository}
 
 	// Generic Objects
 	genericRepository := &v1.GenericRepository{DB: DB}
@@ -163,7 +165,7 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 	//Cashout Transaction Object
 	cashoutTransactionRepository := &v1.CashoutTransactionRepository{DB: DB}
 	cashoutTransactionService := &v1.CashoutTransactionService{CashoutTransactionRepository: cashoutTransactionRepository,
-		TransactionService: transactionService, UserRepository: userRepository, TransactionTypeRepository: transactionTypeRepository}
+		TransactionService: transactionService, UserRepository: userRepository}
 
 	// Setting Objects
 	settingRepository := &v1.SettingRepository{DB: DB}
@@ -174,18 +176,16 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 		SmsHistoryRepository: smsHistoryRepository, DeviceService: deviceService}
 
 	// User Handler
-	userHandler := v1.UserHandler{UserRepository: userRepository, UserService: userService,
-		DeviceService: deviceService, ReferralCashbackRepository: referralCashbackRepository, SmsService: smsService,
-		FacebookService: facebookService, TransactionService: transactionService, DealCashbackService: dealCashbackService}
+	userHandler := v1.UserHandler{UserService: userService, SettingService: settingService}
 
 	// Device Handler
-	deviceHandler := v1.DeviceHandler{DeviceService: deviceService}
+	deviceHandler := v1.DeviceHandler{DeviceService: deviceService, UserService: userService}
 
 	// Shopping List Handler
 	shoppingListHandler := v1.ShoppingListHandler{ShoppingListService: shoppingListService, ShoppingListItemImageService: shoppingListItemImageService}
 
 	// Auth Handler
-	authHandler := v1.AuthHandler{AuthService: authService}
+	authHandler := v1.AuthHandler{AuthService: authService, UserService: userService}
 
 	// Occasion Handler
 	occasionHandler := v1.OccasionHandler{OccasionService: occasionService}
@@ -219,7 +219,7 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 
 	transactionHandler := v1.TransactionHandler{TransactionService: transactionService}
 
-	cashoutTransactionHandler := v1.CashoutTransactionHandler{CashoutTransactionService: cashoutTransactionService}
+	cashoutTransactionHandler := v1.CashoutTransactionHandler{CashoutTransactionService: cashoutTransactionService, TransactionService: transactionService}
 
 	defaultShoppingListHandler := v1.DefaultShoppingListHandler{DefaultShoppingListService: defaultShoppingListService}
 

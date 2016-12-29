@@ -21,12 +21,13 @@ type TransactionService struct {
 }
 
 // CreateTransaction function used to create new user transaction and store in database.
-func (ts *TransactionService) CreateTransaction(userGUID string, transactionTypeGUID string, amount float64) (*Transaction, *systems.ErrorData) {
+func (ts *TransactionService) CreateTransaction(userGUID, transactionTypeGUID, transactionStatusGUID string, amount float64) (*Transaction, *systems.ErrorData) {
 	transactionData := &CreateTransaction{
-		UserGUID:            userGUID,
-		TransactionTypeGUID: transactionTypeGUID,
-		Amount:              amount,
-		ReferenceID:         Helper.GenerateUniqueShortID(),
+		UserGUID:              userGUID,
+		TransactionTypeGUID:   transactionTypeGUID,
+		TransactionStatusGUID: transactionStatusGUID,
+		Amount:                amount,
+		ReferenceID:           Helper.GenerateUniqueShortID(),
 	}
 
 	transaction, err := ts.TransactionRepository.Create(transactionData)
@@ -88,6 +89,19 @@ func (ts *TransactionService) ViewDealCashbackTransactionAndUpdateReadStatus(use
 	transaction.Dealcashbacktransactions.TotalDeal = totalDeal
 
 	return transaction, nil
+}
+
+// CheckIfUserHasPendingCashoutTransaction function used to check if user has any cashout transaction with status `pending`.
+// API only allow one time cashout transaction until the cashout transaction status become `approve` or `reject`.
+func (ts *TransactionService) CheckIfUserHasPendingCashoutTransaction(userGUID string) *systems.ErrorData {
+	transactions := ts.TransactionRepository.GetByUserGUIDAndTransactionTypeGUIDAndTransactionStatusGUID(userGUID, "c96358c0-13ae-59ad-863f-f113ddb33c68",
+		"0f9e1582-d618-590c-bd7c-6850555ef8bb", "")
+
+	if len(transactions) > 0 {
+		return Error.GenericError("422", systems.StillHasPendingCashoutTransaction, "Pending Cashout Transaction.", "message", "You still has cashout transaction with status pending.")
+	}
+
+	return nil
 }
 
 // ViewCashoutTransactionAndUpdateReadStatus function used to view cashout transaction details and update `read_status` if the transaction

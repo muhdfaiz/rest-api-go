@@ -3,65 +3,52 @@ package v1
 import "bitbucket.org/cliqers/shoppermate-api/systems"
 
 type AuthService struct {
-	UserService   UserServiceInterface
 	SmsService    SmsServiceInterface
 	DeviceService DeviceServiceInterface
 }
 
 // AuthenticateUserViaPhoneNumber function used to login user using phone number.
-func (as *AuthService) AuthenticateUserViaPhoneNumber(phoneNo string, debug string) (*User, *systems.ErrorData) {
-	user, error := as.UserService.CheckUserPhoneNumberValidOrNot(phoneNo)
+func (as *AuthService) AuthenticateUserViaPhoneNumber(userGUID, phoneNo, debug string) *systems.ErrorData {
+	if debug != "1" {
+		_, error := as.SmsService.SendVerificationCode(phoneNo, userGUID)
 
-	if error != nil {
-		return nil, error
+		if error != nil {
+			return error
+		}
 	}
 
-	if debug != "1" {
-		_, error = as.SmsService.SendVerificationCode(phoneNo, user.GUID)
+	return nil
+}
+
+// AuthenticateUserViaFacebook function used to login user using facebook.
+func (as *AuthService) AuthenticateUserViaFacebook(userGUID, userPhoneNo, facebookID, deviceUUID string) (*systems.JwtToken, *systems.ErrorData) {
+	device := as.DeviceService.ViewDeviceByUUIDIncludingSoftDelete(deviceUUID)
+
+	if device.UserGUID == "" {
+		_, error := as.DeviceService.UpdateByDeviceUUID(deviceUUID, UpdateDevice{UserGUID: userGUID})
 
 		if error != nil {
 			return nil, error
 		}
 	}
 
-	return user, nil
-}
-
-// AuthenticateUserViaFacebook function used to login user using facebook.
-func (as *AuthService) AuthenticateUserViaFacebook(facebookID string, deviceUUID string) (*User, *systems.JwtToken, *systems.ErrorData) {
-	user, error := as.UserService.CheckUserFacebookIDValidOrNot(facebookID)
+	error := as.DeviceService.ReactivateDevice(device.GUID)
 
 	if error != nil {
-		return nil, nil, error
+		return nil, error
 	}
 
-	device := as.DeviceService.ViewDeviceByUUIDIncludingSoftDelete(deviceUUID)
-
-	if device.UserGUID == "" {
-		device, error = as.DeviceService.UpdateByDeviceUUID(deviceUUID, UpdateDevice{UserGUID: user.GUID})
-
-		if error != nil {
-			return nil, nil, error
-		}
-	}
-
-	error = as.DeviceService.ReactivateDevice(device.GUID)
+	jwtToken, error := as.GenerateJWTTokenForUser(userGUID, userPhoneNo, deviceUUID)
 
 	if error != nil {
-		return nil, nil, error
+		return nil, error
 	}
 
-	jwtToken, error := as.GenerateJWTTokenForUser(user.GUID, user.PhoneNo, deviceUUID)
-
-	if error != nil {
-		return nil, nil, error
-	}
-
-	return user, jwtToken, nil
+	return jwtToken, nil
 }
 
 // LogoutUser function used to logout user from application by soft delete user device.
-func (as *AuthService) LogoutUser(deviceUUID string, userGUID string) *systems.ErrorData {
+func (as *AuthService) LogoutUser(deviceUUID, userGUID string) *systems.ErrorData {
 	device := as.DeviceService.ViewDeviceByUUIDandUserGUID(deviceUUID, userGUID)
 
 	if device.UUID == "" {
@@ -78,7 +65,7 @@ func (as *AuthService) LogoutUser(deviceUUID string, userGUID string) *systems.E
 }
 
 // GenerateJWTTokenForUser function used to generate JWT Token for the user.
-func (as *AuthService) GenerateJWTTokenForUser(userGUID string, userPhoneNo string, deviceUUID string) (*systems.JwtToken, *systems.ErrorData) {
+func (as *AuthService) GenerateJWTTokenForUser(userGUID, userPhoneNo, deviceUUID string) (*systems.JwtToken, *systems.ErrorData) {
 	jwt := &systems.Jwt{}
 
 	jwtToken, error := jwt.GenerateToken(userGUID, userPhoneNo, deviceUUID)

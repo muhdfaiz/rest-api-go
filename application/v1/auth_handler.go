@@ -7,8 +7,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// AuthHandler will handle all request related to Auth Resources.
 type AuthHandler struct {
 	AuthService AuthServiceInterface
+	UserService UserServiceInterface
 }
 
 // LoginViaPhone function will handle user authentication using phone number.
@@ -22,7 +24,15 @@ func (ah *AuthHandler) LoginViaPhone(context *gin.Context) {
 
 	debug := context.Query("debug")
 
-	user, error := ah.AuthService.AuthenticateUserViaPhoneNumber(authData.PhoneNo, debug)
+	user, error := ah.UserService.CheckUserPhoneNumberExistOrNot(authData.PhoneNo)
+
+	if error != nil {
+		errorCode, _ := strconv.Atoi(error.Error.Status)
+		context.JSON(errorCode, error)
+		return
+	}
+
+	error = ah.AuthService.AuthenticateUserViaPhoneNumber(user.GUID, authData.PhoneNo, debug)
 
 	if error != nil {
 		errorCode, _ := strconv.Atoi(error.Error.Status)
@@ -46,7 +56,15 @@ func (ah *AuthHandler) LoginViaFacebook(context *gin.Context) {
 		return
 	}
 
-	user, jwtToken, error := ah.AuthService.AuthenticateUserViaFacebook(authData.FacebookID, authData.DeviceUUID)
+	user, error := ah.UserService.CheckUserFacebookIDExistOrNot(authData.FacebookID)
+
+	if error != nil {
+		errorCode, _ := strconv.Atoi(error.Error.Status)
+		context.JSON(errorCode, error)
+		return
+	}
+
+	jwtToken, error := ah.AuthService.AuthenticateUserViaFacebook(user.GUID, user.PhoneNo, authData.FacebookID, authData.DeviceUUID)
 
 	if error != nil {
 		errorCode, _ := strconv.Atoi(error.Error.Status)

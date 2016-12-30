@@ -2,6 +2,7 @@ package v1
 
 import "time"
 
+// Event Model
 type Event struct {
 	ID        int        `json:"id"`
 	GUID      string     `json:"guid"`
@@ -15,11 +16,13 @@ type Event struct {
 	UpdatedAt time.Time  `json:"updated_at"`
 	DeletedAt *time.Time `json:"deleted_at"`
 
-	// Event Has Many Deals
 	//Eventdeals []*EventDeal `json:"deals,omitempty" gorm:"ForeignKey:EventID;AssociationForeignKey:ID"`
+
+	// Event Has Many Deals
 	Deals []*Deal `json:"deals,omitempty" gorm:"many2many:event_deal;"`
 }
 
+// TableName function used to override default plural table name used by gorm based on struct name.
 func (e Event) TableName() string {
 	return "event"
 }

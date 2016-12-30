@@ -2,6 +2,7 @@ package v1
 
 import "time"
 
+// Advertiser Model
 type Advertiser struct {
 	ID               int        `json:"id"`
 	GUID             string     `json:"guid"`
@@ -21,7 +22,8 @@ type Advertiser struct {
 	DeletedAt        *time.Time `json:"deleted_at"`
 }
 
-// TableName function used to set Item table name to be `item``
+// TableName function used to set advertiser table name to `advertiser`
+// By default, gorm used plural table name.
 func (g Advertiser) TableName() string {
 	return "advertiser"
 }

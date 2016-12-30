@@ -2,6 +2,7 @@ package v1
 
 import "time"
 
+// Campaign Model
 type Campaign struct {
 	ID           int        `json:"id"`
 	GUID         string     `json:"guid"`

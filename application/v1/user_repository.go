@@ -11,7 +11,7 @@ type UserRepository struct {
 }
 
 // Create function will create new user and store in database
-func (us *UserRepository) Create(data CreateUser) (*User, *systems.ErrorData) {
+func (ur *UserRepository) Create(data CreateUser) (*User, *systems.ErrorData) {
 	registerBy := "phone_no"
 
 	// Set registerBy equal to facebook if register using Facebook
@@ -32,7 +32,7 @@ func (us *UserRepository) Create(data CreateUser) (*User, *systems.ErrorData) {
 	}
 
 	// Store new user in database
-	result := us.DB.Create(user)
+	result := ur.DB.Create(user)
 
 	if result.Error != nil || result.RowsAffected == 0 {
 		return nil, Error.InternalServerError(result.Error, systems.DatabaseError)
@@ -42,7 +42,7 @@ func (us *UserRepository) Create(data CreateUser) (*User, *systems.ErrorData) {
 }
 
 // Update function used to update user detail by certain field.
-func (us *UserRepository) Update(guid string, data map[string]interface{}) *systems.ErrorData {
+func (ur *UserRepository) Update(guid string, data map[string]interface{}) *systems.ErrorData {
 	updateData := map[string]interface{}{}
 
 	for key, value := range data {
@@ -57,7 +57,7 @@ func (us *UserRepository) Update(guid string, data map[string]interface{}) *syst
 		}
 	}
 
-	result := us.DB.Model(&User{}).Where(&User{GUID: guid}).Updates(updateData)
+	result := ur.DB.Model(&User{}).Where(&User{GUID: guid}).Updates(updateData)
 
 	if result.Error != nil {
 		return Error.InternalServerError(result.Error, systems.DatabaseError)
@@ -66,8 +66,8 @@ func (us *UserRepository) Update(guid string, data map[string]interface{}) *syst
 	return nil
 }
 
-func (us *UserRepository) UpdateUserWallet(userGUID string, amount float64) *systems.ErrorData {
-	result := us.DB.Model(&User{}).Where(&User{GUID: userGUID}).Updates(map[string]interface{}{
+func (ur *UserRepository) UpdateUserWallet(userGUID string, amount float64) *systems.ErrorData {
+	result := ur.DB.Model(&User{}).Where(&User{GUID: userGUID}).Updates(map[string]interface{}{
 		"wallet": amount,
 	})
 
@@ -78,8 +78,8 @@ func (us *UserRepository) UpdateUserWallet(userGUID string, amount float64) *sys
 	return nil
 }
 
-func (us *UserRepository) Delete(attribute string, value string) *systems.ErrorData {
-	result := us.DB.Where(attribute+" = ?", value).Delete(&User{})
+func (ur *UserRepository) Delete(attribute string, value string) *systems.ErrorData {
+	result := ur.DB.Where(attribute+" = ?", value).Delete(&User{})
 
 	if result.Error != nil {
 		return Error.InternalServerError(result.Error, systems.DatabaseError)

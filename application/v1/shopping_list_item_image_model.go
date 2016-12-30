@@ -2,6 +2,7 @@ package v1
 
 import "time"
 
+// ShoppingListItemImage Model
 type ShoppingListItemImage struct {
 	ID                   int        `json:"id"`
 	GUID                 string     `json:"guid"`
@@ -13,6 +14,6 @@ type ShoppingListItemImage struct {
 	UpdatedAt            time.Time  `json:"updated_at"`
 	DeletedAt            *time.Time `json:"deleted_at"`
 
-	// ShoppingListItemImage belongs to Shopping List Item
+	// Shopping List Item Image belongs to Shopping List Item
 	Items *ShoppingListItem `json:"item,omitempty" gorm:"ForeignKey:ShoppingListItemGUID;AssociationForeignKey:GUID"`
 }

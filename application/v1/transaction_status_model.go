@@ -2,6 +2,7 @@ package v1
 
 import "time"
 
+// TransactionStatus model
 type TransactionStatus struct {
 	ID        int        `json:"id"`
 	GUID      string     `json:"guid"`

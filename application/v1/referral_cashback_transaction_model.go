@@ -2,6 +2,7 @@ package v1
 
 import "time"
 
+// ReferralCashbackTransaction Model
 type ReferralCashbackTransaction struct {
 	ID              uint       `json:"id"`
 	GUID            string     `json:"guid"`

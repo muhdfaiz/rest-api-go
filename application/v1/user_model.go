@@ -2,7 +2,7 @@ package v1
 
 import "time"
 
-// User Mapping
+// User Model
 type User struct {
 	ID                int        `json:"id"`
 	GUID              string     `json:"guid"`
@@ -17,13 +17,15 @@ type User struct {
 	BankAccountName   *string    `json:"bank_account_name"`
 	BankAccountNumber *string    `json:"bank_account_number"`
 	RegisterBy        string     `json:"register_by"`
-	AllTimeAmount     *float64   `sql:"-" json:"all_time_amount"`
 	Wallet            float64    `json:"available_cashback_amount"`
-	PendingAmount     *float64   `sql:"-" json:"pending_amount"`
 	Verified          int        `json:"verified"`
 	CreatedAt         time.Time  `json:"created_at"`
 	UpdatedAt         time.Time  `json:"updated_at"`
 	DeletedAt         *time.Time `json:"deleted_at"`
+
+	// Virtual Column. Use this column in the response.
+	AllTimeAmount *float64 `sql:"-" json:"all_time_amount"`
+	PendingAmount *float64 `sql:"-" json:"pending_amount"`
 
 	// User have many Devices
 	Devices []*Device `json:"devices,omitempty" gorm:"ForeignKey:UserGUID"`

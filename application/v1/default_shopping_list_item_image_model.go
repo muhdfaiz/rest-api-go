@@ -2,6 +2,7 @@ package v1
 
 import "time"
 
+// DefaultShoppingListItemImage Model
 type DefaultShoppingListItemImage struct {
 	ID                   int        `json:"id"`
 	GUID                 string     `json:"guid"`

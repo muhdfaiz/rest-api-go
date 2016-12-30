@@ -2,6 +2,7 @@ package v1
 
 import "time"
 
+// DealCashback Model
 type DealCashback struct {
 	ID                          int        `json:"id"`
 	GUID                        string     `json:"guid"`
@@ -14,12 +15,18 @@ type DealCashback struct {
 	UpdatedAt                   time.Time  `json:"updated_at"`
 	DeletedAt                   *time.Time `json:"deleted_at"`
 
+	// Deal Cashback Has One Deal Cashback Status.
 	Dealcashbackstatus *DealCashbackStatus `json:"deal_cashback_statuses" gorm:"ForeignKey:GUID;AssociationForeignKey:DealCashbackGUID"`
 
-	// Has One Deal Cashback Transaction
+	// Deal Cashback Has One Deal Cashback Transaction.
 	Dealcashbacktransactions *DealCashbackTransaction `json:"deal_cashback_transaction,omitempty" gorm:"ForeignKey:GUID;AssociationForeignKey:DealCashbackTransactionGUID"`
 
-	Deals         *Deal         `json:"deal,omitempty" gorm:"ForeignKey:GUID;AssociationForeignKey:DealGUID"`
-	Users         *User         `json:"user,omitempty" gorm:"ForeignKey:GUID;AssociationForeignKey:UserGUID"`
+	// Deal Cashback Has One Deal.
+	Deals *Deal `json:"deal,omitempty" gorm:"ForeignKey:GUID;AssociationForeignKey:DealGUID"`
+
+	// Deal Cashback Has One User.
+	Users *User `json:"user,omitempty" gorm:"ForeignKey:GUID;AssociationForeignKey:UserGUID"`
+
+	// Deal Cashback Has One Shopping List.
 	Shoppinglists *ShoppingList `json:"shopping_list,omitempty" gorm:"ForeignKey:GUID;AssociationForeignKey:ShoppingListGUID"`
 }

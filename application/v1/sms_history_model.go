@@ -2,6 +2,7 @@ package v1
 
 import "time"
 
+// SmsHistory model
 type SmsHistory struct {
 	ID               uint       `json:"id"`
 	GUID             string     `json:"guid"`

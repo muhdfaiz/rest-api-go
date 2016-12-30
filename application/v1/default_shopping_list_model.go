@@ -2,6 +2,7 @@ package v1
 
 import "time"
 
+// DefaultShoppingList Model
 type DefaultShoppingList struct {
 	ID           int        `json:"id"`
 	GUID         string     `json:"guid"`
@@ -11,9 +12,9 @@ type DefaultShoppingList struct {
 	UpdatedAt    time.Time  `json:"updated_at"`
 	DeletedAt    *time.Time `json:"deleted_at"`
 
-	// DefaultShoppingList has one Occasion
+	// Default Shopping List Has One Occasion
 	Occasions *Occasion `json:"occasions,omitempty" gorm:"ForeignKey:OccasionGUID;AssociationForeignKey:GUID"`
 
-	// Has many Shopping List Item
+	// Default Shopping List Has many Default Shopping List Item
 	Items []*DefaultShoppingListItem `json:"items,omitempty" gorm:"ForeignKey:ShoppingListGUID;AssociationForeignKey:GUID"`
 }

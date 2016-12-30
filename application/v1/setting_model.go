@@ -2,6 +2,7 @@ package v1
 
 import "time"
 
+// Setting Model
 type Setting struct {
 	ID        int       `json:"id"`
 	GUID      string    `json:"guid"`

@@ -2,6 +2,7 @@ package v1
 
 import "time"
 
+// Grocer Model
 type Grocer struct {
 	ID        int        `json:"id"`
 	GUID      string     `json:"guid"`
@@ -13,14 +14,17 @@ type Grocer struct {
 	UpdatedAt time.Time  `json:"updated_at"`
 	DeletedAt *time.Time `json:"deleted_at"`
 
-	// Grocer Has Many Grocer Location
+	// Grocer Has Many Grocer Location.
 	GrocerLocations []*GrocerLocation `json:"grocer_locations,omitempty" gorm:"ForeignKey:GrocerID;AssociationForeignKey:ID"`
 
-	TotalDeals int     `json:"total_deals"`
-	Deals      []*Deal `json:"deals,omitempty"`
+	// Grocer Has Many Deals.
+	Deals []*Deal `json:"deals,omitempty"`
+
+	// Virtual Column. Not exist in real database table.
+	TotalDeals int `json:"total_deals"`
 }
 
-// TableName function used to set Item table name to be `item``
+// TableName function used to override default plural table name used by gorm based on struct name.
 func (g Grocer) TableName() string {
 	return "grocer"
 }

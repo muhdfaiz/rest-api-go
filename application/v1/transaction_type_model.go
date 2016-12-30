@@ -2,6 +2,7 @@ package v1
 
 import "time"
 
+// TransactionType model
 type TransactionType struct {
 	ID        int        `json:"id"`
 	GUID      string     `json:"guid"`

@@ -2,6 +2,7 @@ package v1
 
 import "time"
 
+// Transaction model
 type Transaction struct {
 	ID                    int        `json:"id"`
 	GUID                  string     `json:"guid"`
@@ -17,13 +18,18 @@ type Transaction struct {
 	UpdatedAt             time.Time  `json:"updated_at"`
 	DeletedAt             *time.Time `json:"deleted_at"`
 
+	// Transaction has one User.
 	Users *User `json:"user" gorm:"ForeignKey:GUID;AssociationForeignKey:UserGUID"`
 
+	// Transaction has one Deal Cashback Transaction.
 	Dealcashbacktransactions *DealCashbackTransaction `json:"deal_cashback_transaction,omitempty" gorm:"ForeignKey:TransactionGUID;AssociationForeignKey:GUID"`
 
+	// Transaction has one Cashout Transaction.
 	Cashouttransactions *CashoutTransaction `json:"cashout_transaction,omitempty" gorm:"ForeignKey:TransactionGUID;AssociationForeignKey:GUID"`
 
+	// Transaction has one Transaction Type.
 	Transactiontypes *TransactionType `json:"transaction_type" gorm:"ForeignKey:TransactionTypeGUID;AssociationForeignKey:GUID"`
 
+	// Transaction has one Transaction Status.
 	Transactionstatuses *TransactionStatus `json:"transaction_status" gorm:"ForeignKey:TransactionStatusGUID;AssociationForeignKey:GUID"`
 }

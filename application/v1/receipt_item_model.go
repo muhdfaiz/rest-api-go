@@ -2,6 +2,7 @@ package v1
 
 import "time"
 
+// ReceiptItem Model
 type ReceiptItem struct {
 	ID          int        `json:"id"`
 	GUID        string     `json:"guid"`
@@ -14,6 +15,7 @@ type ReceiptItem struct {
 	DeletedAt   *time.Time `json:"deleted_at"`
 }
 
+// TableName function used to override default plural table name used by gorm based on struct name.
 func (ri ReceiptItem) TableName() string {
 	return "receipt_item"
 }

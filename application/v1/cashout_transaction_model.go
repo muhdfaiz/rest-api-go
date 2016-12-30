@@ -2,6 +2,7 @@ package v1
 
 import "time"
 
+// CashoutTransaction model
 type CashoutTransaction struct {
 	ID                    int        `json:"id"`
 	GUID                  string     `json:"guid"`
@@ -19,5 +20,6 @@ type CashoutTransaction struct {
 	UpdatedAt             time.Time  `json:"updated_at"`
 	DeletedAt             *time.Time `json:"deleted_at"`
 
+	// Cashout Transaction has one Transaction.
 	Transactions *Transaction `json:"transaction,omitempty" gorm:"ForeignKey:TransactionGUID;AssociationForeignKey:GUID"`
 }

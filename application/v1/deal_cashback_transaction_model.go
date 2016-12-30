@@ -2,6 +2,7 @@ package v1
 
 import "time"
 
+// DealCashbackTransaction model
 type DealCashbackTransaction struct {
 	ID               int        `json:"id"`
 	GUID             string     `json:"guid"`
@@ -16,12 +17,15 @@ type DealCashbackTransaction struct {
 	UpdatedAt        time.Time  `json:"updated_at"`
 	DeletedAt        *time.Time `json:"deleted_at"`
 
+	// Deal Cashback Transaction Has Many Shopping Lists.
 	DealCashbackGroupByShoppingListName []*ShoppingList `json:"deal_cashbacks_group_by_shopping_list"`
 
-	// Has many Deal Cashback
+	// Deal Cashback Trasnaction Has many Deal Cashbacks.
 	Dealcashbacks []*DealCashback `json:"deal_cashbacks,omitempty" gorm:"ForeignKey:DealCashbackTransactionGUID;AssociationForeignKey:GUID"`
 
+	// DealCashbackTransaction Has One Receipt.
 	Receipt *Receipt `json:"receipt" gorm:"ForeignKey:DealCashbackTransactionGUID;AssociationForeignKey:GUID"`
 
+	// Deal Cashback Transaction Has One Transaction.
 	Transactions *Transaction `json:"transaction,omitempty" gorm:"ForeignKey:TransactionGUID;AssociationForeignKey:GUID"`
 }

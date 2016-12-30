@@ -74,3 +74,17 @@ func (gr *GenericRepository) GetByID(genericID int, relations string) *Generic {
 
 	return generic
 }
+
+// GetByName function used to retrieve generic category from database by Name.
+// Return empty result if generic name not exist in database.
+func (gr *GenericRepository) GetByName(name, relations string) *Generic {
+	DB := gr.DB.Model(&Generic{})
+
+	DB = LoadRelations(DB, relations)
+
+	generic := &Generic{}
+
+	DB.Where(&Generic{Name: name}).First(&generic)
+
+	return generic
+}

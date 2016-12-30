@@ -33,3 +33,10 @@ func (gs *GenericService) GetLatestUpdate(lastSyncDate, pageNumber, pageLimit, r
 
 	return generics, totalGeneric
 }
+
+// GetGenericByName function used to retrieve generic by name through generic repository.
+func (gs *GenericService) GetGenericByName(name string) *Generic {
+	generic := gs.GenericRepository.GetByName(name, "")
+
+	return generic
+}

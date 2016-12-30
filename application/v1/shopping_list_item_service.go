@@ -16,6 +16,7 @@ type ShoppingListItemService struct {
 	ItemCategoryService        ItemCategoryServiceInterface
 	ItemSubCategoryService     ItemSubCategoryServiceInterface
 	DealService                DealServiceInterface
+	GenericService             GenericServiceInterface
 }
 
 // ViewUserShoppingListItem function used to view details of one user shopping list item inside user shopping list
@@ -339,6 +340,16 @@ func (slis *ShoppingListItemService) SetShoppingListItemCategoryAndSubcategory(s
 		shoppingListItemCategory = slis.ItemCategoryService.GetItemCategoryByID(item.CategoryID).Name
 
 		shoppingListItemSubCategory = slis.ItemSubCategoryService.GetItemSubCategoryByID(item.SubcategoryID).Name
+	}
+
+	if item.GUID == "" {
+		generic := slis.GenericService.GetGenericByName(shoppingListItemName)
+
+		if generic.GUID != "" {
+			shoppingListItemCategory = slis.ItemCategoryService.GetItemCategoryByID(generic.CategoryID).Name
+
+			shoppingListItemSubCategory = slis.ItemSubCategoryService.GetItemSubCategoryByID(generic.SubcategoryID).Name
+		}
 	}
 
 	return shoppingListItemCategory, shoppingListItemSubCategory

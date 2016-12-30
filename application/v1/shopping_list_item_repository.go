@@ -14,6 +14,7 @@ type ShoppingListItemRepository struct {
 // Create function used to create user shopping list item
 func (slir *ShoppingListItemRepository) Create(data CreateShoppingListItem) (*ShoppingListItem, *systems.ErrorData) {
 	dealGUID := data.DealGUID
+
 	cashbackAmount := data.CashbackAmount
 
 	shoppingListItem := &ShoppingListItem{

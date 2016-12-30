@@ -100,9 +100,14 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 	defaultShoppingListItemRepository := &v1.DefaultShoppingListItemRepository{DB: DB}
 	defaultShoppingListItemService := &v1.DefaultShoppingListItemService{DefaultShoppingListItemRepository: defaultShoppingListItemRepository}
 
+	// Generic Objects
+	genericRepository := &v1.GenericRepository{DB: DB}
+	genericService := &v1.GenericService{GenericRepository: genericRepository}
+	genericTransformer := &v1.GenericTransformer{}
+
 	// Shopping List Item Repository
 	shoppingListItemService := &v1.ShoppingListItemService{ShoppingListItemRepository: shoppingListItemRepository, ItemService: itemService,
-		ItemCategoryService: itemCategoryService, ItemSubCategoryService: itemSubCategoryService, DealService: dealService}
+		ItemCategoryService: itemCategoryService, ItemSubCategoryService: itemSubCategoryService, DealService: dealService, GenericService: genericService}
 
 	// Shopping List Item Image Objects
 	shoppingListItemImageRepository := &v1.ShoppingListItemImageRepository{DB: DB}
@@ -152,11 +157,6 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 	dealCashbackTransactionService := &v1.DealCashbackTransactionService{AmazonS3FileSystem: amazonS3FileSystem,
 		DealCashbackRepository: dealCashbackRepository, DealCashbackTransactionRepository: dealCashbackTransactionRepository,
 		DealRepository: dealRepository, TransactionRepository: transactionRepository}
-
-	// Generic Objects
-	genericRepository := &v1.GenericRepository{DB: DB}
-	genericService := &v1.GenericService{GenericRepository: genericRepository}
-	genericTransformer := &v1.GenericTransformer{}
 
 	// Event Objects
 	eventRepository := &v1.EventRepository{DB: DB}

@@ -16,6 +16,7 @@ type GenericServiceInterface interface {
 	CheckGenericExistOrNotByID(genericID int) (*Generic, *systems.ErrorData)
 	GetAllGeneric(pageNumber, pageLimit, relations string) ([]*Generic, int)
 	GetLatestUpdate(lastSyncDate, pageNumber, pageLimit, relations string) ([]*Generic, int)
+	GetGenericByName(name string) *Generic
 }
 
 // GenericRepositoryInterface is acontract that defines the method needed for
@@ -24,4 +25,5 @@ type GenericRepositoryInterface interface {
 	GetAll(pageNumber, pageLimit, relations string) ([]*Generic, int)
 	GetByUpdatedAtGreaterThanLastSyncDate(lastSyncDate, pageNumber, pageLimit, relations string) ([]*Generic, int)
 	GetByID(genericID int, relations string) *Generic
+	GetByName(name, relations string) *Generic
 }

@@ -224,31 +224,35 @@ func (us *UserService) CheckUserFacebookIDValidOrNot(facebookID string, debug in
 func (us *UserService) CreateReferralCashbackTransaction(referrerUser *User, referentUser *User,
 	referralSettings map[string]string) *systems.ErrorData {
 
-	totalNumberOfUserReferralCashbackTransactions := us.ReferralCashbackTransactionService.CountTotalNumberOfUserReferralCashbackTransaction(referentUser.GUID)
+	if referentUser != nil {
+		totalNumberOfUserReferralCashbackTransactions := us.ReferralCashbackTransactionService.CountTotalNumberOfUserReferralCashbackTransaction(referentUser.GUID)
 
-	maxReferralPerUserInInt, _ := strconv.ParseInt(referralSettings["max_referral_per_user"], 10, 64)
+		maxReferralPerUserInInt, _ := strconv.ParseInt(referralSettings["max_referral_per_user"], 10, 64)
 
-	if referralSettings["referral_active"] == "true" && referrerUser.GUID != "" && totalNumberOfUserReferralCashbackTransactions <= maxReferralPerUserInInt {
+		if referralSettings["referral_active"] == "true" && referrerUser.GUID != "" && totalNumberOfUserReferralCashbackTransactions <= maxReferralPerUserInInt {
 
-		pricePerReferralInFloat64, _ := strconv.ParseFloat(referralSettings["price_per_referral"], 64)
+			pricePerReferralInFloat64, _ := strconv.ParseFloat(referralSettings["price_per_referral"], 64)
 
-		transaction, error := us.TransactionService.CreateTransaction(referentUser.GUID, "a606113b-fb22-59f3-876f-dd05da7befc7", "669e13c0-eaea-5aef-a25f-6ba54b529e33", pricePerReferralInFloat64)
+			transaction, error := us.TransactionService.CreateTransaction(referentUser.GUID, "a606113b-fb22-59f3-876f-dd05da7befc7", "669e13c0-eaea-5aef-a25f-6ba54b529e33", pricePerReferralInFloat64)
 
-		if error != nil {
-			return error
+			if error != nil {
+				return error
+			}
+
+			_, error = us.ReferralCashbackTransactionService.CreateReferralCashbackTransaction(referentUser.GUID, referrerUser.GUID, transaction.GUID)
+
+			if error != nil {
+				return error
+			}
+
+			error = us.UserRepository.UpdateUserWallet(referentUser.GUID, referentUser.Wallet+pricePerReferralInFloat64)
+
+			if error != nil {
+				return error
+			}
 		}
 
-		_, error = us.ReferralCashbackTransactionService.CreateReferralCashbackTransaction(referentUser.GUID, referrerUser.GUID, transaction.GUID)
-
-		if error != nil {
-			return error
-		}
-
-		error = us.UserRepository.UpdateUserWallet(referentUser.GUID, referentUser.Wallet+pricePerReferralInFloat64)
-
-		if error != nil {
-			return error
-		}
+		return nil
 	}
 
 	return nil

@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/fatih/structs"
+	"github.com/jinzhu/gorm"
 
 	"os"
 
@@ -38,8 +39,8 @@ func (us *UserService) ViewUser(userGUID, relations string) *User {
 }
 
 // CreateUser function used to create new user and store in database.
-func (us *UserService) CreateUser(userData CreateUser, profilePicture multipart.File, referralSettings map[string]string,
-	debug string) (*User, *systems.ErrorData) {
+func (us *UserService) CreateUser(dbTransaction *gorm.DB, userData CreateUser, profilePicture multipart.File,
+	referralSettings map[string]string, debug string) (*User, *systems.ErrorData) {
 
 	error := us.CheckUserPhoneNumberDuplicate(userData.PhoneNo)
 
@@ -71,20 +72,20 @@ func (us *UserService) CreateUser(userData CreateUser, profilePicture multipart.
 
 	userData.ReferralCode = us.GenerateReferralCode(userData.Name)
 
-	newUser, error := us.UserRepository.Create(userData)
+	newUser, error := us.UserRepository.Create(dbTransaction, userData)
 
 	if error != nil {
 		return nil, error
 	}
 
-	error = us.CreateReferralCashbackTransaction(newUser, referentUser, referralSettings)
+	error = us.CreateReferralCashbackTransaction(dbTransaction, newUser, referentUser, referralSettings)
 
 	if error != nil {
 		return nil, error
 	}
 
 	if debug != "1" {
-		_, error = us.SmsService.SendVerificationCode(newUser.PhoneNo, newUser.GUID)
+		_, error = us.SmsService.SendVerificationCode(dbTransaction, newUser.PhoneNo, newUser.GUID)
 
 		if error != nil {
 			return nil, error
@@ -97,10 +98,14 @@ func (us *UserService) CreateUser(userData CreateUser, profilePicture multipart.
 }
 
 // UpdateUser function used to update user data and update in database.
-func (us *UserService) UpdateUser(userGUID, deviceUUID string, userData UpdateUser,
+func (us *UserService) UpdateUser(dbTransaction *gorm.DB, userGUID, deviceUUID string, userData UpdateUser,
 	profilePicture multipart.File) (*User, *systems.ErrorData) {
 
-	user := us.UserRepository.GetByGUID(userGUID, "")
+	user, error := us.CheckUserGUIDExistOrNot(userGUID)
+
+	if error != nil {
+		return nil, error
+	}
 
 	uploadedProfilePicture, error := us.UploadUserProfilePicture(profilePicture)
 
@@ -112,23 +117,19 @@ func (us *UserService) UpdateUser(userGUID, deviceUUID string, userData UpdateUs
 		userData.ProfilePicture = uploadedProfilePicture["path"]
 	}
 
-	error = us.UserRepository.Update(userGUID, structs.Map(&userData))
+	error = us.UserRepository.Update(dbTransaction, userGUID, structs.Map(&userData))
 
 	if error != nil {
 		return nil, error
 	}
 
-	if uploadedProfilePicture != nil {
+	if uploadedProfilePicture != nil && user.ProfilePicture != nil {
 		error = us.DeleteProfilePicture(user.ProfilePicture)
 
 		if error != nil {
 			return nil, error
 		}
 	}
-
-	updatedUser := us.UserRepository.GetByGUID(userGUID, "")
-
-	updatedUser = us.CalculateAllTimeAmountAndPendingAmount(updatedUser)
 
 	// TODO: Need to think how to handle when user change phone number. For now not priority.
 	// error = us.SendSMSAndSetUserStatusToUnverifyWhenPhoneNumberIsNew(user.PhoneNo, userData.PhoneNo, userGUID, deviceUUID)
@@ -137,18 +138,18 @@ func (us *UserService) UpdateUser(userGUID, deviceUUID string, userData UpdateUs
 	// 	return nil, error
 	// }
 
-	return updatedUser, nil
+	return user, nil
 }
 
 // CheckUserGUIDExistOrNot function used to check user exist or not in database by checking the user GUID.
-func (us *UserService) CheckUserGUIDExistOrNot(userGUID string) *systems.ErrorData {
+func (us *UserService) CheckUserGUIDExistOrNot(userGUID string) (*User, *systems.ErrorData) {
 	user := us.UserRepository.GetByGUID(userGUID, "")
 
 	if user.GUID == "" {
-		return Error.ResourceNotFoundError("User", "guid", userGUID)
+		return nil, Error.ResourceNotFoundError("User", "guid", userGUID)
 	}
 
-	return nil
+	return user, nil
 }
 
 // CheckUserPhoneNumberDuplicate function used to check if user phone no already exist in the database.
@@ -221,7 +222,7 @@ func (us *UserService) CheckUserFacebookIDValidOrNot(facebookID string, debug in
 // Referrer User is a person that give the referral means the person that use other person referral code during
 // account registration.
 // Referent User is a person that got the referral.
-func (us *UserService) CreateReferralCashbackTransaction(referrerUser *User, referentUser *User,
+func (us *UserService) CreateReferralCashbackTransaction(dbTransaction *gorm.DB, referrerUser *User, referentUser *User,
 	referralSettings map[string]string) *systems.ErrorData {
 
 	if referentUser != nil {
@@ -233,19 +234,19 @@ func (us *UserService) CreateReferralCashbackTransaction(referrerUser *User, ref
 
 			pricePerReferralInFloat64, _ := strconv.ParseFloat(referralSettings["price_per_referral"], 64)
 
-			transaction, error := us.TransactionService.CreateTransaction(referentUser.GUID, "a606113b-fb22-59f3-876f-dd05da7befc7", "669e13c0-eaea-5aef-a25f-6ba54b529e33", pricePerReferralInFloat64)
+			transaction, error := us.TransactionService.CreateTransaction(dbTransaction, referentUser.GUID, "a606113b-fb22-59f3-876f-dd05da7befc7", "669e13c0-eaea-5aef-a25f-6ba54b529e33", pricePerReferralInFloat64)
 
 			if error != nil {
 				return error
 			}
 
-			_, error = us.ReferralCashbackTransactionService.CreateReferralCashbackTransaction(referentUser.GUID, referrerUser.GUID, transaction.GUID)
+			_, error = us.ReferralCashbackTransactionService.CreateReferralCashbackTransaction(dbTransaction, referentUser.GUID, referrerUser.GUID, transaction.GUID)
 
 			if error != nil {
 				return error
 			}
 
-			error = us.UserRepository.UpdateUserWallet(referentUser.GUID, referentUser.Wallet+pricePerReferralInFloat64)
+			error = us.UserRepository.UpdateUserWallet(dbTransaction, referentUser.GUID, referentUser.Wallet+pricePerReferralInFloat64)
 
 			if error != nil {
 				return error
@@ -260,18 +261,18 @@ func (us *UserService) CreateReferralCashbackTransaction(referrerUser *User, ref
 
 // SendSMSAndSetUserStatusToUnverifyWhenPhoneNumberIsNew function used to send SMS to user when the phone number
 // user enter is new during update user.
-func (us *UserService) SendSMSAndSetUserStatusToUnverifyWhenPhoneNumberIsNew(oldPhoneNo, newPhoneNo, userGUID,
+func (us *UserService) SendSMSAndSetUserStatusToUnverifyWhenPhoneNumberIsNew(dbTransaction *gorm.DB, oldPhoneNo, newPhoneNo, userGUID,
 	deviceUUID string) *systems.ErrorData {
 
 	if oldPhoneNo != newPhoneNo && newPhoneNo != "" {
-		_, error := us.SmsService.SendVerificationCode(newPhoneNo, userGUID)
+		_, error := us.SmsService.SendVerificationCode(dbTransaction, newPhoneNo, userGUID)
 
 		if error != nil {
 			return error
 		}
 
 		// Soft delete device by set current time to deleted_at column
-		error = us.DeviceService.DeleteDeviceByUUID(deviceUUID)
+		error = us.DeviceService.DeleteDeviceByUUID(dbTransaction, deviceUUID)
 
 		if error != nil {
 			return error
@@ -346,11 +347,11 @@ func (us *UserService) GenerateReferralCode(name string) string {
 }
 
 // DeleteProfilePicture function used to delete profile picture from Amazon S3
-func (us *UserService) DeleteProfilePicture(profilePictureURL string) *systems.ErrorData {
+func (us *UserService) DeleteProfilePicture(profilePictureURL *string) *systems.ErrorData {
 	profilePicturesToDelete := make([]string, 1)
 
 	// Example URI: `https://s3-ap-southeast-1.amazonaws.com/shoppermate-test/profile_images/f83617cd-2b17-3c59-81a5-78c9cfbe7c4f.png`
-	url, _ := url.Parse(profilePictureURL)
+	url, _ := url.Parse(*profilePictureURL)
 
 	uriSegments := strings.SplitN(url.Path, "/", 3)
 

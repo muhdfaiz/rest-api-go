@@ -11,7 +11,7 @@ type DealCashbackRepository struct {
 }
 
 // Create function used to create user deal cashback and store in database.
-func (dcr *DealCashbackRepository) Create(userGUID string, data CreateDealCashback) (*DealCashback, *systems.ErrorData) {
+func (dcr *DealCashbackRepository) Create(dbTransaction *gorm.DB, userGUID string, data CreateDealCashback) (*DealCashback, *systems.ErrorData) {
 	dealCashback := &DealCashback{
 		GUID:             Helper.GenerateUUID(),
 		UserGUID:         userGUID,
@@ -19,7 +19,7 @@ func (dcr *DealCashbackRepository) Create(userGUID string, data CreateDealCashba
 		DealGUID:         data.DealGUID,
 	}
 
-	result := dcr.DB.Create(dealCashback)
+	result := dbTransaction.Create(dealCashback)
 
 	if result.Error != nil || result.RowsAffected == 0 {
 		return nil, Error.InternalServerError(result.Error, systems.DatabaseError)
@@ -29,8 +29,8 @@ func (dcr *DealCashbackRepository) Create(userGUID string, data CreateDealCashba
 }
 
 // UpdateDealCashbackTransactionGUID function used to update Deal Cashback Transaction GUID for multiple deal cashback by GUID.
-func (dcr *DealCashbackRepository) UpdateDealCashbackTransactionGUID(dealCashbackGUIDs []string, dealCashbackTransactionGUID string) *systems.ErrorData {
-	result := dcr.DB.Model(&DealCashback{}).Where("guid IN (?)", dealCashbackGUIDs).
+func (dcr *DealCashbackRepository) UpdateDealCashbackTransactionGUID(dbTransaction *gorm.DB, dealCashbackGUIDs []string, dealCashbackTransactionGUID string) *systems.ErrorData {
+	result := dbTransaction.Model(&DealCashback{}).Where("guid IN (?)", dealCashbackGUIDs).
 		Updates(map[string]interface{}{"deal_cashback_transaction_guid": dealCashbackTransactionGUID})
 
 	if result.Error != nil {
@@ -41,8 +41,8 @@ func (dcr *DealCashbackRepository) UpdateDealCashbackTransactionGUID(dealCashbac
 }
 
 // DeleteByUserGUIDAndDealGUID function used to soft delete Deal Cashback by User GUID and Deal GUID.
-func (dcr *DealCashbackRepository) DeleteByUserGUIDAndDealGUID(userGUID string, dealGUID string) *systems.ErrorData {
-	result := dcr.DB.Model(&DealCashback{}).Where(&DealCashback{UserGUID: userGUID, DealGUID: dealGUID}).Delete(&DealCashback{})
+func (dcr *DealCashbackRepository) DeleteByUserGUIDAndDealGUID(dbTransaction *gorm.DB, userGUID string, dealGUID string) *systems.ErrorData {
+	result := dbTransaction.Model(&DealCashback{}).Where(&DealCashback{UserGUID: userGUID, DealGUID: dealGUID}).Delete(&DealCashback{})
 
 	if result.Error != nil {
 		return Error.InternalServerError(result.Error, systems.DatabaseError)
@@ -52,8 +52,8 @@ func (dcr *DealCashbackRepository) DeleteByUserGUIDAndDealGUID(userGUID string, 
 }
 
 // DeleteByUserGUIDAndShoppingListGUIDAndDealGUID function used to soft delete deal cashback by user GUID, shopping list GUID and deal GUID.
-func (dcr *DealCashbackRepository) DeleteByUserGUIDAndShoppingListGUIDAndDealGUID(userGUID string, shoppingListGUID string, dealGUID string) *systems.ErrorData {
-	result := dcr.DB.Model(&DealCashback{}).Where(&DealCashback{UserGUID: userGUID, ShoppingListGUID: shoppingListGUID, DealGUID: dealGUID}).Delete(&DealCashback{})
+func (dcr *DealCashbackRepository) DeleteByUserGUIDAndShoppingListGUIDAndDealGUID(dbTransaction *gorm.DB, userGUID string, shoppingListGUID string, dealGUID string) *systems.ErrorData {
+	result := dbTransaction.Model(&DealCashback{}).Where(&DealCashback{UserGUID: userGUID, ShoppingListGUID: shoppingListGUID, DealGUID: dealGUID}).Delete(&DealCashback{})
 
 	if result.Error != nil {
 		return Error.InternalServerError(result.Error, systems.DatabaseError)

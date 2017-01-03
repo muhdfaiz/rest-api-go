@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
 )
 
 // ShoppingListHandler will handle all request related to user shopping list
@@ -40,6 +41,8 @@ func (slh *ShoppingListHandler) View(context *gin.Context) {
 
 // Create function used to create user shopping list
 func (slh *ShoppingListHandler) Create(context *gin.Context) {
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
+
 	tokenData := context.MustGet("Token").(map[string]string)
 
 	userGUID := context.Param("guid")
@@ -56,13 +59,16 @@ func (slh *ShoppingListHandler) Create(context *gin.Context) {
 		return
 	}
 
-	createdShoppingList, error := slh.ShoppingListService.CreateUserShoppingList(userGUID, createData)
+	createdShoppingList, error := slh.ShoppingListService.CreateUserShoppingList(dbTransaction, userGUID, createData)
 
 	if error != nil {
+		dbTransaction.Rollback()
 		errorCode, _ := strconv.Atoi(error.Error.Status)
 		context.JSON(errorCode, error)
 		return
 	}
+
+	dbTransaction.Commit()
 
 	context.JSON(http.StatusOK, gin.H{"data": createdShoppingList})
 
@@ -70,6 +76,8 @@ func (slh *ShoppingListHandler) Create(context *gin.Context) {
 
 // Update function used to update user shopping list
 func (slh *ShoppingListHandler) Update(context *gin.Context) {
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
+
 	tokenData := context.MustGet("Token").(map[string]string)
 
 	userGUID := context.Param("guid")
@@ -88,13 +96,16 @@ func (slh *ShoppingListHandler) Update(context *gin.Context) {
 
 	shoppingListGUID := context.Param("shopping_list_guid")
 
-	updatedShoppingList, error := slh.ShoppingListService.UpdateUserShoppingList(userGUID, shoppingListGUID, updateData)
+	updatedShoppingList, error := slh.ShoppingListService.UpdateUserShoppingList(dbTransaction, userGUID, shoppingListGUID, updateData)
 
 	if error != nil {
+		dbTransaction.Rollback()
 		errorCode, _ := strconv.Atoi(error.Error.Status)
 		context.JSON(errorCode, error)
 		return
 	}
+
+	dbTransaction.Commit()
 
 	context.JSON(http.StatusOK, gin.H{"data": updatedShoppingList})
 
@@ -102,6 +113,8 @@ func (slh *ShoppingListHandler) Update(context *gin.Context) {
 
 // Delete function used to soft delete device by setting current timeo the deleted_at column
 func (slh *ShoppingListHandler) Delete(context *gin.Context) {
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
+
 	tokenData := context.MustGet("Token").(map[string]string)
 
 	userGUID := context.Param("guid")
@@ -113,13 +126,16 @@ func (slh *ShoppingListHandler) Delete(context *gin.Context) {
 
 	shoppingListGUID := context.Param("shopping_list_guid")
 
-	error := slh.ShoppingListService.DeleteUserShoppingListIncludingItemsAndImages(userGUID, shoppingListGUID)
+	error := slh.ShoppingListService.DeleteUserShoppingListIncludingItemsAndImages(dbTransaction, userGUID, shoppingListGUID)
 
 	if error != nil {
+		dbTransaction.Rollback()
 		errorCode, _ := strconv.Atoi(error.Error.Status)
 		context.JSON(errorCode, error)
 		return
 	}
+
+	dbTransaction.Commit()
 
 	result := make(map[string]string)
 	result["message"] = "Successfully deleted shopping list including with guid " + shoppingListGUID

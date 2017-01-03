@@ -11,7 +11,7 @@ type DealCashbackTransactionRepository struct {
 }
 
 // Create function used to create new deal cashback transaction and store in database.
-func (dctr *DealCashbackTransactionRepository) Create(userGUID string, transactionGUID, receiptURL string) (*DealCashbackTransaction, *systems.ErrorData) {
+func (dctr *DealCashbackTransactionRepository) Create(dbTransaction *gorm.DB, userGUID string, transactionGUID, receiptURL string) (*DealCashbackTransaction, *systems.ErrorData) {
 	createdDealCashbackTransaction := &DealCashbackTransaction{}
 
 	dealCashbackTransaction := &DealCashbackTransaction{
@@ -23,7 +23,7 @@ func (dctr *DealCashbackTransactionRepository) Create(userGUID string, transacti
 		RemarkBody:      nil,
 	}
 
-	result := dctr.DB.Create(dealCashbackTransaction)
+	result := dbTransaction.Create(dealCashbackTransaction)
 
 	if result.Error != nil || result.RowsAffected == 0 {
 		return nil, Error.InternalServerError(result.Error, systems.DatabaseError)

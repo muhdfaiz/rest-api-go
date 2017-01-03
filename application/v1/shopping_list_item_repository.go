@@ -12,7 +12,7 @@ type ShoppingListItemRepository struct {
 }
 
 // Create function used to create user shopping list item
-func (slir *ShoppingListItemRepository) Create(data CreateShoppingListItem) (*ShoppingListItem, *systems.ErrorData) {
+func (slir *ShoppingListItemRepository) Create(dbTransaction *gorm.DB, data CreateShoppingListItem) (*ShoppingListItem, *systems.ErrorData) {
 	dealGUID := data.DealGUID
 
 	cashbackAmount := data.CashbackAmount
@@ -31,7 +31,7 @@ func (slir *ShoppingListItemRepository) Create(data CreateShoppingListItem) (*Sh
 		CashbackAmount:   &cashbackAmount,
 	}
 
-	result := slir.DB.Create(shoppingListItem)
+	result := dbTransaction.Create(shoppingListItem)
 
 	if result.Error != nil || result.RowsAffected == 0 {
 		return nil, Error.InternalServerError(result.Error, systems.DatabaseError)
@@ -42,7 +42,9 @@ func (slir *ShoppingListItemRepository) Create(data CreateShoppingListItem) (*Sh
 
 // UpdateByUserGUIDShoppingListGUIDAndShoppingListItemGUID function used to update device data
 // Require device uuid. Must provide in url
-func (slir *ShoppingListItemRepository) UpdateByUserGUIDShoppingListGUIDAndShoppingListItemGUID(userGUID string, shoppingListGUID string, shoppingListItemGUID string, data map[string]interface{}) *systems.ErrorData {
+func (slir *ShoppingListItemRepository) UpdateByUserGUIDShoppingListGUIDAndShoppingListItemGUID(dbTransaction *gorm.DB, userGUID string,
+	shoppingListGUID string, shoppingListItemGUID string, data map[string]interface{}) *systems.ErrorData {
+
 	updateData := map[string]interface{}{}
 
 	for key, value := range data {
@@ -61,7 +63,7 @@ func (slir *ShoppingListItemRepository) UpdateByUserGUIDShoppingListGUIDAndShopp
 		}
 	}
 
-	result := slir.DB.Model(&ShoppingListItem{}).Where(&ShoppingListItem{GUID: shoppingListItemGUID, ShoppingListGUID: shoppingListGUID, UserGUID: userGUID}).
+	result := dbTransaction.Model(&ShoppingListItem{}).Where(&ShoppingListItem{GUID: shoppingListItemGUID, ShoppingListGUID: shoppingListGUID, UserGUID: userGUID}).
 		Updates(updateData)
 
 	if result.Error != nil {
@@ -72,67 +74,7 @@ func (slir *ShoppingListItemRepository) UpdateByUserGUIDShoppingListGUIDAndShopp
 }
 
 // UpdateByUserGUIDAndShoppingListGUID function used to update user shopping list item data by user GUID and shopping list GUID
-func (slir *ShoppingListItemRepository) UpdateByUserGUIDAndShoppingListGUID(userGUID string, shoppingListGUID string, data map[string]interface{}) *systems.ErrorData {
-	updateData := map[string]interface{}{}
-
-	for key, value := range data {
-		if data, ok := value.(string); ok && value.(string) != "" {
-			updateData[snaker.CamelToSnake(key)] = data
-		}
-
-		if data, ok := value.(int); ok {
-			if key == "Quantity" && data != 0 {
-				updateData[snaker.CamelToSnake(key)] = data
-			}
-
-			if key != "Quantity" {
-				updateData[snaker.CamelToSnake(key)] = data
-			}
-		}
-	}
-
-	result := slir.DB.Model(&ShoppingListItem{}).Where(&ShoppingListItem{ShoppingListGUID: shoppingListGUID, UserGUID: userGUID}).
-		Updates(updateData)
-
-	if result.Error != nil {
-		return Error.InternalServerError(result.Error, systems.DatabaseError)
-	}
-
-	return nil
-}
-
-// UpdateByUserGUIDAndDealGUID function used to update user shopping list item by user GUID and deal GUID
-func (slir *ShoppingListItemRepository) UpdateByUserGUIDAndDealGUID(userGUID string, dealGUID string, data map[string]interface{}) *systems.ErrorData {
-	updateData := map[string]interface{}{}
-
-	for key, value := range data {
-		if data, ok := value.(string); ok && value.(string) != "" {
-			updateData[snaker.CamelToSnake(key)] = data
-		}
-
-		if data, ok := value.(int); ok {
-			if key == "Quantity" && data != 0 {
-				updateData[snaker.CamelToSnake(key)] = data
-			}
-
-			if key != "Quantity" {
-				updateData[snaker.CamelToSnake(key)] = data
-			}
-		}
-	}
-
-	result := slir.DB.Model(&ShoppingListItem{}).Where(&ShoppingListItem{UserGUID: userGUID, DealGUID: &dealGUID}).
-		Updates(updateData)
-
-	if result.Error != nil {
-		return Error.InternalServerError(result.Error, systems.DatabaseError)
-	}
-
-	return nil
-}
-
-// UpdateByUserGUIDShoppingListGUIDAndDealGUID function used to update user shopping list item by user GUID and deal GUID
-func (slir *ShoppingListItemRepository) UpdateByUserGUIDShoppingListGUIDAndDealGUID(userGUID string, shoppingListGUID string, dealGUID string,
+func (slir *ShoppingListItemRepository) UpdateByUserGUIDAndShoppingListGUID(dbTransaction *gorm.DB, userGUID string, shoppingListGUID string,
 	data map[string]interface{}) *systems.ErrorData {
 
 	updateData := map[string]interface{}{}
@@ -153,7 +95,71 @@ func (slir *ShoppingListItemRepository) UpdateByUserGUIDShoppingListGUIDAndDealG
 		}
 	}
 
-	result := slir.DB.Model(&ShoppingListItem{}).Where(&ShoppingListItem{UserGUID: userGUID, ShoppingListGUID: shoppingListGUID, DealGUID: &dealGUID}).
+	result := dbTransaction.Model(&ShoppingListItem{}).Where(&ShoppingListItem{ShoppingListGUID: shoppingListGUID, UserGUID: userGUID}).
+		Updates(updateData)
+
+	if result.Error != nil {
+		return Error.InternalServerError(result.Error, systems.DatabaseError)
+	}
+
+	return nil
+}
+
+// UpdateByUserGUIDAndDealGUID function used to update user shopping list item by user GUID and deal GUID
+func (slir *ShoppingListItemRepository) UpdateByUserGUIDAndDealGUID(dbTransaction *gorm.DB, userGUID string, dealGUID string,
+	data map[string]interface{}) *systems.ErrorData {
+
+	updateData := map[string]interface{}{}
+
+	for key, value := range data {
+		if data, ok := value.(string); ok && value.(string) != "" {
+			updateData[snaker.CamelToSnake(key)] = data
+		}
+
+		if data, ok := value.(int); ok {
+			if key == "Quantity" && data != 0 {
+				updateData[snaker.CamelToSnake(key)] = data
+			}
+
+			if key != "Quantity" {
+				updateData[snaker.CamelToSnake(key)] = data
+			}
+		}
+	}
+
+	result := dbTransaction.Model(&ShoppingListItem{}).Where(&ShoppingListItem{UserGUID: userGUID, DealGUID: &dealGUID}).
+		Updates(updateData)
+
+	if result.Error != nil {
+		return Error.InternalServerError(result.Error, systems.DatabaseError)
+	}
+
+	return nil
+}
+
+// UpdateByUserGUIDShoppingListGUIDAndDealGUID function used to update user shopping list item by user GUID and deal GUID
+func (slir *ShoppingListItemRepository) UpdateByUserGUIDShoppingListGUIDAndDealGUID(dbTransaction *gorm.DB, userGUID string, shoppingListGUID string,
+	dealGUID string, data map[string]interface{}) *systems.ErrorData {
+
+	updateData := map[string]interface{}{}
+
+	for key, value := range data {
+		if data, ok := value.(string); ok && value.(string) != "" {
+			updateData[snaker.CamelToSnake(key)] = data
+		}
+
+		if data, ok := value.(int); ok {
+			if key == "Quantity" && data != 0 {
+				updateData[snaker.CamelToSnake(key)] = data
+			}
+
+			if key != "Quantity" {
+				updateData[snaker.CamelToSnake(key)] = data
+			}
+		}
+	}
+
+	result := dbTransaction.Model(&ShoppingListItem{}).Where(&ShoppingListItem{UserGUID: userGUID, ShoppingListGUID: shoppingListGUID, DealGUID: &dealGUID}).
 		Updates(updateData)
 
 	if result.Error != nil {
@@ -164,8 +170,8 @@ func (slir *ShoppingListItemRepository) UpdateByUserGUIDShoppingListGUIDAndDealG
 }
 
 // SetDealExpired function used to set deal expired on shopping list item when the deal already expired.
-func (slir *ShoppingListItemRepository) SetDealExpired(dealGUID string) *systems.ErrorData {
-	result := slir.DB.Model(&ShoppingListItem{}).Where("deal_guid = ?", dealGUID).Select("deal_expired").Updates(map[string]interface{}{"deal_expired": 1})
+func (slir *ShoppingListItemRepository) SetDealExpired(dbTransaction *gorm.DB, dealGUID string) *systems.ErrorData {
+	result := dbTransaction.Model(&ShoppingListItem{}).Where("deal_guid = ?", dealGUID).Select("deal_expired").Updates(map[string]interface{}{"deal_expired": 1})
 
 	if result.Error != nil {
 		return Error.InternalServerError(result.Error, systems.DatabaseError)
@@ -175,8 +181,8 @@ func (slir *ShoppingListItemRepository) SetDealExpired(dealGUID string) *systems
 }
 
 // DeleteByGUID function used to soft delete shopping list via GUID including the relationship from database
-func (slir *ShoppingListItemRepository) DeleteByGUID(shoppingListItemGUID string) *systems.ErrorData {
-	deleteShoppingListItem := slir.DB.Where("guid = ?", shoppingListItemGUID).Delete(&ShoppingListItem{})
+func (slir *ShoppingListItemRepository) DeleteByGUID(dbTransaction *gorm.DB, shoppingListItemGUID string) *systems.ErrorData {
+	deleteShoppingListItem := dbTransaction.Where("guid = ?", shoppingListItemGUID).Delete(&ShoppingListItem{})
 
 	if deleteShoppingListItem.Error != nil {
 		return Error.InternalServerError(deleteShoppingListItem.Error, systems.DatabaseError)
@@ -186,9 +192,8 @@ func (slir *ShoppingListItemRepository) DeleteByGUID(shoppingListItemGUID string
 }
 
 // DeleteByShoppingListGUID function used to soft delete shopping list via shopping list GUID including the relationship from database
-func (slir *ShoppingListItemRepository) DeleteByShoppingListGUID(shoppingListGUID string) *systems.ErrorData {
-	// Delete shopping list item by shopping list GUID
-	deleteShoppingListItem := slir.DB.Where("shopping_list_guid = ?", shoppingListGUID).Delete(&ShoppingListItem{})
+func (slir *ShoppingListItemRepository) DeleteByShoppingListGUID(dbTransaction *gorm.DB, shoppingListGUID string) *systems.ErrorData {
+	deleteShoppingListItem := dbTransaction.Where("shopping_list_guid = ?", shoppingListGUID).Delete(&ShoppingListItem{})
 
 	if deleteShoppingListItem.Error != nil {
 		return Error.InternalServerError(deleteShoppingListItem.Error, systems.DatabaseError)
@@ -199,8 +204,8 @@ func (slir *ShoppingListItemRepository) DeleteByShoppingListGUID(shoppingListGUI
 
 // DeleteByUserGUIDAndShoppingListGUID function used to soft delete all user shopping list item by user
 // GUID and shopping list GUID including shopping list item images.
-func (slir *ShoppingListItemRepository) DeleteByUserGUIDAndShoppingListGUID(userGUID string, shoppingListGUID string) *systems.ErrorData {
-	deleteShoppingListItem := slir.DB.Where(&ShoppingListItem{UserGUID: userGUID, ShoppingListGUID: shoppingListGUID}).Delete(&ShoppingListItem{})
+func (slir *ShoppingListItemRepository) DeleteByUserGUIDAndShoppingListGUID(dbTransaction *gorm.DB, userGUID string, shoppingListGUID string) *systems.ErrorData {
+	deleteShoppingListItem := dbTransaction.Where(&ShoppingListItem{UserGUID: userGUID, ShoppingListGUID: shoppingListGUID}).Delete(&ShoppingListItem{})
 
 	if deleteShoppingListItem.Error != nil {
 		return Error.InternalServerError(deleteShoppingListItem.Error, systems.DatabaseError)
@@ -211,10 +216,10 @@ func (slir *ShoppingListItemRepository) DeleteByUserGUIDAndShoppingListGUID(user
 
 // DeleteByGUIDAndUserGUIDAndShoppingListGUID function used to soft delete user shopping list item by
 // shopping list item GUID, user GUID and shopping list GUID including shopping list item images.
-func (slir *ShoppingListItemRepository) DeleteByGUIDAndUserGUIDAndShoppingListGUID(shoppingListItemGUID string,
+func (slir *ShoppingListItemRepository) DeleteByGUIDAndUserGUIDAndShoppingListGUID(dbTransaction *gorm.DB, shoppingListItemGUID string,
 	userGUID string, shoppingListGUID string) *systems.ErrorData {
 
-	deleteShoppingListItem := slir.DB.Where(&ShoppingListItem{GUID: shoppingListItemGUID, UserGUID: userGUID, ShoppingListGUID: shoppingListGUID}).Delete(&ShoppingListItem{})
+	deleteShoppingListItem := dbTransaction.Where(&ShoppingListItem{GUID: shoppingListItemGUID, UserGUID: userGUID, ShoppingListGUID: shoppingListGUID}).Delete(&ShoppingListItem{})
 
 	if deleteShoppingListItem.Error != nil {
 		return Error.InternalServerError(deleteShoppingListItem.Error, systems.DatabaseError)
@@ -225,12 +230,14 @@ func (slir *ShoppingListItemRepository) DeleteByGUIDAndUserGUIDAndShoppingListGU
 
 // DeleteItemsHasBeenAddedToCartByUserGUIDAndShoppingListGUID function used to soft delete all of user shopping list item
 // those has been added to cart including shopping list item images.
-func (slir *ShoppingListItemRepository) DeleteItemsHasBeenAddedToCartByUserGUIDAndShoppingListGUID(userGUID string, shoppingListGUID string) *systems.ErrorData {
+func (slir *ShoppingListItemRepository) DeleteItemsHasBeenAddedToCartByUserGUIDAndShoppingListGUID(dbTransaction *gorm.DB, userGUID string,
+	shoppingListGUID string) *systems.ErrorData {
+
 	userShoppingListItemsHasBeenAddedToCart := []*ShoppingListItem{}
 
 	slir.DB.Where(&ShoppingListItem{UserGUID: userGUID, ShoppingListGUID: shoppingListGUID, AddedToCart: 1}).Find(&userShoppingListItemsHasBeenAddedToCart)
 
-	deleteShoppingListItem := slir.DB.Where(&ShoppingListItem{UserGUID: userGUID, ShoppingListGUID: shoppingListGUID, AddedToCart: 1}).Delete(&ShoppingListItem{})
+	deleteShoppingListItem := dbTransaction.Where(&ShoppingListItem{UserGUID: userGUID, ShoppingListGUID: shoppingListGUID, AddedToCart: 1}).Delete(&ShoppingListItem{})
 
 	if deleteShoppingListItem.Error != nil {
 		return Error.InternalServerError(deleteShoppingListItem.Error, systems.DatabaseError)
@@ -241,14 +248,16 @@ func (slir *ShoppingListItemRepository) DeleteItemsHasBeenAddedToCartByUserGUIDA
 
 // DeleteItemsHasNotBeenAddedToCartByUserGUIDAndShoppingListGUID function used to soft delete all of user shopping list item
 // those has not been added to cart including shopping list item images.
-func (slir *ShoppingListItemRepository) DeleteItemsHasNotBeenAddedToCartByUserGUIDAndShoppingListGUID(userGUID string, shoppingListGUID string) *systems.ErrorData {
+func (slir *ShoppingListItemRepository) DeleteItemsHasNotBeenAddedToCartByUserGUIDAndShoppingListGUID(dbTransaction *gorm.DB, userGUID string,
+	shoppingListGUID string) *systems.ErrorData {
+
 	userShoppingListItemsHasBeenAddedToCart := []*ShoppingListItem{}
 
 	// Retrieve shopping list item those has been added to cart by user
 	slir.DB.Where(&ShoppingListItem{UserGUID: userGUID, ShoppingListGUID: shoppingListGUID, AddedToCart: 0}).Find(&userShoppingListItemsHasBeenAddedToCart)
 
 	// Delete shopping list item by user_guid and itemsadded to cart
-	deleteShoppingListItem := slir.DB.Where(&ShoppingListItem{UserGUID: userGUID, ShoppingListGUID: shoppingListGUID, AddedToCart: 0}).Delete(&ShoppingListItem{})
+	deleteShoppingListItem := dbTransaction.Where(&ShoppingListItem{UserGUID: userGUID, ShoppingListGUID: shoppingListGUID, AddedToCart: 0}).Delete(&ShoppingListItem{})
 
 	if deleteShoppingListItem.Error != nil {
 		return Error.InternalServerError(deleteShoppingListItem.Error, systems.DatabaseError)

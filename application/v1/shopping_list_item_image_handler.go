@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
 )
 
 //ShoppingListItemImageHandler used to handle all request related to shopping list item image resource.
@@ -45,6 +46,7 @@ func (sliih *ShoppingListItemImageHandler) View(context *gin.Context) {
 
 // Create function used to store shopping list item image in database
 func (sliih *ShoppingListItemImageHandler) Create(context *gin.Context) {
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
 
 	tokenData := context.MustGet("Token").(map[string]string)
 
@@ -68,19 +70,24 @@ func (sliih *ShoppingListItemImageHandler) Create(context *gin.Context) {
 
 	imagesToUpload := context.Request.MultipartForm.File["images"]
 
-	createdImages, error := sliih.ShoppingListItemImageService.CreateUserShoppingListItemImage(userGUID, shoppingListGUID, shoppingListItemGUID, imagesToUpload)
+	createdImages, error := sliih.ShoppingListItemImageService.CreateUserShoppingListItemImage(dbTransaction, userGUID, shoppingListGUID, shoppingListItemGUID, imagesToUpload)
 
 	if error != nil {
+		dbTransaction.Rollback()
 		errorCode, _ := strconv.Atoi(error.Error.Status)
 		context.JSON(errorCode, error)
 		return
 	}
+
+	dbTransaction.Commit()
 
 	context.JSON(http.StatusOK, gin.H{"data": createdImages})
 }
 
 // Delete function used to delete multiple shopping list item images
 func (sliih *ShoppingListItemImageHandler) Delete(context *gin.Context) {
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
+
 	tokenData := context.MustGet("Token").(map[string]string)
 
 	userGUID := context.Param("guid")
@@ -96,13 +103,16 @@ func (sliih *ShoppingListItemImageHandler) Delete(context *gin.Context) {
 		return
 	}
 
-	error := sliih.ShoppingListItemImageService.DeleteShoppingListItemImages(userGUID, shoppingListGUID, shoppingListItemGUID, shoppingListItemImageGUIDs)
+	error := sliih.ShoppingListItemImageService.DeleteShoppingListItemImages(dbTransaction, userGUID, shoppingListGUID, shoppingListItemGUID, shoppingListItemImageGUIDs)
 
 	if error != nil {
+		dbTransaction.Rollback()
 		errorCode, _ := strconv.Atoi(error.Error.Status)
 		context.JSON(errorCode, error)
 		return
 	}
+
+	dbTransaction.Commit()
 
 	deletedResult := make(map[string]string)
 	deletedResult["message"] = "Successfully deleted shopping list item image with GUIDs " + shoppingListItemImageGUIDs

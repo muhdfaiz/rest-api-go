@@ -1,14 +1,17 @@
 package v1
 
-import "bitbucket.org/cliqers/shoppermate-api/systems"
+import (
+	"bitbucket.org/cliqers/shoppermate-api/systems"
+	"github.com/jinzhu/gorm"
+)
 
 // CashoutTransactionServiceInterface is a contract that defines the method needed for Cashout Transaction Service.
 type CashoutTransactionServiceInterface interface {
-	CreateCashoutTransaction(userGUID string, cashoutTransactionData *CreateCashoutTransaction) (*Transaction, *systems.ErrorData)
+	CreateCashoutTransaction(dbTransaction *gorm.DB, userGUID string, cashoutTransactionData *CreateCashoutTransaction) (*Transaction, *systems.ErrorData)
 }
 
 // CashoutTransactionRepositoryInterface is a contract that defines the method
 // needed for Cashout Transaction Repository.
 type CashoutTransactionRepositoryInterface interface {
-	Create(userGUID, transactionGUID string, cashoutTransactionData *CreateCashoutTransaction) (*CashoutTransaction, *systems.ErrorData)
+	Create(dbTransaction *gorm.DB, userGUID, transactionGUID string, cashoutTransactionData *CreateCashoutTransaction) (*CashoutTransaction, *systems.ErrorData)
 }

@@ -1,6 +1,9 @@
 package v1
 
-import "bitbucket.org/cliqers/shoppermate-api/systems"
+import (
+	"bitbucket.org/cliqers/shoppermate-api/systems"
+	"github.com/jinzhu/gorm"
+)
 
 type DeviceService struct {
 	DeviceRepository DeviceRepositoryInterface
@@ -30,14 +33,14 @@ func (ds *DeviceService) CheckDeviceExistOrNot(deviceUUID string) (*Device, *sys
 }
 
 // CreateDevice function used to create new device and store in database.
-func (ds *DeviceService) CreateDevice(deviceData CreateDevice) (*Device, *systems.ErrorData) {
+func (ds *DeviceService) CreateDevice(dbTransaction *gorm.DB, deviceData CreateDevice) (*Device, *systems.ErrorData) {
 	error := ds.CheckDuplicateDevice(deviceData.UUID)
 
 	if error != nil {
 		return nil, error
 	}
 
-	device, error := ds.DeviceRepository.Create(deviceData)
+	device, error := ds.DeviceRepository.Create(dbTransaction, deviceData)
 
 	if error != nil {
 		return nil, error
@@ -47,14 +50,14 @@ func (ds *DeviceService) CreateDevice(deviceData CreateDevice) (*Device, *system
 }
 
 // UpdateDevice function used to update device information in database.
-func (ds *DeviceService) UpdateDevice(deviceUUID string, deviceData UpdateDevice) (*Device, *systems.ErrorData) {
+func (ds *DeviceService) UpdateDevice(dbTransaction *gorm.DB, deviceUUID string, deviceData UpdateDevice) (*Device, *systems.ErrorData) {
 	_, error := ds.CheckDeviceExistOrNot(deviceUUID)
 
 	if error != nil {
 		return nil, error
 	}
 
-	device, error := ds.UpdateByDeviceUUID(deviceUUID, deviceData)
+	device, error := ds.UpdateByDeviceUUID(dbTransaction, deviceUUID, deviceData)
 
 	if error != nil {
 		return nil, error
@@ -64,8 +67,8 @@ func (ds *DeviceService) UpdateDevice(deviceUUID string, deviceData UpdateDevice
 }
 
 // UpdateByDeviceUUID function used to update device by Device UUID.
-func (ds *DeviceService) UpdateByDeviceUUID(deviceUUID string, deviceData UpdateDevice) (*Device, *systems.ErrorData) {
-	error := ds.DeviceRepository.Update(deviceUUID, deviceData)
+func (ds *DeviceService) UpdateByDeviceUUID(dbTransaction *gorm.DB, deviceUUID string, deviceData UpdateDevice) (*Device, *systems.ErrorData) {
+	error := ds.DeviceRepository.Update(dbTransaction, deviceUUID, deviceData)
 
 	if error != nil {
 		return nil, error
@@ -77,8 +80,8 @@ func (ds *DeviceService) UpdateByDeviceUUID(deviceUUID string, deviceData Update
 }
 
 // ReactivateDevice function used to reactivate device by set deleted_at column to NULL.
-func (ds *DeviceService) ReactivateDevice(deviceGUID string) *systems.ErrorData {
-	error := ds.DeviceRepository.SetDeletedAtToNull(deviceGUID)
+func (ds *DeviceService) ReactivateDevice(dbTransaction *gorm.DB, deviceGUID string) *systems.ErrorData {
+	error := ds.DeviceRepository.SetDeletedAtToNull(dbTransaction, deviceGUID)
 
 	if error != nil {
 		return error
@@ -89,14 +92,14 @@ func (ds *DeviceService) ReactivateDevice(deviceGUID string) *systems.ErrorData 
 
 // DeleteDeviceByUUID function used to soft delete device by setting the current date and time
 // to deleted_at column.
-func (ds *DeviceService) DeleteDeviceByUUID(deviceUUID string) *systems.ErrorData {
+func (ds *DeviceService) DeleteDeviceByUUID(dbTransaction *gorm.DB, deviceUUID string) *systems.ErrorData {
 	_, error := ds.CheckDeviceExistOrNot(deviceUUID)
 
 	if error != nil {
 		return error
 	}
 
-	error = ds.DeviceRepository.Delete("uuid", deviceUUID)
+	error = ds.DeviceRepository.Delete(dbTransaction, "uuid", deviceUUID)
 
 	if error != nil {
 		return error

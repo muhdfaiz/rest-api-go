@@ -6,7 +6,7 @@ import "time"
 type Device struct {
 	ID           int        `json:"id"`
 	GUID         string     `json:"guid"`
-	UserGUID     string     `json:"user_guid"`
+	UserGUID     *string    `json:"user_guid"`
 	UUID         string     `json:"uuid"`
 	Os           string     `json:"os"`
 	Model        string     `json:"model"`

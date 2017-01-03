@@ -11,7 +11,7 @@ type CashoutTransactionRepository struct {
 }
 
 // Create function used to new Cashout Transaction and store in database.
-func (ctr *CashoutTransactionRepository) Create(userGUID, transactionGUID string,
+func (ctr *CashoutTransactionRepository) Create(dbTransaction *gorm.DB, userGUID, transactionGUID string,
 	cashoutTransactionData *CreateCashoutTransaction) (*CashoutTransaction, *systems.ErrorData) {
 
 	cashoutTransaction := &CashoutTransaction{
@@ -24,7 +24,7 @@ func (ctr *CashoutTransactionRepository) Create(userGUID, transactionGUID string
 		BankCountry:           cashoutTransactionData.BankCountry,
 	}
 
-	result := ctr.DB.Create(cashoutTransaction)
+	result := dbTransaction.Create(cashoutTransaction)
 
 	if result.Error != nil || result.RowsAffected == 0 {
 		return nil, Error.InternalServerError(result.Error, systems.DatabaseError)

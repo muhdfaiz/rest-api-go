@@ -12,7 +12,7 @@ type TransactionRepository struct {
 }
 
 // Create function used to create transaction and store in Database
-func (tr *TransactionRepository) Create(createTransactionData *CreateTransaction) (*Transaction, *systems.ErrorData) {
+func (tr *TransactionRepository) Create(dbTransaction *gorm.DB, createTransactionData *CreateTransaction) (*Transaction, *systems.ErrorData) {
 	createdTransaction := &Transaction{}
 
 	transaction := &Transaction{
@@ -26,7 +26,7 @@ func (tr *TransactionRepository) Create(createTransactionData *CreateTransaction
 		RejectedAmount:        nil,
 	}
 
-	result := tr.DB.Create(transaction)
+	result := dbTransaction.Create(transaction)
 
 	if result.Error != nil || result.RowsAffected == 0 {
 		return nil, Error.InternalServerError(result.Error, systems.DatabaseError)
@@ -38,8 +38,8 @@ func (tr *TransactionRepository) Create(createTransactionData *CreateTransaction
 }
 
 // UpdateReadStatus function used to set `read_status` column to new value
-func (tr *TransactionRepository) UpdateReadStatus(transactionGUID string, readStatus int) *systems.ErrorData {
-	updateResult := tr.DB.Model(&Transaction{}).Where(&Transaction{GUID: transactionGUID}).Update("read_status", readStatus)
+func (tr *TransactionRepository) UpdateReadStatus(dbTransaction *gorm.DB, transactionGUID string, readStatus int) *systems.ErrorData {
+	updateResult := dbTransaction.Model(&Transaction{}).Where(&Transaction{GUID: transactionGUID}).Update("read_status", readStatus)
 
 	if updateResult.Error != nil {
 		return Error.InternalServerError(updateResult.Error, systems.DatabaseError)
@@ -78,7 +78,7 @@ func (tr *TransactionRepository) GetByUserGUID(userGUID string, relations string
 	return transactions
 }
 
-// GetByTransactionTypeGUIDAndTransactionStatusGUID function used to retrieve transactions by Transaction Type GUID and Transaction Status GUID.
+// GetByUserGUIDAndTransactionTypeGUIDAndTransactionStatusGUID function used to retrieve transactions by Transaction Type GUID and Transaction Status GUID.
 func (tr *TransactionRepository) GetByUserGUIDAndTransactionTypeGUIDAndTransactionStatusGUID(userGUID, transactionTypeGUID, transactionStatusGUID, relations string) []*Transaction {
 	transactions := []*Transaction{}
 

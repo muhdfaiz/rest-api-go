@@ -3,6 +3,8 @@ package v1
 import (
 	"net/http"
 
+	"github.com/jinzhu/gorm"
+
 	"bitbucket.org/cliqers/shoppermate-api/systems"
 )
 
@@ -23,7 +25,7 @@ type DealServiceInterface interface {
 	FilteredDealByPositiveTag(deals []*Deal, shoppingListItemName string) []*Deal
 	FilteredDealsNotAddedTolist(deals []*Deal, userGUID, shoppingListGUID string) []*Deal
 	GetFirstThreeDeals(deals []*Deal) []*Deal
-	RemoveDealCashbackAndSetItemDealExpired(userGUID, shoppingListGUID, dealGUID string) *systems.ErrorData
+	RemoveDealCashbackAndSetItemDealExpired(dbTransaction *gorm.DB, userGUID, shoppingListGUID, dealGUID string) *systems.ErrorData
 	ViewDealDetails(dealGUID, relations string) *Ads
 	GetAvailableDealsForGuestUser(latitude, longitude, pageNumber, pageLimit, relations string) ([]*Deal, int)
 	GetAvailableDealsForRegisteredUser(userGUID, name, latitude, longitude, pageNumber, pageLimit,

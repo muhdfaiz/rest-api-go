@@ -1,6 +1,9 @@
 package v1
 
-import "bitbucket.org/cliqers/shoppermate-api/systems"
+import (
+	"bitbucket.org/cliqers/shoppermate-api/systems"
+	"github.com/jinzhu/gorm"
+)
 
 type ShoppingListService struct {
 	ShoppingListRepository         ShoppingListRepositoryInterface
@@ -12,7 +15,7 @@ type ShoppingListService struct {
 }
 
 // CreateUserShoppingList function used to create user shopping lists and store in database.
-func (sls *ShoppingListService) CreateUserShoppingList(userGUID string, createData CreateShoppingList) (*ShoppingList, *systems.ErrorData) {
+func (sls *ShoppingListService) CreateUserShoppingList(dbTransaction *gorm.DB, userGUID string, createData CreateShoppingList) (*ShoppingList, *systems.ErrorData) {
 	_, error := sls.OccasionService.CheckOccassionExistOrNot(createData.OccasionGUID)
 
 	if error != nil {
@@ -25,7 +28,7 @@ func (sls *ShoppingListService) CreateUserShoppingList(userGUID string, createDa
 		return nil, error
 	}
 
-	createdShoppingList, error := sls.ShoppingListRepository.Create(userGUID, createData)
+	createdShoppingList, error := sls.ShoppingListRepository.Create(dbTransaction, userGUID, createData)
 
 	if error != nil {
 		return nil, error
@@ -37,7 +40,7 @@ func (sls *ShoppingListService) CreateUserShoppingList(userGUID string, createDa
 }
 
 // UpdateUserShoppingList function used to update user shopping lists in database.
-func (sls *ShoppingListService) UpdateUserShoppingList(userGUID string, shoppingListGUID string,
+func (sls *ShoppingListService) UpdateUserShoppingList(dbTransaction *gorm.DB, userGUID string, shoppingListGUID string,
 	updateData UpdateShoppingList) (*ShoppingList, *systems.ErrorData) {
 
 	_, error := sls.CheckUserShoppingListExistOrNot(userGUID, shoppingListGUID)
@@ -60,7 +63,7 @@ func (sls *ShoppingListService) UpdateUserShoppingList(userGUID string, shopping
 		}
 	}
 
-	error = sls.ShoppingListRepository.Update(userGUID, shoppingListGUID, updateData)
+	error = sls.ShoppingListRepository.Update(dbTransaction, userGUID, shoppingListGUID, updateData)
 
 	if error != nil {
 		return nil, error
@@ -73,26 +76,26 @@ func (sls *ShoppingListService) UpdateUserShoppingList(userGUID string, shopping
 
 // DeleteUserShoppingListIncludingItemsAndImages function used to soft delete user shopping list including user shopping list items and
 // shopping list item image inside the user shopping list.
-func (sls *ShoppingListService) DeleteUserShoppingListIncludingItemsAndImages(userGUID string, shoppingListGUID string) *systems.ErrorData {
+func (sls *ShoppingListService) DeleteUserShoppingListIncludingItemsAndImages(dbTransaction *gorm.DB, userGUID string, shoppingListGUID string) *systems.ErrorData {
 	_, error := sls.CheckUserShoppingListExistOrNot(userGUID, shoppingListGUID)
 
 	if error != nil {
 		return error
 	}
 
-	error = sls.ShoppingListRepository.Delete("guid", shoppingListGUID)
+	error = sls.ShoppingListRepository.Delete(dbTransaction, "guid", shoppingListGUID)
 
 	if error != nil {
 		return error
 	}
 
-	_, error = sls.ShoppingListItemService.DeleteAllShoppingListItemsInShoppingList(userGUID, shoppingListGUID)
+	_, error = sls.ShoppingListItemService.DeleteAllShoppingListItemsInShoppingList(dbTransaction, userGUID, shoppingListGUID)
 
 	if error != nil {
 		return error
 	}
 
-	error = sls.ShoppingListItemImageService.DeleteImagesForShoppingList(shoppingListGUID)
+	error = sls.ShoppingListItemImageService.DeleteImagesForShoppingList(dbTransaction, shoppingListGUID)
 
 	if error != nil {
 		return error
@@ -149,7 +152,7 @@ func (sls *ShoppingListService) GetShoppingListIncludingDealCashbacks(shoppingLi
 }
 
 // CreateSampleShoppingListsAndItemsForUser function used to create sample shopping list and shopping list item for user.
-func (sls *ShoppingListService) CreateSampleShoppingListsAndItemsForUser(userGUID string) *systems.ErrorData {
+func (sls *ShoppingListService) CreateSampleShoppingListsAndItemsForUser(dbTransaction *gorm.DB, userGUID string) *systems.ErrorData {
 	defaultShoppingLists := sls.DefaultShoppingListService.GetAllDefaultShoppingLists("")
 
 	for _, defaultShoppingList := range defaultShoppingLists {
@@ -158,13 +161,13 @@ func (sls *ShoppingListService) CreateSampleShoppingListsAndItemsForUser(userGUI
 			Name:         defaultShoppingList.Name,
 		}
 
-		shoppingList, error := sls.CreateUserShoppingList(userGUID, userShoppingList)
+		shoppingList, error := sls.CreateUserShoppingList(dbTransaction, userGUID, userShoppingList)
 
 		if error != nil {
 			return error
 		}
 
-		error = sls.createSampleShoppingListItems(userGUID, shoppingList.GUID)
+		error = sls.createSampleShoppingListItems(dbTransaction, userGUID, shoppingList.GUID)
 
 		if error != nil {
 			return error
@@ -174,7 +177,7 @@ func (sls *ShoppingListService) CreateSampleShoppingListsAndItemsForUser(userGUI
 	return nil
 }
 
-func (sls *ShoppingListService) createSampleShoppingListItems(userGUID string, shoppingListGUID string) *systems.ErrorData {
+func (sls *ShoppingListService) createSampleShoppingListItems(dbTransaction *gorm.DB, userGUID string, shoppingListGUID string) *systems.ErrorData {
 	defaultShoppingListitems := sls.DefaultShoppingListItemService.GetAllDefaultShoppingListItems()
 
 	for _, defaultShoppingListItem := range defaultShoppingListitems {
@@ -187,7 +190,7 @@ func (sls *ShoppingListService) createSampleShoppingListItems(userGUID string, s
 			AddedToCart:      defaultShoppingListItem.AddedToCart,
 		}
 
-		_, error := sls.ShoppingListItemService.CreateUserShoppingListItem(userGUID, shoppingListGUID, userShoppingListItem)
+		_, error := sls.ShoppingListItemService.CreateUserShoppingListItem(dbTransaction, userGUID, shoppingListGUID, userShoppingListItem)
 
 		if error != nil {
 			return error

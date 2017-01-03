@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
 )
 
 // DealCashbackHandler will handle all requests related to Deal Cashback resource.
@@ -18,6 +19,8 @@ type DealCashbackHandler struct {
 
 // Create function used to create new deal cashback and store in database and create shopping list item based on deal info.
 func (dch *DealCashbackHandler) Create(context *gin.Context) {
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
+
 	tokenData := context.MustGet("Token").(map[string]string)
 
 	dealCashbackData := CreateDealCashback{}
@@ -41,13 +44,16 @@ func (dch *DealCashbackHandler) Create(context *gin.Context) {
 		return
 	}
 
-	error := dch.DealCashbackService.CreateDealCashbackAndShoppingListItem(userGUID, dealCashbackData)
+	error := dch.DealCashbackService.CreateDealCashbackAndShoppingListItem(dbTransaction, userGUID, dealCashbackData)
 
 	if error != nil {
+		dbTransaction.Rollback()
 		errorCode, _ := strconv.Atoi(error.Error.Status)
 		context.JSON(errorCode, error)
 		return
 	}
+
+	dbTransaction.Commit()
 
 	result := make(map[string]string)
 	result["message"] = "Successfully add deal guid " + dealCashbackData.DealGUID + " to list."
@@ -57,6 +63,8 @@ func (dch *DealCashbackHandler) Create(context *gin.Context) {
 
 // ViewByShoppingList function used to retrieve deal cashback by Shopping List GUID.
 func (dch *DealCashbackHandler) ViewByShoppingList(context *gin.Context) {
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
+
 	tokenData := context.MustGet("Token").(map[string]string)
 
 	userGUID := context.Param("guid")
@@ -93,10 +101,19 @@ func (dch *DealCashbackHandler) ViewByShoppingList(context *gin.Context) {
 
 	transactionStatus := context.Query("transaction_status")
 
-	userDealCashbacks, totalUserDealCashback := dch.DealCashbackService.GetUserDealCashbacksByShoppingList(userGUID, shoppingListGUID,
+	userDealCashbacks, totalUserDealCashback, error := dch.DealCashbackService.GetUserDealCashbacksByShoppingList(dbTransaction, userGUID, shoppingListGUID,
 		transactionStatus, pageNumber, pageLimit, relations)
 
+	if error != nil {
+		dbTransaction.Rollback()
+		errorCode, _ := strconv.Atoi(error.Error.Status)
+		context.JSON(errorCode, error)
+		return
+	}
+
 	dealCashbackResponse := dch.DealCashbackTransformer.transformCollection(context.Request, userDealCashbacks, totalUserDealCashback, pageLimit)
+
+	dbTransaction.Commit()
 
 	context.JSON(http.StatusOK, gin.H{"data": dealCashbackResponse})
 }

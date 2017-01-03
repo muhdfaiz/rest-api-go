@@ -11,7 +11,7 @@ type ReferralCashbackTransactionRepository struct {
 }
 
 // Create function used to store referral cashback history in database after registration
-func (rctr *ReferralCashbackTransactionRepository) Create(userGUID, referrerGUID, transactionGUID string) (*ReferralCashbackTransaction, *systems.ErrorData) {
+func (rctr *ReferralCashbackTransactionRepository) Create(dbTransaction *gorm.DB, userGUID, referrerGUID, transactionGUID string) (*ReferralCashbackTransaction, *systems.ErrorData) {
 	referralCashback := &ReferralCashbackTransaction{
 		GUID:            Helper.GenerateUUID(),
 		UserGUID:        userGUID,
@@ -19,7 +19,7 @@ func (rctr *ReferralCashbackTransactionRepository) Create(userGUID, referrerGUID
 		TransactionGUID: transactionGUID,
 	}
 
-	result := rctr.DB.Create(referralCashback)
+	result := dbTransaction.Create(referralCashback)
 
 	if result.Error != nil || result.RowsAffected == 0 {
 		return nil, Error.InternalServerError(result.Error, systems.DatabaseError)

@@ -19,7 +19,7 @@ type SmsService struct {
 }
 
 // SendVerificationCode function handle sending sms contain verification code during registration & login
-func (sf *SmsService) SendVerificationCode(phoneNo string, userGUID string) (interface{}, *systems.ErrorData) {
+func (sf *SmsService) SendVerificationCode(dbTransaction *gorm.DB, phoneNo string, userGUID string) (interface{}, *systems.ErrorData) {
 	smsVerificationCode := Helper.RandomString("Digit", 4, "", "")
 
 	smsText := fmt.Sprintf("Your verification code is %s - Shoppermate", smsVerificationCode)
@@ -44,7 +44,7 @@ func (sf *SmsService) SendVerificationCode(phoneNo string, userGUID string) (int
 	smsHistory["verification_code"] = smsVerificationCode
 	smsHistory["status"] = "0"
 
-	result, err := sf.SmsHistoryRepository.Create(smsHistory)
+	result, err := sf.SmsHistoryRepository.Create(dbTransaction, smsHistory)
 
 	if err != nil {
 		return nil, err

@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
 )
 
 // AuthHandler will handle all request related to Auth Resources.
@@ -15,6 +16,8 @@ type AuthHandler struct {
 
 // LoginViaPhone function will handle user authentication using phone number.
 func (ah *AuthHandler) LoginViaPhone(context *gin.Context) {
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
+
 	authData := &LoginViaPhone{}
 
 	if error := Binding.Bind(authData, context); error != nil {
@@ -32,13 +35,16 @@ func (ah *AuthHandler) LoginViaPhone(context *gin.Context) {
 		return
 	}
 
-	error = ah.AuthService.AuthenticateUserViaPhoneNumber(user.GUID, authData.PhoneNo, debug)
+	error = ah.AuthService.AuthenticateUserViaPhoneNumber(dbTransaction, user.GUID, authData.PhoneNo, debug)
 
 	if error != nil {
+		dbTransaction.Rollback()
 		errorCode, _ := strconv.Atoi(error.Error.Status)
 		context.JSON(errorCode, error)
 		return
 	}
+
+	dbTransaction.Commit()
 
 	result := make(map[string]string)
 	result["user_guid"] = user.GUID
@@ -49,6 +55,8 @@ func (ah *AuthHandler) LoginViaPhone(context *gin.Context) {
 
 // LoginViaFacebook function used to login user via facebook
 func (ah *AuthHandler) LoginViaFacebook(context *gin.Context) {
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
+
 	authData := &LoginViaFacebook{}
 
 	if error := Binding.Bind(authData, context); error != nil {
@@ -64,13 +72,16 @@ func (ah *AuthHandler) LoginViaFacebook(context *gin.Context) {
 		return
 	}
 
-	jwtToken, error := ah.AuthService.AuthenticateUserViaFacebook(user.GUID, user.PhoneNo, authData.FacebookID, authData.DeviceUUID)
+	jwtToken, error := ah.AuthService.AuthenticateUserViaFacebook(dbTransaction, user.GUID, user.PhoneNo, authData.FacebookID, authData.DeviceUUID)
 
 	if error != nil {
+		dbTransaction.Rollback()
 		errorCode, _ := strconv.Atoi(error.Error.Status)
 		context.JSON(errorCode, error)
 		return
 	}
+
+	dbTransaction.Commit()
 
 	response := make(map[string]interface{})
 	response["user"] = user
@@ -98,15 +109,20 @@ func (ah *AuthHandler) Refresh(context *gin.Context) {
 // Logout function used to logout user from application.
 // System will soft delete device by set deleted_at column to the current date & time.
 func (ah *AuthHandler) Logout(context *gin.Context) {
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
+
 	tokenData := context.MustGet("Token").(map[string]string)
 
-	error := ah.AuthService.LogoutUser(tokenData["device_uuid"], tokenData["user_guid"])
+	error := ah.AuthService.LogoutUser(dbTransaction, tokenData["device_uuid"], tokenData["user_guid"])
 
 	if error != nil {
+		dbTransaction.Rollback()
 		errorCode, _ := strconv.Atoi(error.Error.Status)
 		context.JSON(errorCode, error)
 		return
 	}
+
+	dbTransaction.Commit()
 
 	result := make(map[string]string)
 	result["message"] = "Successfully logout"

@@ -4,6 +4,8 @@ import (
 	"mime/multipart"
 	"strings"
 
+	"github.com/jinzhu/gorm"
+
 	"os"
 
 	"bitbucket.org/cliqers/shoppermate-api/services/filesystem"
@@ -20,7 +22,7 @@ type DealCashbackTransactionService struct {
 
 // CreateTransaction function used to upload receipt image to Amazon S3 and create new transaction
 // through DealCashbackTransactionRepository.
-func (dcts *DealCashbackTransactionService) CreateTransaction(receipt *multipart.FileHeader, userGUID string,
+func (dcts *DealCashbackTransactionService) CreateTransaction(dbTransaction *gorm.DB, receipt *multipart.FileHeader, userGUID string,
 	dealCashbackGUIDs string, relations string) (*Transaction, *systems.ErrorData) {
 
 	uploadedReceipt, err := dcts.UploadReceipt(receipt)
@@ -54,19 +56,19 @@ func (dcts *DealCashbackTransactionService) CreateTransaction(receipt *multipart
 		ReferenceID:           Helper.GenerateUniqueShortID(),
 	}
 
-	transaction, err := dcts.TransactionRepository.Create(transactionData)
+	transaction, err := dcts.TransactionRepository.Create(dbTransaction, transactionData)
 
 	if err != nil {
 		return nil, err
 	}
 
-	result, err := dcts.DealCashbackTransactionRepository.Create(userGUID, transaction.GUID, uploadedReceipt["path"])
+	result, err := dcts.DealCashbackTransactionRepository.Create(dbTransaction, userGUID, transaction.GUID, uploadedReceipt["path"])
 
 	if err != nil {
 		return nil, err
 	}
 
-	err = dcts.DealCashbackRepository.UpdateDealCashbackTransactionGUID(splitDealCashbackGUID, result.GUID)
+	err = dcts.DealCashbackRepository.UpdateDealCashbackTransactionGUID(dbTransaction, splitDealCashbackGUID, result.GUID)
 
 	if err != nil {
 		return nil, err

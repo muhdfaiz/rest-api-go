@@ -1,6 +1,9 @@
 package v1
 
-import "bitbucket.org/cliqers/shoppermate-api/systems"
+import (
+	"bitbucket.org/cliqers/shoppermate-api/systems"
+	"github.com/jinzhu/gorm"
+)
 
 type ReferralCashbackTransactionService struct {
 	ReferralCashbackTransactionRepository ReferralCashbackTransactionRepositoryInterface
@@ -8,10 +11,10 @@ type ReferralCashbackTransactionService struct {
 
 // CreateReferralCashbackTransaction function used to create referral cashback transaction when someone register new
 // account and apply other user referral code.
-func (rcts *ReferralCashbackTransactionService) CreateReferralCashbackTransaction(userGUID, referrerGUID,
+func (rcts *ReferralCashbackTransactionService) CreateReferralCashbackTransaction(dbTransaction *gorm.DB, userGUID, referrerGUID,
 	transactionGUID string) (*ReferralCashbackTransaction, *systems.ErrorData) {
 
-	referralCashbackTransaction, error := rcts.ReferralCashbackTransactionRepository.Create(userGUID, referrerGUID, transactionGUID)
+	referralCashbackTransaction, error := rcts.ReferralCashbackTransactionRepository.Create(dbTransaction, userGUID, referrerGUID, transactionGUID)
 
 	if error != nil {
 		return nil, error

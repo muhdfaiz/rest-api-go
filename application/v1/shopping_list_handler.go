@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
 )
 
 // ShoppingListHandler will handle all request related to user shopping list
@@ -56,13 +57,18 @@ func (slh *ShoppingListHandler) Create(context *gin.Context) {
 		return
 	}
 
-	createdShoppingList, error := slh.ShoppingListService.CreateUserShoppingList(userGUID, createData)
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
+
+	createdShoppingList, error := slh.ShoppingListService.CreateUserShoppingList(dbTransaction, userGUID, createData)
 
 	if error != nil {
+		dbTransaction.Rollback()
 		errorCode, _ := strconv.Atoi(error.Error.Status)
 		context.JSON(errorCode, error)
 		return
 	}
+
+	dbTransaction.Commit()
 
 	context.JSON(http.StatusOK, gin.H{"data": createdShoppingList})
 
@@ -88,13 +94,18 @@ func (slh *ShoppingListHandler) Update(context *gin.Context) {
 
 	shoppingListGUID := context.Param("shopping_list_guid")
 
-	updatedShoppingList, error := slh.ShoppingListService.UpdateUserShoppingList(userGUID, shoppingListGUID, updateData)
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
+
+	updatedShoppingList, error := slh.ShoppingListService.UpdateUserShoppingList(dbTransaction, userGUID, shoppingListGUID, updateData)
 
 	if error != nil {
+		dbTransaction.Rollback()
 		errorCode, _ := strconv.Atoi(error.Error.Status)
 		context.JSON(errorCode, error)
 		return
 	}
+
+	dbTransaction.Commit()
 
 	context.JSON(http.StatusOK, gin.H{"data": updatedShoppingList})
 
@@ -113,13 +124,18 @@ func (slh *ShoppingListHandler) Delete(context *gin.Context) {
 
 	shoppingListGUID := context.Param("shopping_list_guid")
 
-	error := slh.ShoppingListService.DeleteUserShoppingListIncludingItemsAndImages(userGUID, shoppingListGUID)
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
+
+	error := slh.ShoppingListService.DeleteUserShoppingListIncludingItemsAndImages(dbTransaction, userGUID, shoppingListGUID)
 
 	if error != nil {
+		dbTransaction.Rollback()
 		errorCode, _ := strconv.Atoi(error.Error.Status)
 		context.JSON(errorCode, error)
 		return
 	}
+
+	dbTransaction.Commit()
 
 	result := make(map[string]string)
 	result["message"] = "Successfully deleted shopping list including with guid " + shoppingListGUID

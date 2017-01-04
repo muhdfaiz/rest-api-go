@@ -14,6 +14,10 @@ import (
 
 // InitializeObjectAndSetRoutes will initialize object and set all routes across the API
 func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
+	router.Use(func(context *gin.Context) {
+		context.Set("DB", DB)
+	})
+
 	// Amazon S3 Config
 	accessKey := os.Getenv("AWS_ACCESS_KEY_ID")
 	secretKey := os.Getenv("AWS_SECRET_ACCESS_KEY")

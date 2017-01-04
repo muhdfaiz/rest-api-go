@@ -11,28 +11,34 @@ type UserRepository struct {
 }
 
 // Create function will create new user and store in database
-func (ur *UserRepository) Create(data CreateUser) (*User, *systems.ErrorData) {
+func (ur *UserRepository) Create(dbTransansaction *gorm.DB, data CreateUser) (*User, *systems.ErrorData) {
 	registerBy := "phone_no"
 
-	// Set registerBy equal to facebook if register using Facebook
 	if data.FacebookID != "" {
 		registerBy = "facebook"
 	}
 
 	user := &User{
 		GUID:           Helper.GenerateUUID(),
-		FacebookID:     data.FacebookID,
 		Name:           data.Name,
 		Email:          data.Email,
+		FacebookID:     &data.FacebookID,
 		PhoneNo:        data.PhoneNo,
-		ProfilePicture: data.ProfilePicture,
+		ProfilePicture: &data.ProfilePicture,
 		RegisterBy:     registerBy,
 		ReferralCode:   data.ReferralCode,
 		Verified:       0,
 	}
 
-	// Store new user in database
-	result := ur.DB.Create(user)
+	if data.FacebookID == "" {
+		user.FacebookID = nil
+	}
+
+	if data.ProfilePicture == "" {
+		user.ProfilePicture = nil
+	}
+
+	result := dbTransansaction.Create(user)
 
 	if result.Error != nil || result.RowsAffected == 0 {
 		return nil, Error.InternalServerError(result.Error, systems.DatabaseError)
@@ -42,7 +48,7 @@ func (ur *UserRepository) Create(data CreateUser) (*User, *systems.ErrorData) {
 }
 
 // Update function used to update user detail by certain field.
-func (ur *UserRepository) Update(guid string, data map[string]interface{}) *systems.ErrorData {
+func (ur *UserRepository) Update(dbTransaction *gorm.DB, guid string, data map[string]interface{}) *systems.ErrorData {
 	updateData := map[string]interface{}{}
 
 	for key, value := range data {
@@ -57,7 +63,7 @@ func (ur *UserRepository) Update(guid string, data map[string]interface{}) *syst
 		}
 	}
 
-	result := ur.DB.Model(&User{}).Where(&User{GUID: guid}).Updates(updateData)
+	result := dbTransaction.Model(&User{}).Where(&User{GUID: guid}).Updates(updateData)
 
 	if result.Error != nil {
 		return Error.InternalServerError(result.Error, systems.DatabaseError)
@@ -66,8 +72,8 @@ func (ur *UserRepository) Update(guid string, data map[string]interface{}) *syst
 	return nil
 }
 
-func (ur *UserRepository) UpdateUserWallet(userGUID string, amount float64) *systems.ErrorData {
-	result := ur.DB.Model(&User{}).Where(&User{GUID: userGUID}).Updates(map[string]interface{}{
+func (ur *UserRepository) UpdateUserWallet(dbTransaction *gorm.DB, userGUID string, amount float64) *systems.ErrorData {
+	result := dbTransaction.Model(&User{}).Where(&User{GUID: userGUID}).Updates(map[string]interface{}{
 		"wallet": amount,
 	})
 
@@ -78,8 +84,8 @@ func (ur *UserRepository) UpdateUserWallet(userGUID string, amount float64) *sys
 	return nil
 }
 
-func (ur *UserRepository) Delete(attribute string, value string) *systems.ErrorData {
-	result := ur.DB.Where(attribute+" = ?", value).Delete(&User{})
+func (ur *UserRepository) Delete(dbTransaction *gorm.DB, attribute string, value string) *systems.ErrorData {
+	result := dbTransaction.Where(attribute+" = ?", value).Delete(&User{})
 
 	if result.Error != nil {
 		return Error.InternalServerError(result.Error, systems.DatabaseError)
@@ -131,7 +137,7 @@ func (ur *UserRepository) GetByFacebookID(facebookID string, relations string) *
 		DB = LoadRelations(DB, relations)
 	}
 
-	DB.Where(&User{FacebookID: facebookID}).First(&user)
+	DB.Where(&User{FacebookID: &facebookID}).First(&user)
 
 	return user
 }

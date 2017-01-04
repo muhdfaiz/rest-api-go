@@ -11,7 +11,7 @@ type ShoppingListItemImageRepository struct {
 }
 
 // Create function used to store shopping list item images in database.
-func (sliir *ShoppingListItemImageRepository) Create(userGUID string, shoppingListGUID string, shoppingListItemGUID string,
+func (sliir *ShoppingListItemImageRepository) Create(dbTransaction *gorm.DB, userGUID string, shoppingListGUID string, shoppingListItemGUID string,
 	images []map[string]string) ([]*ShoppingListItemImage, *systems.ErrorData) {
 
 	createdImages := make([]*ShoppingListItemImage, len(images))
@@ -26,7 +26,7 @@ func (sliir *ShoppingListItemImageRepository) Create(userGUID string, shoppingLi
 			URL:                  image["path"],
 		}
 
-		result := sliir.DB.Create(shoppingListItemImage)
+		result := dbTransaction.Create(shoppingListItemImage)
 
 		if result.Error != nil || result.RowsAffected == 0 {
 			return nil, Error.InternalServerError(result.Error, systems.DatabaseError)
@@ -39,9 +39,9 @@ func (sliir *ShoppingListItemImageRepository) Create(userGUID string, shoppingLi
 }
 
 // Delete function used to soft delete shopping list item image from database.
-func (sliir *ShoppingListItemImageRepository) Delete(attribute string, value string) *systems.ErrorData {
+func (sliir *ShoppingListItemImageRepository) Delete(dbTransaction *gorm.DB, attribute string, value string) *systems.ErrorData {
 
-	deleteShoppingListItemImage := sliir.DB.Where(attribute+" = ?", value).Delete(&ShoppingListItemImage{})
+	deleteShoppingListItemImage := dbTransaction.Where(attribute+" = ?", value).Delete(&ShoppingListItemImage{})
 
 	if deleteShoppingListItemImage.Error != nil {
 		return Error.InternalServerError(deleteShoppingListItemImage.Error, systems.DatabaseError)

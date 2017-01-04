@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
 )
 
 // DealCashbackHandler will handle all requests related to Deal Cashback resource.
@@ -41,13 +42,18 @@ func (dch *DealCashbackHandler) Create(context *gin.Context) {
 		return
 	}
 
-	error := dch.DealCashbackService.CreateDealCashbackAndShoppingListItem(userGUID, dealCashbackData)
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
+
+	error := dch.DealCashbackService.CreateDealCashbackAndShoppingListItem(dbTransaction, userGUID, dealCashbackData)
 
 	if error != nil {
+		dbTransaction.Rollback()
 		errorCode, _ := strconv.Atoi(error.Error.Status)
 		context.JSON(errorCode, error)
 		return
 	}
+
+	dbTransaction.Commit()
 
 	result := make(map[string]string)
 	result["message"] = "Successfully add deal guid " + dealCashbackData.DealGUID + " to list."
@@ -93,10 +99,21 @@ func (dch *DealCashbackHandler) ViewByShoppingList(context *gin.Context) {
 
 	transactionStatus := context.Query("transaction_status")
 
-	userDealCashbacks, totalUserDealCashback := dch.DealCashbackService.GetUserDealCashbacksByShoppingList(userGUID, shoppingListGUID,
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
+
+	userDealCashbacks, totalUserDealCashback, error := dch.DealCashbackService.GetUserDealCashbacksByShoppingList(dbTransaction, userGUID, shoppingListGUID,
 		transactionStatus, pageNumber, pageLimit, relations)
 
+	if error != nil {
+		dbTransaction.Rollback()
+		errorCode, _ := strconv.Atoi(error.Error.Status)
+		context.JSON(errorCode, error)
+		return
+	}
+
 	dealCashbackResponse := dch.DealCashbackTransformer.transformCollection(context.Request, userDealCashbacks, totalUserDealCashback, pageLimit)
+
+	dbTransaction.Commit()
 
 	context.JSON(http.StatusOK, gin.H{"data": dealCashbackResponse})
 }

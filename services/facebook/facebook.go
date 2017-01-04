@@ -40,10 +40,12 @@ func (fs *FacebookService) IDIsValid(facebookID string, debug int) bool {
 // GetAccessToken function used to retrieve access token
 func (fs *FacebookService) GetAccessToken(debug int) string {
 	appID := os.Getenv("FACEBOOK_APP_ID")
+
 	appSecret := os.Getenv("FACEBOOK_APP_SECRET")
 
 	if debug == 1 {
 		appID = os.Getenv("DEBUG_FACEBOOK_APP_ID")
+
 		appSecret = os.Getenv("DEBUG_FACEBOOK_APP_SECRET")
 	}
 

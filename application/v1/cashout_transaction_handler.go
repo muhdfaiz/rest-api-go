@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
 )
 
 type CashoutTransactionHandler struct {
@@ -37,13 +38,18 @@ func (cth CashoutTransactionHandler) Create(context *gin.Context) {
 		return
 	}
 
-	transaction, error := cth.CashoutTransactionService.CreateCashoutTransaction(userGUID, createCashoutTransaction)
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
+
+	transaction, error := cth.CashoutTransactionService.CreateCashoutTransaction(dbTransaction, userGUID, createCashoutTransaction)
 
 	if error != nil {
+		dbTransaction.Rollback()
 		errorCode, _ := strconv.Atoi(error.Error.Status)
 		context.JSON(errorCode, error)
 		return
 	}
+
+	dbTransaction.Commit()
 
 	context.JSON(http.StatusOK, gin.H{"data": transaction})
 }

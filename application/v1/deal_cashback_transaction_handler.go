@@ -7,34 +7,35 @@ import (
 	"bitbucket.org/cliqers/shoppermate-api/systems"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
 )
 
 type DealCashbackTransactionHandler struct {
 	DealCashbackTransactionService DealCashbackTransactionServiceInterface
 }
 
-func (dcth *DealCashbackTransactionHandler) Create(c *gin.Context) {
-	tokenData := c.MustGet("Token").(map[string]string)
+func (dcth *DealCashbackTransactionHandler) Create(context *gin.Context) {
+	tokenData := context.MustGet("Token").(map[string]string)
 
-	userGUID := c.Param("guid")
+	userGUID := context.Param("guid")
 
 	if tokenData["user_guid"] != userGUID {
-		c.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("create deal cashback transaction"))
+		context.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("create deal cashback transaction"))
 		return
 	}
 
 	createDealCashbackTransaction := &CreateDealCashbackTransaction{}
 
-	if err := Binding.Bind(createDealCashbackTransaction, c); err != nil {
-		c.JSON(http.StatusUnprocessableEntity, err)
+	if error := Binding.Bind(createDealCashbackTransaction, context); error != nil {
+		context.JSON(http.StatusUnprocessableEntity, error)
 		return
 	}
 
-	receipt := c.Request.MultipartForm.File["receipt_image"]
+	receipt := context.Request.MultipartForm.File["receipt_image"]
 
 	if len(receipt) < 1 {
-		err := &systems.Error{}
-		c.JSON(http.StatusUnprocessableEntity, err.FileRequireErrors("receipt_image"))
+		error := &systems.Error{}
+		context.JSON(http.StatusUnprocessableEntity, error.FileRequireErrors("receipt_image"))
 		return
 	}
 
@@ -42,13 +43,18 @@ func (dcth *DealCashbackTransactionHandler) Create(c *gin.Context) {
 
 	relations := "transactiontypes,transactionstatuses,dealcashbacktransactions,dealcashbacktransactions.dealcashbacks,dealcashbacktransactions.dealcashbacks.deals"
 
-	result, err := dcth.DealCashbackTransactionService.CreateTransaction(receipt[0], userGUID, dealCashbackGUIDs, relations)
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
 
-	if err != nil {
-		errorCode, _ := strconv.Atoi(err.Error.Status)
-		c.JSON(errorCode, err)
+	result, error := dcth.DealCashbackTransactionService.CreateTransaction(dbTransaction, receipt[0], userGUID, dealCashbackGUIDs, relations)
+
+	if error != nil {
+		dbTransaction.Rollback()
+		errorCode, _ := strconv.Atoi(error.Error.Status)
+		context.JSON(errorCode, error)
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"data": result})
+	dbTransaction.Commit()
+
+	context.JSON(http.StatusOK, gin.H{"data": result})
 }

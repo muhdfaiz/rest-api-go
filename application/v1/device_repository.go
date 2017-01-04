@@ -13,10 +13,10 @@ type DeviceRepository struct {
 
 // Create function used to create new device
 // Optional UserGUID because app must register device first when app is loaded
-func (dr *DeviceRepository) Create(data CreateDevice) (*Device, *systems.ErrorData) {
+func (dr *DeviceRepository) Create(databaseTransaction *gorm.DB, data CreateDevice) (*Device, *systems.ErrorData) {
 	device := &Device{
 		GUID:       Helper.GenerateUUID(),
-		UserGUID:   data.UserGUID,
+		UserGUID:   &data.UserGUID,
 		UUID:       data.UUID,
 		Os:         data.Os,
 		Model:      data.Model,
@@ -24,7 +24,11 @@ func (dr *DeviceRepository) Create(data CreateDevice) (*Device, *systems.ErrorDa
 		AppVersion: data.AppVersion,
 	}
 
-	result := dr.DB.Create(device)
+	if data.UserGUID == "" {
+		device.UserGUID = nil
+	}
+
+	result := databaseTransaction.Create(device)
 
 	if result.Error != nil || result.RowsAffected == 0 {
 		return nil, Error.InternalServerError(result.Error, systems.DatabaseError)
@@ -34,7 +38,7 @@ func (dr *DeviceRepository) Create(data CreateDevice) (*Device, *systems.ErrorDa
 }
 
 // Update function used to update device data. Require device uuid.
-func (dr *DeviceRepository) Update(uuid string, data UpdateDevice) *systems.ErrorData {
+func (dr *DeviceRepository) Update(dbTransaction *gorm.DB, uuid string, data UpdateDevice) *systems.ErrorData {
 	updateData := map[string]string{}
 	for key, value := range structs.Map(data) {
 		if value != "" {
@@ -42,7 +46,7 @@ func (dr *DeviceRepository) Update(uuid string, data UpdateDevice) *systems.Erro
 		}
 	}
 
-	result := dr.DB.Unscoped().Model(&Device{}).Where(&Device{UUID: uuid}).Updates(updateData)
+	result := dbTransaction.Unscoped().Model(&Device{}).Where(&Device{UUID: uuid}).Updates(updateData)
 
 	if result.Error != nil {
 		return Error.InternalServerError(result.Error, systems.DatabaseError)
@@ -51,9 +55,9 @@ func (dr *DeviceRepository) Update(uuid string, data UpdateDevice) *systems.Erro
 	return nil
 }
 
-func (dr *DeviceRepository) SetDeletedAtToNull(deviceGUID string) *systems.ErrorData {
-	// Reactivate device by set null to deleted_at column in devices table
-	result := dr.DB.Unscoped().Model(&Device{}).Where(&Device{GUID: deviceGUID}).Update("deleted_at", nil)
+// SetDeletedAtToNull function used to set column `deleted_at` to null in database.
+func (dr *DeviceRepository) SetDeletedAtToNull(dbTransaction *gorm.DB, deviceGUID string) *systems.ErrorData {
+	result := dbTransaction.Unscoped().Model(&Device{}).Where(&Device{GUID: deviceGUID}).Update("deleted_at", nil)
 
 	if result.Error != nil {
 		return Error.InternalServerError(result.Error, systems.DatabaseError)
@@ -63,8 +67,8 @@ func (dr *DeviceRepository) SetDeletedAtToNull(deviceGUID string) *systems.Error
 }
 
 // Delete function used to soft delete device.
-func (dr *DeviceRepository) Delete(attribute string, value string) *systems.ErrorData {
-	result := dr.DB.Where(attribute+" = ?", value).Delete(&Device{})
+func (dr *DeviceRepository) Delete(dbTransaction *gorm.DB, attribute string, value string) *systems.ErrorData {
+	result := dbTransaction.Where(attribute+" = ?", value).Delete(&Device{})
 
 	if result.Error != nil {
 		return Error.InternalServerError(result.Error, systems.DatabaseError)
@@ -86,7 +90,7 @@ func (dr *DeviceRepository) GetByUUID(uuid string) *Device {
 
 // GetByUUIDAndUserGUID function used to retrieve device by device uuid and user guid
 func (dr *DeviceRepository) GetByUUIDAndUserGUID(uuid string, userGUID string) *Device {
-	result := dr.DB.Where(&Device{UUID: uuid, UserGUID: userGUID}).First(&Device{})
+	result := dr.DB.Where(&Device{UUID: uuid, UserGUID: &userGUID}).First(&Device{})
 
 	if result.RowsAffected == 0 {
 		return &Device{}

@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
 )
 
 // ShoppingListItemHandler will handle all task related to shopping list item resource.
@@ -86,13 +87,18 @@ func (slih *ShoppingListItemHandler) ViewAll(context *gin.Context) {
 		return
 	}
 
-	userShoppingListItems, error := slih.ShoppingListItemService.ViewAllUserShoppingListItem(userGUID, shoppingListGUID, addedToCart, latitude, longitude, relations)
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
+
+	userShoppingListItems, error := slih.ShoppingListItemService.ViewAllUserShoppingListItem(dbTransaction, userGUID, shoppingListGUID, addedToCart, latitude, longitude, relations)
 
 	if error != nil {
+		dbTransaction.Rollback()
 		errorCode, _ := strconv.Atoi(error.Error.Status)
 		context.JSON(errorCode, error)
 		return
 	}
+
+	dbTransaction.Commit()
 
 	context.JSON(http.StatusOK, gin.H{"data": userShoppingListItems})
 }
@@ -125,13 +131,18 @@ func (slih *ShoppingListItemHandler) Create(context *gin.Context) {
 		return
 	}
 
-	createdShoppingListItem, error := slih.ShoppingListItemService.CreateUserShoppingListItem(userGUID, shoppingListGUID, shoppingListItemToCreate)
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
+
+	createdShoppingListItem, error := slih.ShoppingListItemService.CreateUserShoppingListItem(dbTransaction, userGUID, shoppingListGUID, shoppingListItemToCreate)
 
 	if error != nil {
+		dbTransaction.Rollback()
 		errorCode, _ := strconv.Atoi(error.Error.Status)
 		context.JSON(errorCode, error)
 		return
 	}
+
+	dbTransaction.Commit()
 
 	context.JSON(http.StatusOK, gin.H{"data": createdShoppingListItem})
 }
@@ -165,15 +176,22 @@ func (slih *ShoppingListItemHandler) Update(context *gin.Context) {
 		return
 	}
 
-	updatedShoppingList, error := slih.ShoppingListItemService.UpdateUserShoppingListItem(userGUID, shoppingListGUID, shoppingListItemGUID, shoppingListItemToUpdate, "")
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
+
+	updatedShoppingListItem, error := slih.ShoppingListItemService.UpdateUserShoppingListItem(dbTransaction, userGUID, shoppingListGUID, shoppingListItemGUID, shoppingListItemToUpdate, "")
 
 	if error != nil {
+		dbTransaction.Rollback()
 		errorCode, _ := strconv.Atoi(error.Error.Status)
 		context.JSON(errorCode, error)
 		return
 	}
 
-	context.JSON(http.StatusOK, gin.H{"data": updatedShoppingList})
+	dbTransaction.Commit()
+
+	updatedShoppingListItem = slih.ShoppingListItemService.GetShoppingListItemByGUID(shoppingListItemGUID, "")
+
+	context.JSON(http.StatusOK, gin.H{"data": updatedShoppingListItem})
 }
 
 // UpdateAll function used to update shopping list item
@@ -204,13 +222,20 @@ func (slih *ShoppingListItemHandler) UpdateAll(context *gin.Context) {
 		return
 	}
 
-	updatedShoppingListItems, error := slih.ShoppingListItemService.UpdateAllUserShoppingListItem(userGUID, shoppingListGUID, updateShoppingListItemData)
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
+
+	updatedShoppingListItems, error := slih.ShoppingListItemService.UpdateAllUserShoppingListItem(dbTransaction, userGUID, shoppingListGUID, updateShoppingListItemData)
 
 	if error != nil {
+		dbTransaction.Rollback()
 		errorCode, _ := strconv.Atoi(error.Error.Status)
 		context.JSON(errorCode, error)
 		return
 	}
+
+	dbTransaction.Commit()
+
+	updatedShoppingListItems = slih.ShoppingListItemService.GetShoppingListItemsByUserGUIDAndShoppingListGUID(userGUID, shoppingListGUID, "")
 
 	context.JSON(http.StatusOK, gin.H{"data": updatedShoppingListItems})
 }
@@ -246,21 +271,27 @@ func (slih *ShoppingListItemHandler) DeleteAll(context *gin.Context) {
 		return
 	}
 
-	result, error := slih.ShoppingListItemService.DeleteUserShoppingListItem(userGUID, shoppingListGUID, deleteItemInCart)
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
+
+	result, error := slih.ShoppingListItemService.DeleteUserShoppingListItem(dbTransaction, userGUID, shoppingListGUID, deleteItemInCart)
 
 	if error != nil {
+		dbTransaction.Rollback()
 		errorCode, _ := strconv.Atoi(error.Error.Status)
 		context.JSON(errorCode, error)
 		return
 	}
 
-	error = slih.ShoppingListItemImageService.DeleteImagesForShoppingList(shoppingListGUID)
+	error = slih.ShoppingListItemImageService.DeleteImagesForShoppingList(dbTransaction, shoppingListGUID)
 
 	if error != nil {
+		dbTransaction.Rollback()
 		errorCode, _ := strconv.Atoi(error.Error.Status)
 		context.JSON(errorCode, error)
 		return
 	}
+
+	dbTransaction.Commit()
 
 	context.JSON(http.StatusOK, gin.H{"data": result})
 }
@@ -279,21 +310,27 @@ func (slih *ShoppingListItemHandler) Delete(context *gin.Context) {
 	shoppingListGUID := context.Param("shopping_list_guid")
 	shoppingListItemGUID := context.Param("item_guid")
 
-	result, error := slih.ShoppingListItemService.DeleteShoppingListItemInShoppingList(shoppingListItemGUID, userGUID, shoppingListGUID)
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
+
+	result, error := slih.ShoppingListItemService.DeleteShoppingListItemInShoppingList(dbTransaction, shoppingListItemGUID, userGUID, shoppingListGUID)
 
 	if error != nil {
+		dbTransaction.Rollback()
 		errorCode, _ := strconv.Atoi(error.Error.Status)
 		context.JSON(errorCode, error)
 		return
 	}
 
-	error = slih.ShoppingListItemImageService.DeleteImagesForShoppingListItem(shoppingListItemGUID)
+	error = slih.ShoppingListItemImageService.DeleteImagesForShoppingListItem(dbTransaction, shoppingListItemGUID)
 
 	if error != nil {
+		dbTransaction.Rollback()
 		errorCode, _ := strconv.Atoi(error.Error.Status)
 		context.JSON(errorCode, error)
 		return
 	}
+
+	dbTransaction.Commit()
 
 	context.JSON(http.StatusOK, gin.H{"data": result})
 }

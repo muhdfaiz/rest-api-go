@@ -12,7 +12,7 @@ type ShoppingListRepository struct {
 }
 
 // Create function used to create user shopping list.
-func (slr *ShoppingListRepository) Create(userGUID string, data CreateShoppingList) (*ShoppingList, *systems.ErrorData) {
+func (slr *ShoppingListRepository) Create(dbTransaction *gorm.DB, userGUID string, data CreateShoppingList) (*ShoppingList, *systems.ErrorData) {
 	shoppingList := &ShoppingList{
 		GUID:         Helper.GenerateUUID(),
 		UserGUID:     userGUID,
@@ -20,7 +20,7 @@ func (slr *ShoppingListRepository) Create(userGUID string, data CreateShoppingLi
 		OccasionGUID: data.OccasionGUID,
 	}
 
-	result := slr.DB.Create(shoppingList)
+	result := dbTransaction.Create(shoppingList)
 
 	if result.Error != nil || result.RowsAffected == 0 {
 		return nil, Error.InternalServerError(result.Error, systems.DatabaseError)
@@ -31,7 +31,7 @@ func (slr *ShoppingListRepository) Create(userGUID string, data CreateShoppingLi
 
 // Update function used to update shopping list
 // Require device uuid. Must provide in url
-func (slr *ShoppingListRepository) Update(userGUID string, shoppingListGUID string, data UpdateShoppingList) *systems.ErrorData {
+func (slr *ShoppingListRepository) Update(dbTransaction *gorm.DB, userGUID string, shoppingListGUID string, data UpdateShoppingList) *systems.ErrorData {
 	updateData := map[string]string{}
 
 	for key, value := range structs.Map(data) {
@@ -40,7 +40,7 @@ func (slr *ShoppingListRepository) Update(userGUID string, shoppingListGUID stri
 		}
 	}
 
-	result := slr.DB.Model(&ShoppingList{}).Where(&ShoppingList{UserGUID: userGUID, GUID: shoppingListGUID}).Updates(updateData)
+	result := dbTransaction.Model(&ShoppingList{}).Where(&ShoppingList{UserGUID: userGUID, GUID: shoppingListGUID}).Updates(updateData)
 
 	if result.Error != nil {
 		return Error.InternalServerError(result.Error, systems.DatabaseError)
@@ -50,8 +50,8 @@ func (slr *ShoppingListRepository) Update(userGUID string, shoppingListGUID stri
 }
 
 // Delete function used to soft delete shopping list
-func (slr *ShoppingListRepository) Delete(attribute string, value string) *systems.ErrorData {
-	result := slr.DB.Where(attribute+" = ?", value).Delete(&ShoppingList{})
+func (slr *ShoppingListRepository) Delete(dbTransaction *gorm.DB, attribute string, value string) *systems.ErrorData {
+	result := dbTransaction.Where(attribute+" = ?", value).Delete(&ShoppingList{})
 
 	if result.Error != nil {
 		return Error.InternalServerError(result.Error, systems.DatabaseError)

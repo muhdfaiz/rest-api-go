@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
 )
 
 type TransactionHandler struct {
@@ -23,13 +24,18 @@ func (th *TransactionHandler) ViewDealCashbackTransaction(context *gin.Context) 
 		return
 	}
 
-	transaction, error := th.TransactionService.ViewDealCashbackTransactionAndUpdateReadStatus(userGUID, transactionGUID)
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
+
+	transaction, error := th.TransactionService.ViewDealCashbackTransactionAndUpdateReadStatus(dbTransaction, userGUID, transactionGUID)
 
 	if error != nil {
+		dbTransaction.Rollback()
 		errorCode, _ := strconv.Atoi(error.Error.Status)
 		context.JSON(errorCode, error)
 		return
 	}
+
+	dbTransaction.Commit()
 
 	context.JSON(http.StatusOK, gin.H{"data": transaction})
 }
@@ -46,13 +52,18 @@ func (th *TransactionHandler) ViewCashoutTransaction(context *gin.Context) {
 		return
 	}
 
-	transaction, error := th.TransactionService.ViewCashoutTransactionAndUpdateReadStatus(userGUID, transactionGUID)
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
+
+	transaction, error := th.TransactionService.ViewCashoutTransactionAndUpdateReadStatus(dbTransaction, userGUID, transactionGUID)
 
 	if error != nil {
+		dbTransaction.Rollback()
 		errorCode, _ := strconv.Atoi(error.Error.Status)
 		context.JSON(errorCode, error)
 		return
 	}
+
+	dbTransaction.Commit()
 
 	context.JSON(http.StatusOK, gin.H{"data": transaction})
 }
@@ -69,7 +80,9 @@ func (th *TransactionHandler) ViewReferralCashbackTransaction(context *gin.Conte
 		return
 	}
 
-	transaction, error := th.TransactionService.ViewReferralCashbackTransactionAndUpdateReadStatus(userGUID, transactionGUID)
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
+	
+	transaction, error := th.TransactionService.ViewReferralCashbackTransactionAndUpdateReadStatus(dbTransaction, userGUID, transactionGUID)
 
 	if error != nil {
 		errorCode, _ := strconv.Atoi(error.Error.Status)

@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/jinzhu/gorm"
+
 	"bitbucket.org/cliqers/shoppermate-api/services/location"
 	"bitbucket.org/cliqers/shoppermate-api/systems"
 )
@@ -286,19 +288,19 @@ func (ds *DealService) GetFirstThreeDeals(deals []*Deal) []*Deal {
 }
 
 // RemoveDealCashbackAndSetItemDealExpired function used to soft delete deal cashback that already expired and set the item deal expired.
-func (ds *DealService) RemoveDealCashbackAndSetItemDealExpired(userGUID, shoppingListGUID, dealGUID string) *systems.ErrorData {
+func (ds *DealService) RemoveDealCashbackAndSetItemDealExpired(dbTransaction *gorm.DB, userGUID, shoppingListGUID, dealGUID string) *systems.ErrorData {
 	currentDateInGMT8 := time.Now().UTC().Add(time.Hour * 8).Format("2006-01-02")
 
 	deal := ds.DealRepository.GetDealByGUIDAndValidStartEndDate(dealGUID, currentDateInGMT8)
 
 	if deal.GUID == "" {
-		error := ds.DealCashbackRepository.DeleteByUserGUIDAndShoppingListGUIDAndDealGUID(userGUID, shoppingListGUID, dealGUID)
+		error := ds.DealCashbackRepository.DeleteByUserGUIDAndShoppingListGUIDAndDealGUID(dbTransaction, userGUID, shoppingListGUID, dealGUID)
 
 		if error != nil {
 			return error
 		}
 
-		error = ds.ShoppingListItemRepository.SetDealExpired(dealGUID)
+		error = ds.ShoppingListItemRepository.SetDealExpired(dbTransaction, dealGUID)
 
 		if error != nil {
 			return error

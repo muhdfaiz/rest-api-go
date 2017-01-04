@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
 )
 
 // UserHandler will handle all request related to User
@@ -55,13 +56,18 @@ func (uh *UserHandler) Create(context *gin.Context) {
 		"max_referral_per_user": maxReferralPerUser,
 	}
 
-	newUser, error := uh.UserService.CreateUser(userData, profilePicture, referralSettings, debug)
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
+
+	newUser, error := uh.UserService.CreateUser(dbTransaction, userData, profilePicture, referralSettings, debug)
 
 	if error != nil {
+		dbTransaction.Rollback()
 		errorCode, _ := strconv.Atoi(error.Error.Status)
 		context.JSON(errorCode, error)
 		return
 	}
+
+	dbTransaction.Commit()
 
 	context.JSON(http.StatusOK, gin.H{"data": newUser})
 }
@@ -86,13 +92,22 @@ func (uh *UserHandler) Update(context *gin.Context) {
 
 	profilePicture, _, _ := context.Request.FormFile("profile_picture")
 
-	updatedUser, error := uh.UserService.UpdateUser(userGUID, userToken["device_uuid"], userData, profilePicture)
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
+
+	updatedUser, error := uh.UserService.UpdateUser(dbTransaction, userGUID, userToken["device_uuid"], userData, profilePicture)
 
 	if error != nil {
+		dbTransaction.Rollback()
 		errorCode, _ := strconv.Atoi(error.Error.Status)
 		context.JSON(errorCode, error)
 		return
 	}
+
+	dbTransaction.Commit()
+
+	updatedUser = uh.UserService.ViewUser(userGUID, "")
+
+	updatedUser = uh.UserService.CalculateAllTimeAmountAndPendingAmount(updatedUser)
 
 	context.JSON(http.StatusOK, gin.H{"data": updatedUser})
 }

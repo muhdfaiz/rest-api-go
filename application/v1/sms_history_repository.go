@@ -14,7 +14,7 @@ type SmsHistoryRepository struct {
 }
 
 // Create function used to create new sms history and store in database.
-func (shr *SmsHistoryRepository) Create(data map[string]string) (interface{}, *systems.ErrorData) {
+func (shr *SmsHistoryRepository) Create(dbTransaction *gorm.DB, data map[string]string) (interface{}, *systems.ErrorData) {
 	smsHistory := &SmsHistory{
 		GUID:             data["guid"],
 		UserGUID:         data["user_guid"],
@@ -26,7 +26,7 @@ func (shr *SmsHistoryRepository) Create(data map[string]string) (interface{}, *s
 		Status:           data["status"],
 	}
 
-	result := shr.DB.Create(smsHistory)
+	result := dbTransaction.Create(smsHistory)
 
 	if result.Error != nil || result.RowsAffected == 0 {
 		return nil, Error.InternalServerError(result.Error, systems.DatabaseError)

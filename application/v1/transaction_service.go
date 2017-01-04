@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/jinzhu/gorm"
+
 	"strconv"
 
 	"bitbucket.org/cliqers/shoppermate-api/systems"
@@ -21,7 +23,7 @@ type TransactionService struct {
 }
 
 // CreateTransaction function used to create new user transaction and store in database.
-func (ts *TransactionService) CreateTransaction(userGUID, transactionTypeGUID, transactionStatusGUID string, amount float64) (*Transaction, *systems.ErrorData) {
+func (ts *TransactionService) CreateTransaction(dbTransaction *gorm.DB, userGUID, transactionTypeGUID, transactionStatusGUID string, amount float64) (*Transaction, *systems.ErrorData) {
 	transactionData := &CreateTransaction{
 		UserGUID:              userGUID,
 		TransactionTypeGUID:   transactionTypeGUID,
@@ -30,7 +32,7 @@ func (ts *TransactionService) CreateTransaction(userGUID, transactionTypeGUID, t
 		ReferenceID:           Helper.GenerateUniqueShortID(),
 	}
 
-	transaction, err := ts.TransactionRepository.Create(transactionData)
+	transaction, err := ts.TransactionRepository.Create(dbTransaction, transactionData)
 
 	if err != nil {
 		return nil, err
@@ -48,7 +50,7 @@ func (ts *TransactionService) ViewTransactionDetails(transactionGUID string, rel
 
 // ViewDealCashbackTransactionAndUpdateReadStatus function used to view transaction details and update `read_status` if the transaction
 // not equal to `pending`.
-func (ts *TransactionService) ViewDealCashbackTransactionAndUpdateReadStatus(userGUID string, transactionGUID string) (*Transaction, *systems.ErrorData) {
+func (ts *TransactionService) ViewDealCashbackTransactionAndUpdateReadStatus(dbTransaction *gorm.DB, userGUID string, transactionGUID string) (*Transaction, *systems.ErrorData) {
 
 	relations := "transactionstatuses,transactiontypes,dealcashbacktransactions.receipt.receiptitems"
 
@@ -59,7 +61,7 @@ func (ts *TransactionService) ViewDealCashbackTransactionAndUpdateReadStatus(use
 	}
 
 	if transaction.Transactionstatuses.Slug != "pending" {
-		error := ts.TransactionRepository.UpdateReadStatus(transactionGUID, 1)
+		error := ts.TransactionRepository.UpdateReadStatus(dbTransaction, transactionGUID, 1)
 
 		if error != nil {
 			return nil, error
@@ -106,7 +108,7 @@ func (ts *TransactionService) CheckIfUserHasPendingCashoutTransaction(userGUID s
 
 // ViewCashoutTransactionAndUpdateReadStatus function used to view cashout transaction details and update `read_status` if the transaction
 // not equal to `pending`
-func (ts *TransactionService) ViewCashoutTransactionAndUpdateReadStatus(userGUID string, transactionGUID string) (*Transaction, *systems.ErrorData) {
+func (ts *TransactionService) ViewCashoutTransactionAndUpdateReadStatus(dbTransaction *gorm.DB, userGUID string, transactionGUID string) (*Transaction, *systems.ErrorData) {
 
 	relations := "transactionstatuses,transactiontypes,cashouttransactions"
 
@@ -117,7 +119,7 @@ func (ts *TransactionService) ViewCashoutTransactionAndUpdateReadStatus(userGUID
 	}
 
 	if cashoutTransaction.Transactionstatuses.Slug != "pending" {
-		error := ts.TransactionRepository.UpdateReadStatus(transactionGUID, 1)
+		error := ts.TransactionRepository.UpdateReadStatus(dbTransaction, transactionGUID, 1)
 
 		if error != nil {
 			return nil, error
@@ -129,7 +131,7 @@ func (ts *TransactionService) ViewCashoutTransactionAndUpdateReadStatus(userGUID
 
 // ViewReferralCashbackTransactionAndUpdateReadStatus function used to view referral cashback transaction and update `read_status` if the transaction
 // not equal to `pending`
-func (ts *TransactionService) ViewReferralCashbackTransactionAndUpdateReadStatus(userGUID string, transactionGUID string) (*Transaction, *systems.ErrorData) {
+func (ts *TransactionService) ViewReferralCashbackTransactionAndUpdateReadStatus(dbTransaction *gorm.DB, userGUID string, transactionGUID string) (*Transaction, *systems.ErrorData) {
 
 	relations := "transactionstatuses,transactiontypes,referralCashbackTransactions.referrers"
 
@@ -140,7 +142,7 @@ func (ts *TransactionService) ViewReferralCashbackTransactionAndUpdateReadStatus
 	}
 
 	if referralCashbackTransaction.Transactionstatuses.Slug != "pending" {
-		error := ts.TransactionRepository.UpdateReadStatus(transactionGUID, 1)
+		error := ts.TransactionRepository.UpdateReadStatus(dbTransaction, transactionGUID, 1)
 
 		if error != nil {
 			return nil, error

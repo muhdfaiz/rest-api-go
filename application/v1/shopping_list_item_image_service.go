@@ -44,7 +44,7 @@ func (sliis *ShoppingListItemImageService) ViewUserShoppingListItemImage(userGUI
 
 // CreateUserShoppingListItemImage function used to create multiple user shopping list item image, upload the
 // images into Amazon S3 and store the URL in database.
-func (sliis *ShoppingListItemImageService) CreateUserShoppingListItemImage(userGUID string, shoppingListGUID string, shoppingListItemGUID string,
+func (sliis *ShoppingListItemImageService) CreateUserShoppingListItemImage(dbTransaction *gorm.DB, userGUID string, shoppingListGUID string, shoppingListItemGUID string,
 	imagesToUpload []*multipart.FileHeader) ([]*ShoppingListItemImage, *systems.ErrorData) {
 
 	_, error := sliis.ShoppingListItemService.CheckUserShoppingListItemExistOrNot(shoppingListItemGUID, userGUID, shoppingListGUID)
@@ -69,7 +69,7 @@ func (sliis *ShoppingListItemImageService) CreateUserShoppingListItemImage(userG
 		return nil, error
 	}
 
-	createdImages, error := sliis.ShoppingListItemImageRepository.Create(userGUID, shoppingListGUID, shoppingListItemGUID, uploadedImages)
+	createdImages, error := sliis.ShoppingListItemImageRepository.Create(dbTransaction, userGUID, shoppingListGUID, shoppingListItemGUID, uploadedImages)
 
 	if error != nil {
 		return nil, error
@@ -135,7 +135,7 @@ func (sliis *ShoppingListItemImageService) ValidateShoppingListItemImages(images
 
 // DeleteImagesForShoppingList function used to soft delete all images for all of user shopping list items inside
 // shopping list.
-func (sliis *ShoppingListItemImageService) DeleteImagesForShoppingList(shoppingListGUID string) *systems.ErrorData {
+func (sliis *ShoppingListItemImageService) DeleteImagesForShoppingList(dbTransaction *gorm.DB, shoppingListGUID string) *systems.ErrorData {
 
 	shoppingListItemImages := sliis.ShoppingListItemImageRepository.GetByShoppingListGUID(shoppingListGUID, "")
 
@@ -144,7 +144,7 @@ func (sliis *ShoppingListItemImageService) DeleteImagesForShoppingList(shoppingL
 	if len(shoppingListItemImages) > 0 {
 		for key, shoppingListItemImage := range shoppingListItemImages {
 
-			error := sliis.ShoppingListItemImageRepository.Delete("guid", shoppingListItemImage.GUID)
+			error := sliis.ShoppingListItemImageRepository.Delete(dbTransaction, "guid", shoppingListItemImage.GUID)
 
 			if error != nil {
 				return error
@@ -168,7 +168,7 @@ func (sliis *ShoppingListItemImageService) DeleteImagesForShoppingList(shoppingL
 }
 
 // DeleteImagesForShoppingListItem function used to soft delete all images for shopping list item
-func (sliis *ShoppingListItemImageService) DeleteImagesForShoppingListItem(shoppingListItemGUID string) *systems.ErrorData {
+func (sliis *ShoppingListItemImageService) DeleteImagesForShoppingListItem(dbTransaction *gorm.DB, shoppingListItemGUID string) *systems.ErrorData {
 
 	shoppingListItemImages := sliis.ShoppingListItemImageRepository.GetByItemGUID(shoppingListItemGUID, "")
 
@@ -178,7 +178,7 @@ func (sliis *ShoppingListItemImageService) DeleteImagesForShoppingListItem(shopp
 
 		for key, shoppingListItemImage := range shoppingListItemImages {
 
-			error := sliis.ShoppingListItemImageRepository.Delete("guid", shoppingListItemImage.GUID)
+			error := sliis.ShoppingListItemImageRepository.Delete(dbTransaction, "guid", shoppingListItemImage.GUID)
 
 			if error != nil {
 				return error
@@ -203,7 +203,7 @@ func (sliis *ShoppingListItemImageService) DeleteImagesForShoppingListItem(shopp
 
 // DeleteShoppingListItemImages function used to soft delete multiple shopping list item images in database
 // and delete the images from Amazon S3.
-func (sliis *ShoppingListItemImageService) DeleteShoppingListItemImages(userGUID string, shoppingListGUID string,
+func (sliis *ShoppingListItemImageService) DeleteShoppingListItemImages(dbTransaction *gorm.DB, userGUID string, shoppingListGUID string,
 	shoppingListItemGUID string, shoppingListItemImageGUIDs string) *systems.ErrorData {
 
 	splitShoppingListItemImageGUID := strings.Split(shoppingListItemImageGUIDs, ",")
@@ -218,7 +218,7 @@ func (sliis *ShoppingListItemImageService) DeleteShoppingListItemImages(userGUID
 
 	for key, imageToDelete := range imagesToDelete {
 
-		error := sliis.ShoppingListItemImageRepository.Delete("guid", imageToDelete.GUID)
+		error := sliis.ShoppingListItemImageRepository.Delete(dbTransaction, "guid", imageToDelete.GUID)
 
 		if error != nil {
 			return error

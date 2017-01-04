@@ -329,6 +329,7 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 			version1.GET("users/:guid/transactions", transactionHandler.ViewUserTransactions)
 			version1.GET("users/:guid/transactions/:transaction_guid/deal_cashback_transactions", transactionHandler.ViewDealCashbackTransaction)
 			version1.GET("users/:guid/transactions/:transaction_guid/cashout_transactions", transactionHandler.ViewCashoutTransaction)
+			version1.GET("users/:guid/transactions/:transaction_guid/referral_cashback_transactions", transactionHandler.ViewReferralCashbackTransaction)
 
 			// Cashout Transaction
 			version1.POST("users/:guid/transactions/cashout_transactions", cashoutTransactionHandler.Create)

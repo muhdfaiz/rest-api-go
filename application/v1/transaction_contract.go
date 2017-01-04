@@ -13,6 +13,7 @@ type TransactionServiceInterface interface {
 	ViewDealCashbackTransactionAndUpdateReadStatus(userGUID, transactionGUID string) (*Transaction, *systems.ErrorData)
 	CheckIfUserHasPendingCashoutTransaction(userGUID string) *systems.ErrorData
 	ViewCashoutTransactionAndUpdateReadStatus(userGUID, transactionGUID string) (*Transaction, *systems.ErrorData)
+	ViewReferralCashbackTransactionAndUpdateReadStatus(userGUID string, transactionGUID string) (*Transaction, *systems.ErrorData)
 	GetUserTransactions(request *http.Request, userGUID, transactionStatus, isRead, pageNumber, pageLimit string) *TransactionResponse
 	SumTotalAmountOfUserPendingTransaction(userGUID string) float64
 	SumTotalAmountOfUserCashoutTransaction(userGUID string) float64

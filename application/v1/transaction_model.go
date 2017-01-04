@@ -27,6 +27,8 @@ type Transaction struct {
 	// Transaction has one Cashout Transaction.
 	Cashouttransactions *CashoutTransaction `json:"cashout_transaction,omitempty" gorm:"ForeignKey:TransactionGUID;AssociationForeignKey:GUID"`
 
+	ReferralCashbackTransactions *ReferralCashbackTransaction `json:"referral_cashback_transaction,omitempty" gorm:"ForeignKey:TransactionGUID;AssociationForeignKey:GUID"`
+
 	// Transaction has one Transaction Type.
 	Transactiontypes *TransactionType `json:"transaction_type" gorm:"ForeignKey:TransactionTypeGUID;AssociationForeignKey:GUID"`
 

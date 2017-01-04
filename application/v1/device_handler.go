@@ -16,8 +16,6 @@ type DeviceHandler struct {
 
 // Create function used to create new device and store in database.
 func (dh *DeviceHandler) Create(context *gin.Context) {
-	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
-
 	deviceData := CreateDevice{}
 
 	if error := Binding.Bind(&deviceData, context); error != nil {
@@ -35,6 +33,8 @@ func (dh *DeviceHandler) Create(context *gin.Context) {
 		}
 	}
 
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
+
 	device, error := dh.DeviceService.CreateDevice(dbTransaction, deviceData)
 
 	if error != nil {
@@ -51,8 +51,6 @@ func (dh *DeviceHandler) Create(context *gin.Context) {
 
 // Update function used to update device with new data.
 func (dh *DeviceHandler) Update(context *gin.Context) {
-	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
-
 	deviceData := UpdateDevice{}
 
 	if error := Binding.Bind(&deviceData, context); error != nil {
@@ -71,6 +69,8 @@ func (dh *DeviceHandler) Update(context *gin.Context) {
 	}
 
 	deviceUUID := context.Param("uuid")
+
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
 
 	device, error := dh.DeviceService.UpdateDevice(dbTransaction, deviceUUID, deviceData)
 
@@ -91,9 +91,9 @@ func (dh *DeviceHandler) Update(context *gin.Context) {
 // Delete function used to soft delete device by setting current date and time as a value
 // for deleted_at column.
 func (dh *DeviceHandler) Delete(context *gin.Context) {
-	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
-
 	deviceUUID := context.Param("uuid")
+
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
 
 	error := dh.DeviceService.DeleteDeviceByUUID(dbTransaction, deviceUUID)
 

@@ -41,8 +41,6 @@ func (slh *ShoppingListHandler) View(context *gin.Context) {
 
 // Create function used to create user shopping list
 func (slh *ShoppingListHandler) Create(context *gin.Context) {
-	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
-
 	tokenData := context.MustGet("Token").(map[string]string)
 
 	userGUID := context.Param("guid")
@@ -58,6 +56,8 @@ func (slh *ShoppingListHandler) Create(context *gin.Context) {
 		context.JSON(http.StatusUnprocessableEntity, error)
 		return
 	}
+
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
 
 	createdShoppingList, error := slh.ShoppingListService.CreateUserShoppingList(dbTransaction, userGUID, createData)
 
@@ -76,8 +76,6 @@ func (slh *ShoppingListHandler) Create(context *gin.Context) {
 
 // Update function used to update user shopping list
 func (slh *ShoppingListHandler) Update(context *gin.Context) {
-	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
-
 	tokenData := context.MustGet("Token").(map[string]string)
 
 	userGUID := context.Param("guid")
@@ -96,6 +94,8 @@ func (slh *ShoppingListHandler) Update(context *gin.Context) {
 
 	shoppingListGUID := context.Param("shopping_list_guid")
 
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
+
 	updatedShoppingList, error := slh.ShoppingListService.UpdateUserShoppingList(dbTransaction, userGUID, shoppingListGUID, updateData)
 
 	if error != nil {
@@ -113,8 +113,6 @@ func (slh *ShoppingListHandler) Update(context *gin.Context) {
 
 // Delete function used to soft delete device by setting current timeo the deleted_at column
 func (slh *ShoppingListHandler) Delete(context *gin.Context) {
-	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
-
 	tokenData := context.MustGet("Token").(map[string]string)
 
 	userGUID := context.Param("guid")
@@ -125,6 +123,8 @@ func (slh *ShoppingListHandler) Delete(context *gin.Context) {
 	}
 
 	shoppingListGUID := context.Param("shopping_list_guid")
+
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
 
 	error := slh.ShoppingListService.DeleteUserShoppingListIncludingItemsAndImages(dbTransaction, userGUID, shoppingListGUID)
 

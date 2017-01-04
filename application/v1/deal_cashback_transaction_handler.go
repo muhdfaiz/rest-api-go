@@ -15,8 +15,6 @@ type DealCashbackTransactionHandler struct {
 }
 
 func (dcth *DealCashbackTransactionHandler) Create(context *gin.Context) {
-	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
-
 	tokenData := context.MustGet("Token").(map[string]string)
 
 	userGUID := context.Param("guid")
@@ -44,6 +42,8 @@ func (dcth *DealCashbackTransactionHandler) Create(context *gin.Context) {
 	dealCashbackGUIDs := createDealCashbackTransaction.DealCashbackGuids
 
 	relations := "transactiontypes,transactionstatuses,dealcashbacktransactions,dealcashbacktransactions.dealcashbacks,dealcashbacktransactions.dealcashbacks.deals"
+
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
 
 	result, error := dcth.DealCashbackTransactionService.CreateTransaction(dbTransaction, receipt[0], userGUID, dealCashbackGUIDs, relations)
 

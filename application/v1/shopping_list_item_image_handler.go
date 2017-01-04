@@ -46,8 +46,6 @@ func (sliih *ShoppingListItemImageHandler) View(context *gin.Context) {
 
 // Create function used to store shopping list item image in database
 func (sliih *ShoppingListItemImageHandler) Create(context *gin.Context) {
-	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
-
 	tokenData := context.MustGet("Token").(map[string]string)
 
 	userGUID := context.Param("guid")
@@ -70,6 +68,8 @@ func (sliih *ShoppingListItemImageHandler) Create(context *gin.Context) {
 
 	imagesToUpload := context.Request.MultipartForm.File["images"]
 
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
+
 	createdImages, error := sliih.ShoppingListItemImageService.CreateUserShoppingListItemImage(dbTransaction, userGUID, shoppingListGUID, shoppingListItemGUID, imagesToUpload)
 
 	if error != nil {
@@ -86,8 +86,6 @@ func (sliih *ShoppingListItemImageHandler) Create(context *gin.Context) {
 
 // Delete function used to delete multiple shopping list item images
 func (sliih *ShoppingListItemImageHandler) Delete(context *gin.Context) {
-	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
-
 	tokenData := context.MustGet("Token").(map[string]string)
 
 	userGUID := context.Param("guid")
@@ -102,6 +100,8 @@ func (sliih *ShoppingListItemImageHandler) Delete(context *gin.Context) {
 		context.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("delete shopping list item image"))
 		return
 	}
+
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
 
 	error := sliih.ShoppingListItemImageService.DeleteShoppingListItemImages(dbTransaction, userGUID, shoppingListGUID, shoppingListItemGUID, shoppingListItemImageGUIDs)
 

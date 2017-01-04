@@ -53,8 +53,6 @@ func (slih *ShoppingListItemHandler) View(context *gin.Context) {
 
 // ViewAll function used to retrieve all user shopping list items.
 func (slih *ShoppingListItemHandler) ViewAll(context *gin.Context) {
-	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
-
 	tokenData := context.MustGet("Token").(map[string]string)
 
 	userGUID := context.Param("guid")
@@ -89,6 +87,8 @@ func (slih *ShoppingListItemHandler) ViewAll(context *gin.Context) {
 		return
 	}
 
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
+
 	userShoppingListItems, error := slih.ShoppingListItemService.ViewAllUserShoppingListItem(dbTransaction, userGUID, shoppingListGUID, addedToCart, latitude, longitude, relations)
 
 	if error != nil {
@@ -105,8 +105,6 @@ func (slih *ShoppingListItemHandler) ViewAll(context *gin.Context) {
 
 // Create function used to create user shopping list item
 func (slih *ShoppingListItemHandler) Create(context *gin.Context) {
-	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
-
 	tokenData := context.MustGet("Token").(map[string]string)
 
 	userGUID := context.Param("guid")
@@ -133,6 +131,8 @@ func (slih *ShoppingListItemHandler) Create(context *gin.Context) {
 		return
 	}
 
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
+
 	createdShoppingListItem, error := slih.ShoppingListItemService.CreateUserShoppingListItem(dbTransaction, userGUID, shoppingListGUID, shoppingListItemToCreate)
 
 	if error != nil {
@@ -149,8 +149,6 @@ func (slih *ShoppingListItemHandler) Create(context *gin.Context) {
 
 // Update function used to update one of the user shopping list item
 func (slih *ShoppingListItemHandler) Update(context *gin.Context) {
-	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
-
 	tokenData := context.MustGet("Token").(map[string]string)
 
 	userGUID := context.Param("guid")
@@ -178,6 +176,8 @@ func (slih *ShoppingListItemHandler) Update(context *gin.Context) {
 		return
 	}
 
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
+
 	updatedShoppingListItem, error := slih.ShoppingListItemService.UpdateUserShoppingListItem(dbTransaction, userGUID, shoppingListGUID, shoppingListItemGUID, shoppingListItemToUpdate, "")
 
 	if error != nil {
@@ -196,8 +196,6 @@ func (slih *ShoppingListItemHandler) Update(context *gin.Context) {
 
 // UpdateAll function used to update shopping list item
 func (slih *ShoppingListItemHandler) UpdateAll(context *gin.Context) {
-	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
-
 	tokenData := context.MustGet("Token").(map[string]string)
 
 	userGUID := context.Param("guid")
@@ -224,6 +222,8 @@ func (slih *ShoppingListItemHandler) UpdateAll(context *gin.Context) {
 		return
 	}
 
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
+
 	updatedShoppingListItems, error := slih.ShoppingListItemService.UpdateAllUserShoppingListItem(dbTransaction, userGUID, shoppingListGUID, updateShoppingListItemData)
 
 	if error != nil {
@@ -243,8 +243,6 @@ func (slih *ShoppingListItemHandler) UpdateAll(context *gin.Context) {
 // DeleteAll function used to delete all shopping list items including relation like image
 // or to to delete all shopping list items from cart
 func (slih *ShoppingListItemHandler) DeleteAll(context *gin.Context) {
-	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
-
 	tokenData := context.MustGet("Token").(map[string]string)
 
 	userGUID := context.Param("guid")
@@ -273,6 +271,8 @@ func (slih *ShoppingListItemHandler) DeleteAll(context *gin.Context) {
 		return
 	}
 
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
+
 	result, error := slih.ShoppingListItemService.DeleteUserShoppingListItem(dbTransaction, userGUID, shoppingListGUID, deleteItemInCart)
 
 	if error != nil {
@@ -298,8 +298,6 @@ func (slih *ShoppingListItemHandler) DeleteAll(context *gin.Context) {
 
 // Delete function used to delete user shopping list item by shopping list item GUID, user GUID and shopping list GUID.
 func (slih *ShoppingListItemHandler) Delete(context *gin.Context) {
-	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
-
 	tokenData := context.MustGet("Token").(map[string]string)
 
 	userGUID := context.Param("guid")
@@ -311,6 +309,8 @@ func (slih *ShoppingListItemHandler) Delete(context *gin.Context) {
 
 	shoppingListGUID := context.Param("shopping_list_guid")
 	shoppingListItemGUID := context.Param("item_guid")
+
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
 
 	result, error := slih.ShoppingListItemService.DeleteShoppingListItemInShoppingList(dbTransaction, shoppingListItemGUID, userGUID, shoppingListGUID)
 

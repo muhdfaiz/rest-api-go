@@ -14,8 +14,6 @@ type CashoutTransactionHandler struct {
 }
 
 func (cth CashoutTransactionHandler) Create(context *gin.Context) {
-	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
-
 	tokenData := context.MustGet("Token").(map[string]string)
 
 	userGUID := context.Param("guid")
@@ -39,6 +37,8 @@ func (cth CashoutTransactionHandler) Create(context *gin.Context) {
 		context.JSON(http.StatusUnprocessableEntity, err)
 		return
 	}
+
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
 
 	transaction, error := cth.CashoutTransactionService.CreateCashoutTransaction(dbTransaction, userGUID, createCashoutTransaction)
 

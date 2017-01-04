@@ -19,8 +19,6 @@ type DealCashbackHandler struct {
 
 // Create function used to create new deal cashback and store in database and create shopping list item based on deal info.
 func (dch *DealCashbackHandler) Create(context *gin.Context) {
-	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
-
 	tokenData := context.MustGet("Token").(map[string]string)
 
 	dealCashbackData := CreateDealCashback{}
@@ -44,6 +42,8 @@ func (dch *DealCashbackHandler) Create(context *gin.Context) {
 		return
 	}
 
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
+
 	error := dch.DealCashbackService.CreateDealCashbackAndShoppingListItem(dbTransaction, userGUID, dealCashbackData)
 
 	if error != nil {
@@ -63,8 +63,6 @@ func (dch *DealCashbackHandler) Create(context *gin.Context) {
 
 // ViewByShoppingList function used to retrieve deal cashback by Shopping List GUID.
 func (dch *DealCashbackHandler) ViewByShoppingList(context *gin.Context) {
-	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
-
 	tokenData := context.MustGet("Token").(map[string]string)
 
 	userGUID := context.Param("guid")
@@ -100,6 +98,8 @@ func (dch *DealCashbackHandler) ViewByShoppingList(context *gin.Context) {
 	relations := context.Query("include")
 
 	transactionStatus := context.Query("transaction_status")
+
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
 
 	userDealCashbacks, totalUserDealCashback, error := dch.DealCashbackService.GetUserDealCashbacksByShoppingList(dbTransaction, userGUID, shoppingListGUID,
 		transactionStatus, pageNumber, pageLimit, relations)

@@ -35,8 +35,6 @@ func (uh *UserHandler) View(context *gin.Context) {
 // Create function used create new user and store in database.
 // If profile picture exists in the request, API will upload to Amazon S3.
 func (uh *UserHandler) Create(context *gin.Context) {
-	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
-
 	userData := CreateUser{}
 
 	if error := Binding.Bind(&userData, context); error != nil {
@@ -58,6 +56,8 @@ func (uh *UserHandler) Create(context *gin.Context) {
 		"max_referral_per_user": maxReferralPerUser,
 	}
 
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
+
 	newUser, error := uh.UserService.CreateUser(dbTransaction, userData, profilePicture, referralSettings, debug)
 
 	if error != nil {
@@ -74,8 +74,6 @@ func (uh *UserHandler) Create(context *gin.Context) {
 
 // Update function used to update user data
 func (uh *UserHandler) Update(context *gin.Context) {
-	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
-
 	userGUID := context.Param("guid")
 
 	userToken := context.MustGet("Token").(map[string]string)
@@ -93,6 +91,8 @@ func (uh *UserHandler) Update(context *gin.Context) {
 	}
 
 	profilePicture, _, _ := context.Request.FormFile("profile_picture")
+
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
 
 	updatedUser, error := uh.UserService.UpdateUser(dbTransaction, userGUID, userToken["device_uuid"], userData, profilePicture)
 

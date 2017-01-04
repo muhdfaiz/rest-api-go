@@ -24,8 +24,6 @@ type SmsHandler struct {
 
 // Send function used to send sms to the user during login & registration
 func (sh *SmsHandler) Send(context *gin.Context) {
-	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
-
 	smsData := &SmsSend{}
 
 	// Bind request based on content type and validate request data
@@ -91,6 +89,8 @@ func (sh *SmsHandler) Send(context *gin.Context) {
 	// fmt.Println(row.Scan(&Count{}))
 	// os.Exit(0)
 
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
+
 	// Send SMS verification code
 	sentSmsData, err := sh.SmsService.SendVerificationCode(dbTransaction, smsData.RecipientNo, smsData.UserGUID)
 
@@ -109,8 +109,6 @@ func (sh *SmsHandler) Send(context *gin.Context) {
 // Verify function used to verify sms verification code during login & registration
 // Return JWT Token if sms verification code valid
 func (sh *SmsHandler) Verify(context *gin.Context) {
-	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
-
 	smsData := SmsVerification{}
 
 	// Bind request based on content type and validate request data
@@ -130,6 +128,8 @@ func (sh *SmsHandler) Verify(context *gin.Context) {
 
 	// Retrieve device by uuid
 	device := sh.DeviceService.ViewDeviceByUUIDIncludingSoftDelete(smsData.DeviceUUID)
+
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
 
 	// If Device User GUID empty, update device with User GUID
 	if device.UserGUID == nil {

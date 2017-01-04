@@ -16,8 +16,6 @@ type AuthHandler struct {
 
 // LoginViaPhone function will handle user authentication using phone number.
 func (ah *AuthHandler) LoginViaPhone(context *gin.Context) {
-	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
-
 	authData := &LoginViaPhone{}
 
 	if error := Binding.Bind(authData, context); error != nil {
@@ -34,6 +32,8 @@ func (ah *AuthHandler) LoginViaPhone(context *gin.Context) {
 		context.JSON(errorCode, error)
 		return
 	}
+
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
 
 	error = ah.AuthService.AuthenticateUserViaPhoneNumber(dbTransaction, user.GUID, authData.PhoneNo, debug)
 
@@ -55,8 +55,6 @@ func (ah *AuthHandler) LoginViaPhone(context *gin.Context) {
 
 // LoginViaFacebook function used to login user via facebook
 func (ah *AuthHandler) LoginViaFacebook(context *gin.Context) {
-	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
-
 	authData := &LoginViaFacebook{}
 
 	if error := Binding.Bind(authData, context); error != nil {
@@ -71,6 +69,8 @@ func (ah *AuthHandler) LoginViaFacebook(context *gin.Context) {
 		context.JSON(errorCode, error)
 		return
 	}
+
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
 
 	jwtToken, error := ah.AuthService.AuthenticateUserViaFacebook(dbTransaction, user.GUID, user.PhoneNo, authData.FacebookID, authData.DeviceUUID)
 

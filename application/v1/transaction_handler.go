@@ -13,8 +13,6 @@ type TransactionHandler struct {
 }
 
 func (th *TransactionHandler) ViewDealCashbackTransaction(context *gin.Context) {
-	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
-
 	tokenData := context.MustGet("Token").(map[string]string)
 
 	userGUID := context.Param("guid")
@@ -25,6 +23,8 @@ func (th *TransactionHandler) ViewDealCashbackTransaction(context *gin.Context) 
 		context.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("update shopping list"))
 		return
 	}
+
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
 
 	transaction, error := th.TransactionService.ViewDealCashbackTransactionAndUpdateReadStatus(dbTransaction, userGUID, transactionGUID)
 
@@ -41,8 +41,6 @@ func (th *TransactionHandler) ViewDealCashbackTransaction(context *gin.Context) 
 }
 
 func (th *TransactionHandler) ViewCashoutTransaction(context *gin.Context) {
-	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
-
 	tokenData := context.MustGet("Token").(map[string]string)
 
 	userGUID := context.Param("guid")
@@ -53,6 +51,8 @@ func (th *TransactionHandler) ViewCashoutTransaction(context *gin.Context) {
 		context.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("update shopping list"))
 		return
 	}
+
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
 
 	transaction, error := th.TransactionService.ViewCashoutTransactionAndUpdateReadStatus(dbTransaction, userGUID, transactionGUID)
 

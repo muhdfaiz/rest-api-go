@@ -127,6 +127,29 @@ func (ts *TransactionService) ViewCashoutTransactionAndUpdateReadStatus(userGUID
 	return cashoutTransaction, nil
 }
 
+// ViewReferralCashbackTransactionAndUpdateReadStatus function used to view referral cashback transaction and update `read_status` if the transaction
+// not equal to `pending`
+func (ts *TransactionService) ViewReferralCashbackTransactionAndUpdateReadStatus(userGUID string, transactionGUID string) (*Transaction, *systems.ErrorData) {
+
+	relations := "transactionstatuses,transactiontypes,referralCashbackTransactions.referrers"
+
+	referralCashbackTransaction := ts.TransactionRepository.GetByGUID(transactionGUID, relations)
+
+	if referralCashbackTransaction.GUID == "" {
+		return nil, Error.ResourceNotFoundError("Transaction", "guid", transactionGUID)
+	}
+
+	if referralCashbackTransaction.Transactionstatuses.Slug != "pending" {
+		error := ts.TransactionRepository.UpdateReadStatus(transactionGUID, 1)
+
+		if error != nil {
+			return nil, error
+		}
+	}
+
+	return referralCashbackTransaction, nil
+}
+
 // GetUserTransactions function used to retrieve list of user transactions that match the transaction status and read status
 // transaction status and read status is optional.
 func (ts *TransactionService) GetUserTransactions(request *http.Request, userGUID string, transactionStatus string,

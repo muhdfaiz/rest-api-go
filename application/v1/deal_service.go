@@ -55,7 +55,7 @@ func (ds *DealService) GetDealsBasedOnUserShoppingListItem(userGUID, shoppingLis
 	latitude1InFLoat64, _ := strconv.ParseFloat(strings.TrimSpace(latitude), 64)
 	longitude1InFLoat64, _ := strconv.ParseFloat(strings.TrimSpace(longitude), 64)
 
-	deals, _ := ds.DealRepository.GetDealsForCategoryWithinRangeAndDateRangeAndUserLimitAndQuota(userGUID, shoppingListItem.Category,
+	deals, _ := ds.DealRepository.GetDealsBySubcategoryNameWithinRangeAndDateRangeAndUserLimitAndQuota(userGUID, shoppingListItem.SubCategory,
 		latitude1InFLoat64, longitude1InFLoat64, currentDateInGMT8, "1", "", "Category")
 
 	if len(deals) < 1 {
@@ -370,7 +370,7 @@ func (ds *DealService) GetAvailableDealsGroupByCategoryForRegisteredUser(userGUI
 	dealCategories, _ := ds.ItemCategoryRepository.GetAll()
 
 	for key, dealCategory := range dealCategories {
-		deals, totalDeal := ds.DealRepository.GetDealsForCategoryWithinRangeAndDateRangeAndUserLimitAndQuota(userGUID, dealCategory.Name, latitude1InFLoat64, longitude1InFLoat64,
+		deals, totalDeal := ds.DealRepository.GetDealsByCategoryNameWithinRangeAndDateRangeAndUserLimitAndQuota(userGUID, dealCategory.Name, latitude1InFLoat64, longitude1InFLoat64,
 			currentDateInGMT8, "1", dealLimitPerCategory, relations)
 
 		if len(deals) > 0 {
@@ -397,7 +397,7 @@ func (ds *DealService) GetAvailableDealsByCategoryGroupBySubCategoryForRegistere
 		currentDateInGMT8, latitudeInFLoat64, longitudeInFLoat64)
 
 	for key, uniqueSubCategory := range uniqueSubCategories {
-		deals, totalDeal := ds.DealRepository.GetDealsForSubCategoryWithinRangeAndDateRangeAndUserLimitAndQuota(userGUID, uniqueSubCategory.GUID, latitudeInFLoat64, longitudeInFLoat64,
+		deals, totalDeal := ds.DealRepository.GetDealBySubCategoryGUIDWithinRangeAndDateRangeAndUserLimitAndQuota(userGUID, uniqueSubCategory.GUID, latitudeInFLoat64, longitudeInFLoat64,
 			currentDateInGMT8, "1", dealLimitPerSubcategory, relations)
 
 		if len(deals) > 0 {
@@ -421,7 +421,7 @@ func (ds *DealService) GetAvailableDealsByCategoryForRegisteredUser(userGUID, ca
 	latitude1InFLoat64, _ := strconv.ParseFloat(strings.TrimSpace(latitude), 64)
 	longitude1InFLoat64, _ := strconv.ParseFloat(strings.TrimSpace(longitude), 64)
 
-	deals, totalDeal := ds.DealRepository.GetDealsForCategoryWithinRangeAndDateRangeAndUserLimitAndQuota(userGUID, categoryName, latitude1InFLoat64, longitude1InFLoat64,
+	deals, totalDeal := ds.DealRepository.GetDealsByCategoryNameWithinRangeAndDateRangeAndUserLimitAndQuota(userGUID, categoryName, latitude1InFLoat64, longitude1InFLoat64,
 		currentDateInGMT8, pageNumber, pageLimit, relations)
 
 	deals = ds.SetAddTolistInfoAndItemsAndGrocerExclusiveForDeals(deals, userGUID)
@@ -438,7 +438,7 @@ func (ds *DealService) GetAvailableDealsForSubCategoryForRegisteredUser(userGUID
 	latitude1InFLoat64, _ := strconv.ParseFloat(strings.TrimSpace(latitude), 64)
 	longitude1InFLoat64, _ := strconv.ParseFloat(strings.TrimSpace(longitude), 64)
 
-	deals, totalDeal := ds.DealRepository.GetDealsForSubCategoryWithinRangeAndDateRangeAndUserLimitAndQuota(userGUID, subCategoryGUID,
+	deals, totalDeal := ds.DealRepository.GetDealBySubCategoryGUIDWithinRangeAndDateRangeAndUserLimitAndQuota(userGUID, subCategoryGUID,
 		latitude1InFLoat64, longitude1InFLoat64, currentDateInGMT8, pageNumber, pageLimit, relations)
 
 	deals = ds.SetAddTolistInfoAndItemsAndGrocerExclusiveForDeals(deals, userGUID)

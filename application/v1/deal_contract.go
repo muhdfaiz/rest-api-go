@@ -59,13 +59,15 @@ type DealRepositoryInterface interface {
 		pageNumber, pageLimit, relations string) ([]*Deal, int)
 	GetDealsForCategoryWithinRangeAndDateRangeAndQuota(category string, latitude, longitude float64,
 		currentDateInGMT8, pageNumber, pageLimit, relations string) ([]*Deal, int)
-	GetDealsForCategoryWithinRangeAndDateRangeAndUserLimitAndQuota(userGUID, category string, latitude, longitude float64,
+	GetDealsByCategoryNameWithinRangeAndDateRangeAndUserLimitAndQuota(userGUID, category string, latitude, longitude float64,
+		currentDateInGMT8, pageNumber, pageLimit, relations string) ([]*Deal, int)
+	GetDealsBySubcategoryNameWithinRangeAndDateRangeAndUserLimitAndQuota(userGUID, subcategory string, latitude, longitude float64,
 		currentDateInGMT8, pageNumber, pageLimit, relations string) ([]*Deal, int)
 	GetDealsForGrocerWithinRangeAndDateRangeAndUserLimitAndQuotaAndCategory(userGUID, categoryGUID string, grocerID int,
 		latitude, longitude float64, currentDateInGMT8, pageNumber, pageLimit, relations string) ([]*Deal, int)
 	CountDealsForGrocerWithinRangeAndDateRangeAndUserLimitAndQuota(userGUID string, grocerID int,
 		latitude, longitude float64, currentDateInGMT8 string) int
-	GetDealsForSubCategoryWithinRangeAndDateRangeAndUserLimitAndQuota(userGUID, subCategoryGUID string, latitude, longitude float64,
+	GetDealBySubCategoryGUIDWithinRangeAndDateRangeAndUserLimitAndQuota(userGUID, subCategoryGUID string, latitude, longitude float64,
 		currentDateInGMT8, pageNumber, pageLimit, relations string) ([]*Deal, int)
 	GetDealByGUIDAndValidStartEndDate(dealGUID, todayDateInGMT8 string) *Deal
 }

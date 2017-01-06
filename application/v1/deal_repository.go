@@ -482,14 +482,14 @@ func (dr *DealRepository) GetDealsForCategoryWithinRangeAndDateRangeAndQuota(cat
 	return deals, len(totalDeal)
 }
 
-// GetDealsForCategoryWithinRangeAndDateRangeAndUserLimitAndQuota used to retrieve deal within valid range (10KM), start date,
+// GetDealsByCategoryNameWithinRangeAndDateRangeAndUserLimitAndQuota used to retrieve deal within valid range (10KM), start date,
 // end date, user limit, category and the deal quota still available including the relations like grocers, grocer locations and item.
 // The deal is valid if item category same with shopping list item category.
 // The deal is valid if user location within valid range (10KM radius).
 // The deal is valid if today date is within deal start date and end date.
 // The deal is valid if total number of deal added to list by user not exceed deal perlimit.
 // The deal is valid when total deal added to list by all user below the deal quota.
-func (dr *DealRepository) GetDealsForCategoryWithinRangeAndDateRangeAndUserLimitAndQuota(userGUID, category string, latitude, longitude float64,
+func (dr *DealRepository) GetDealsByCategoryNameWithinRangeAndDateRangeAndUserLimitAndQuota(userGUID, category string, latitude, longitude float64,
 	currentDateInGMT8, pageNumber, pageLimit, relations string) ([]*Deal, int) {
 
 	deals := []*Deal{}
@@ -564,6 +564,92 @@ func (dr *DealRepository) GetDealsForCategoryWithinRangeAndDateRangeAndUserLimit
 
 	dr.DB.Raw(sqlQueryStatement, userGUID, latitude, longitude, latitude, currentDateInGMT8, currentDateInGMT8,
 		category, os.Getenv("MAX_DEAL_RADIUS_IN_KM"), pageLimit, offset).Scan(&deals)
+
+	return deals, len(totalDeal)
+}
+
+// GetDealsBySubcategoryNameWithinRangeAndDateRangeAndUserLimitAndQuota used to retrieve deal within valid range (10KM), start date,
+// end date, user limit, subcategory name and the deal quota still available including the relations like grocers, grocer locations and item.
+// The deal is valid if item subcategory name same with shopping list item subcategory name.
+// The deal is valid if user location within valid range (10KM radius).
+// The deal is valid if today date is within deal start date and end date.
+// The deal is valid if total number of deal added to list by user not exceed deal perlimit.
+// The deal is valid when total deal added to list by all user below the deal quota.
+func (dr *DealRepository) GetDealsBySubcategoryNameWithinRangeAndDateRangeAndUserLimitAndQuota(userGUID, subcategory string, latitude, longitude float64,
+	currentDateInGMT8, pageNumber, pageLimit, relations string) ([]*Deal, int) {
+
+	deals := []*Deal{}
+
+	offset := SetOffsetValue(pageNumber, pageLimit)
+
+	sqlQueryStatement := `SELECT SQL_CALC_FOUND_ROWS deals.*, count(deal_cashbacks.deal_guid) AS total_deal_cashback,
+	(SELECT count(*) FROM deal_cashbacks WHERE deal_cashbacks.deal_guid = deals.ads_guid AND user_guid = ?) AS total_user_deal_cashback
+	FROM
+		(SELECT ads.id AS ads_id,
+				ads.guid AS ads_guid,
+				ads.id,
+				ads.guid,
+				ads.advertiser_id,
+				ads.campaign_id,
+				ads.item_id,
+				ads.category_id,
+				ads.img,
+				ads.front_name,
+				ads.name,
+				ads.body,
+				ads.start_date,
+				ads.end_date,
+				ads.positive_tag,
+				ads.negative_tag,
+				ads.time,
+				ads.refresh_period,
+				ads.perlimit,
+				ads.perlimit AS ads_perlimit,
+				ads.cashback_amount,
+				ads.quota AS ads_quota,
+				ads.quota,
+				ads.status,
+				ads.grocer_exclusive,
+				ads.terms,
+				ads.created_at as deal_created_time,
+				ads.created_at,
+				ads.updated_at,
+				ads.deleted_at,
+				subcategory.name AS subcategory_name,
+				grocer_location.name AS nearest_grocer_name,
+				grocer_location.lat AS nearest_grocer_latitude,
+				grocer_location.lng AS nearest_grocer_longitude,
+				( min(6373 * acos ( cos (radians(?)) * cos(radians(grocer_location.lat)) * cos(radians(grocer_location.lng) - radians(?)) + sin (radians(?)) * sin(radians(grocer_location.lat)) ))) AS nearest_grocer_distance_in_km
+		FROM ads
+		INNER JOIN ads_grocer ON ads.id = ads_grocer.ads_id
+		INNER JOIN grocer_location ON grocer_location.id = ads_grocer.grocer_location_id
+		LEFT JOIN item ON item.id = ads.item_id
+		LEFT JOIN subcategory ON subcategory.id = item.subcategory_id
+		WHERE ads.status = "publish" AND ads.start_date <= ? AND ads.end_date > ? AND subcategory.name = ?
+		GROUP BY ads_guid
+		HAVING nearest_grocer_distance_in_km <= ?
+		ORDER BY ads.created_at DESC) AS deals
+	LEFT OUTER JOIN deal_cashbacks ON ads_guid = deal_cashbacks.deal_guid
+	GROUP BY ads_guid
+	HAVING total_deal_cashback < ads_quota AND total_user_deal_cashback < ads_perlimit
+	ORDER BY deal_created_time DESC`
+
+	if pageLimit == "" {
+		dr.DB.Raw(sqlQueryStatement, userGUID, latitude, longitude, latitude, currentDateInGMT8, currentDateInGMT8,
+			subcategory, os.Getenv("MAX_DEAL_RADIUS_IN_KM")).Scan(&deals)
+
+		return deals, len(deals)
+	}
+
+	totalDeal := []*Deal{}
+
+	dr.DB.Raw(sqlQueryStatement, userGUID, latitude, longitude, latitude, currentDateInGMT8, currentDateInGMT8,
+		subcategory, os.Getenv("MAX_DEAL_RADIUS_IN_KM")).Scan(&totalDeal)
+
+	sqlQueryStatement = sqlQueryStatement + " LIMIT ? OFFSET ?"
+
+	dr.DB.Raw(sqlQueryStatement, userGUID, latitude, longitude, latitude, currentDateInGMT8, currentDateInGMT8,
+		subcategory, os.Getenv("MAX_DEAL_RADIUS_IN_KM"), pageLimit, offset).Scan(&deals)
 
 	return deals, len(totalDeal)
 }
@@ -724,14 +810,14 @@ func (dr *DealRepository) CountDealsForGrocerWithinRangeAndDateRangeAndUserLimit
 	return len(deals)
 }
 
-// GetDealsForSubCategoryWithinRangeAndDateRangeAndUserLimitAndQuota used to retrieve deal for subcategory within valid range (10KM), start date,
+// GetDealBySubCategoryGUIDWithinRangeAndDateRangeAndUserLimitAndQuota used to retrieve deal for subcategory within valid range (10KM), start date,
 // end date, user limit and the deal quota still available including the relations like grocers, grocer locations and item.
 // The deal is valid if item subcategory same with shopping list item subcategory.
 // The deal is valid if user location within valid range (10KM radius).
 // The deal is valid if today date is within deal start date and end date.
 // The deal is valid if total number of deal added to list by user not exceed deal perlimit.
 // The deal is valid when total deal added to list by all user below the deal quota.
-func (dr *DealRepository) GetDealsForSubCategoryWithinRangeAndDateRangeAndUserLimitAndQuota(userGUID, subCategoryGUID string,
+func (dr *DealRepository) GetDealBySubCategoryGUIDWithinRangeAndDateRangeAndUserLimitAndQuota(userGUID, subCategoryGUID string,
 	latitude, longitude float64, currentDateInGMT8, pageNumber, pageLimit, relations string) ([]*Deal, int) {
 
 	deals := []*Deal{}

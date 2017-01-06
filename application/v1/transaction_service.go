@@ -129,9 +129,8 @@ func (ts *TransactionService) ViewCashoutTransactionAndUpdateReadStatus(dbTransa
 	return cashoutTransaction, nil
 }
 
-// ViewReferralCashbackTransactionAndUpdateReadStatus function used to view referral cashback transaction and update `read_status` if the transaction
-// not equal to `pending`
-func (ts *TransactionService) ViewReferralCashbackTransactionAndUpdateReadStatus(dbTransaction *gorm.DB, userGUID string, transactionGUID string) (*Transaction, *systems.ErrorData) {
+// ViewReferralCashbackTransaction function used to view referral cashback transaction.
+func (ts *TransactionService) ViewReferralCashbackTransaction(userGUID string, transactionGUID string) (*Transaction, *systems.ErrorData) {
 
 	relations := "transactionstatuses,transactiontypes,referralCashbackTransactions.referrers"
 
@@ -139,14 +138,6 @@ func (ts *TransactionService) ViewReferralCashbackTransactionAndUpdateReadStatus
 
 	if referralCashbackTransaction.GUID == "" {
 		return nil, Error.ResourceNotFoundError("Transaction", "guid", transactionGUID)
-	}
-
-	if referralCashbackTransaction.Transactionstatuses.Slug != "pending" {
-		error := ts.TransactionRepository.UpdateReadStatus(dbTransaction, transactionGUID, 1)
-
-		if error != nil {
-			return nil, error
-		}
 	}
 
 	return referralCashbackTransaction, nil

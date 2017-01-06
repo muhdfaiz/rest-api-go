@@ -15,7 +15,7 @@ type TransactionServiceInterface interface {
 	ViewDealCashbackTransactionAndUpdateReadStatus(dbTransaction *gorm.DB, userGUID, transactionGUID string) (*Transaction, *systems.ErrorData)
 	CheckIfUserHasPendingCashoutTransaction(userGUID string) *systems.ErrorData
 	ViewCashoutTransactionAndUpdateReadStatus(dbTransaction *gorm.DB, userGUID, transactionGUID string) (*Transaction, *systems.ErrorData)
-	ViewReferralCashbackTransactionAndUpdateReadStatus(dbTransaction *gorm.DB, userGUID string, transactionGUID string) (*Transaction, *systems.ErrorData)
+	ViewReferralCashbackTransaction(userGUID string, transactionGUID string) (*Transaction, *systems.ErrorData)
 	GetUserTransactions(request *http.Request, userGUID, transactionStatus, isRead, pageNumber, pageLimit string) *TransactionResponse
 	SumTotalAmountOfUserPendingTransaction(userGUID string) float64
 	SumTotalAmountOfUserCashoutTransaction(userGUID string) float64

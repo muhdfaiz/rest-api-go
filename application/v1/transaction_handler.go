@@ -81,14 +81,17 @@ func (th *TransactionHandler) ViewReferralCashbackTransaction(context *gin.Conte
 	}
 
 	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
-	
-	transaction, error := th.TransactionService.ViewReferralCashbackTransactionAndUpdateReadStatus(dbTransaction, userGUID, transactionGUID)
+
+	transaction, error := th.TransactionService.ViewReferralCashbackTransaction(userGUID, transactionGUID)
 
 	if error != nil {
+		dbTransaction.Rollback()
 		errorCode, _ := strconv.Atoi(error.Error.Status)
 		context.JSON(errorCode, error)
 		return
 	}
+
+	dbTransaction.Commit()
 
 	context.JSON(http.StatusOK, gin.H{"data": transaction})
 }

@@ -74,7 +74,7 @@ func (iscr *ItemSubCategoryRepository) GetSubCategoriesForCategoryThoseHaveDeals
 		INNER JOIN ads_grocer ON ads.id = ads_grocer.ads_id
 		INNER JOIN grocer_location ON grocer_location.id = ads_grocer.grocer_location_id
 		LEFT JOIN item ON item.id = ads.item_id
-		LEFT JOIN category ON category.id = ads.category_id
+		LEFT JOIN category ON category.id = item.category_id
 		LEFT JOIN subcategory ON subcategory.id = item.subcategory_id
 		WHERE ads.status = "publish" AND ads.start_date <= ? AND ads.end_date > ? AND category.guid = ?
 		GROUP BY subcategory.name

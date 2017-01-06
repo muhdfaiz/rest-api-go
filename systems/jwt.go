@@ -1,8 +1,11 @@
 package systems
 
 import (
+	"fmt"
 	"os"
 	"time"
+
+	"strconv"
 
 	"github.com/dgrijalva/jwt-go"
 )
@@ -21,15 +24,21 @@ type CustomClaims struct {
 }
 
 // GenerateToken will create new JWt Token
-func (j *Jwt) GenerateToken(userGUID string, phoneNo string, deviceUUID string) (*JwtToken, *ErrorData) {
+func (j *Jwt) GenerateToken(userGUID string, phoneNo string, deviceUUID string, debugToken string) (*JwtToken, *ErrorData) {
 	currentTimestamp := time.Now().UTC().Unix()
 
 	// jti := md5.New()
 	// jti.Write([]byte(deviceUUID))
 	// jtiHash := string(jti.Sum(nil))
 
-	// Create the token
 	expired := time.Now().UTC().AddDate(0, 0, 7).Unix()
+
+	if debugToken != "" {
+		debugTokenInInt, _ := strconv.Atoi(debugToken)
+		minutes := time.Minute * time.Duration(debugTokenInInt)
+		expired = time.Now().Add(minutes).Unix()
+	}
+
 	// Create the Claims
 	claims := CustomClaims{
 		phoneNo,
@@ -57,7 +66,8 @@ func (j *Jwt) GenerateToken(userGUID string, phoneNo string, deviceUUID string) 
 
 	tokenData := &JwtToken{}
 	tokenData.Token = tokenString
-
+	fmt.Println("current time")
+	fmt.Println(time.Now().UTC().Format(time.RFC3339))
 	tokenExpiredDate := time.Unix(expired, 0).UTC().Format(time.RFC3339)
 
 	tokenData.Expired = tokenExpiredDate

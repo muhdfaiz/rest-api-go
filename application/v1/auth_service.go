@@ -71,7 +71,7 @@ func (as *AuthService) LogoutUser(dbTransaction *gorm.DB, deviceUUID, userGUID s
 func (as *AuthService) GenerateJWTTokenForUser(userGUID, userPhoneNo, deviceUUID string) (*systems.JwtToken, *systems.ErrorData) {
 	jwt := &systems.Jwt{}
 
-	jwtToken, error := jwt.GenerateToken(userGUID, userPhoneNo, deviceUUID)
+	jwtToken, error := jwt.GenerateToken(userGUID, userPhoneNo, deviceUUID, "")
 
 	if error != nil {
 		return nil, error

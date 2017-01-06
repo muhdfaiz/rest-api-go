@@ -176,8 +176,17 @@ func (sh *SmsHandler) Verify(context *gin.Context) {
 		return
 	}
 
+	debugToken := context.Query("debug_token")
+
+	jwtToken := &systems.JwtToken{}
 	jwt := &systems.Jwt{}
-	jwtToken, err := jwt.GenerateToken(user.GUID, smsData.PhoneNo, smsData.DeviceUUID)
+
+	if debugToken != "" {
+		jwtToken, err = jwt.GenerateToken(user.GUID, smsData.PhoneNo, smsData.DeviceUUID, debugToken)
+	} else {
+
+		jwtToken, err = jwt.GenerateToken(user.GUID, smsData.PhoneNo, smsData.DeviceUUID, "")
+	}
 
 	if err != nil {
 		dbTransaction.Rollback()

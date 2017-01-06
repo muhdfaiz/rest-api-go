@@ -18,6 +18,7 @@ type DealCashbackTransactionService struct {
 	DealCashbackTransactionRepository DealCashbackTransactionRepositoryInterface
 	DealRepository                    DealRepositoryInterface
 	TransactionRepository             TransactionRepositoryInterface
+	ShoppingListItemRepository        ShoppingListItemRepositoryInterface
 }
 
 // CreateTransaction function used to upload receipt image to Amazon S3 and create new transaction
@@ -25,10 +26,10 @@ type DealCashbackTransactionService struct {
 func (dcts *DealCashbackTransactionService) CreateTransaction(dbTransaction *gorm.DB, receipt *multipart.FileHeader, userGUID string,
 	dealCashbackGUIDs string, relations string) (*Transaction, *systems.ErrorData) {
 
-	uploadedReceipt, err := dcts.UploadReceipt(receipt)
+	uploadedReceipt, error := dcts.UploadReceipt(receipt)
 
-	if err != nil {
-		return nil, err
+	if error != nil {
+		return nil, error
 	}
 
 	// Split on comma.
@@ -56,25 +57,36 @@ func (dcts *DealCashbackTransactionService) CreateTransaction(dbTransaction *gor
 		ReferenceID:           Helper.GenerateUniqueShortID(),
 	}
 
-	transaction, err := dcts.TransactionRepository.Create(dbTransaction, transactionData)
+	transaction, error := dcts.TransactionRepository.Create(dbTransaction, transactionData)
 
-	if err != nil {
-		return nil, err
+	if error != nil {
+		return nil, error
 	}
 
-	result, err := dcts.DealCashbackTransactionRepository.Create(dbTransaction, userGUID, transaction.GUID, uploadedReceipt["path"])
+	result, error := dcts.DealCashbackTransactionRepository.Create(dbTransaction, userGUID, transaction.GUID, uploadedReceipt["path"])
 
-	if err != nil {
-		return nil, err
+	if error != nil {
+		return nil, error
 	}
 
-	err = dcts.DealCashbackRepository.UpdateDealCashbackTransactionGUID(dbTransaction, splitDealCashbackGUID, result.GUID)
+	error = dcts.DealCashbackRepository.UpdateDealCashbackTransactionGUID(dbTransaction, splitDealCashbackGUID, result.GUID)
 
-	if err != nil {
-		return nil, err
+	if error != nil {
+		return nil, error
 	}
 
-	transaction = dcts.TransactionRepository.GetByGUID(transaction.GUID, relations)
+	for _, dealCashbackGUID := range splitDealCashbackGUID {
+		dealCashback := dcts.DealCashbackRepository.GetByGUID(dealCashbackGUID)
+
+		updateAddedToCart := map[string]interface{}{"added_to_cart": 1}
+
+		error := dcts.ShoppingListItemRepository.UpdateByUserGUIDShoppingListGUIDAndDealGUID(dbTransaction, userGUID, dealCashback.ShoppingListGUID,
+			dealCashback.DealGUID, updateAddedToCart)
+
+		if error != nil {
+			return nil, error
+		}
+	}
 
 	return transaction, nil
 }
@@ -83,10 +95,10 @@ func (dcts *DealCashbackTransactionService) CreateTransaction(dbTransaction *gor
 // Allowed file types are jpg, jpeg, png and gif.
 // Maximum file size allow is 5MB.
 func (dcts *DealCashbackTransactionService) UploadReceipt(receiptImage *multipart.FileHeader) (map[string]string, *systems.ErrorData) {
-	image, err := receiptImage.Open()
+	image, error := receiptImage.Open()
 
-	if err != nil {
-		return nil, Error.InternalServerError(err.Error(), systems.CannotReadFile)
+	if error != nil {
+		return nil, Error.InternalServerError(error.Error(), systems.CannotReadFile)
 	}
 
 	err1 := FileValidation.ValidateFileType([]string{"jpg", "jpeg", "png", "gif"}, image)

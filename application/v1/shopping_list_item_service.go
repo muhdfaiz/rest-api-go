@@ -411,7 +411,7 @@ func (slis *ShoppingListItemService) GetAndSetDealForShoppingListItems(dbTransac
 		}
 
 		// If user shopping list item was added from deal and not added to cart, check deal expired or not
-		if userShoppingListItem.AddedFromDeal == 1 && userShoppingListItem.AddedToCart == 0 {
+		if userShoppingListItem.AddedFromDeal == 1 {
 			error := slis.DealService.RemoveDealCashbackAndSetItemDealExpired(dbTransaction, userGUID, shoppingListGUID, *userShoppingListItem.DealGUID)
 
 			if error != nil {

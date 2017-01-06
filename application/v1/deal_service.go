@@ -300,7 +300,7 @@ func (ds *DealService) RemoveDealCashbackAndSetItemDealExpired(dbTransaction *go
 			return error
 		}
 
-		error = ds.ShoppingListItemRepository.SetDealExpired(dbTransaction, dealGUID)
+		error = ds.ShoppingListItemRepository.SetDealExpired(dbTransaction, userGUID, shoppingListGUID, dealGUID)
 
 		if error != nil {
 			return error

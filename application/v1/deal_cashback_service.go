@@ -15,12 +15,31 @@ type DealCashbackService struct {
 	DealRepository             DealRepositoryInterface
 }
 
+// CheckDealAlreadyAddedToShoppingList function used to check if user already added the deal into the same shopping list.
+// Business requirement not allowed user to add same deal multiple times into the same shopping list.
+func (dcs *DealCashbackService) CheckDealAlreadyAddedToShoppingList(userGUID, shoppingListGUID, dealGUID string) *systems.ErrorData {
+	dealCashback := dcs.DealCashbackRepository.GetByUserGUIDAndShoppingListGUIDAndDealGUID(userGUID, shoppingListGUID, dealGUID)
+
+	if dealCashback.GUID != "" {
+		return Error.GenericError("409", systems.UserAlreadyAddDealIntoTheShoppingList,
+			"Failed to added deal into the shopping list.", "message", "User already add the deal into the shopping list.")
+	}
+
+	return nil
+}
+
 // CreateDealCashbackAndShoppingListItem function used to create deal cashback and store new shopping list item based on deal item
 func (dcs *DealCashbackService) CreateDealCashbackAndShoppingListItem(dbTransaction *gorm.DB, userGUID string, dealCashbackData CreateDealCashback) *systems.ErrorData {
-	_, err := dcs.DealCashbackRepository.Create(dbTransaction, userGUID, dealCashbackData)
+	error := dcs.CheckDealAlreadyAddedToShoppingList(userGUID, dealCashbackData.ShoppingListGUID, dealCashbackData.DealGUID)
 
-	if err != nil {
-		return err
+	if error != nil {
+		return error
+	}
+
+	_, error = dcs.DealCashbackRepository.Create(dbTransaction, userGUID, dealCashbackData)
+
+	if error != nil {
+		return error
 	}
 
 	deal := dcs.DealRepository.GetDealByGUID(dealCashbackData.DealGUID)
@@ -35,10 +54,10 @@ func (dcs *DealCashbackService) CreateDealCashbackAndShoppingListItem(dbTransact
 		CashbackAmount:   deal.CashbackAmount,
 	}
 
-	_, err = dcs.ShoppingListItemService.CreateUserShoppingListItemAddedFromDeal(dbTransaction, shoppingListItemData)
+	_, error = dcs.ShoppingListItemService.CreateUserShoppingListItemAddedFromDeal(dbTransaction, shoppingListItemData)
 
-	if err != nil {
-		return err
+	if error != nil {
+		return error
 	}
 
 	return nil
@@ -58,6 +77,8 @@ func (dcs *DealCashbackService) SumTotalAmountOfDealAddedTolistByUser(userGUID s
 	return totalCashbackAmount
 }
 
+// GetDealCashbacksByTransactionGUIDAndGroupByShoppingList function used to retrieve deal cashback by Transaction GUID
+// and group the deal cashback by Shopping List.
 func (dcs *DealCashbackService) GetDealCashbacksByTransactionGUIDAndGroupByShoppingList(dealCashbackTransactionGUID string) []*DealCashback {
 	dealCashbacksGroupByShoppingList := dcs.DealCashbackRepository.GetByDealCashbackTransactionGUIDAndGroupByShoppingListGUID(&dealCashbackTransactionGUID)
 
@@ -71,6 +92,7 @@ func (dcs *DealCashbackService) GetUserDealCashbacksByDealGUID(userGUID, dealGUI
 	return dealCashbacks, totalDealCashbacks
 }
 
+// GetUserDealCashbacksByShoppingList function used to retrieve all deal cashbacks for specific shopping list.
 func (dcs *DealCashbackService) GetUserDealCashbacksByShoppingList(dbTransaction *gorm.DB, userGUID string, shoppingListGUID string, transactionStatus string, pageNumber string,
 	pageLimit string, relations string) ([]*DealCashback, int, *systems.ErrorData) {
 
@@ -121,7 +143,7 @@ func (dcs *DealCashbackService) RemoveDealCashbackAndSetItemDealExpired(dbTransa
 			return error
 		}
 
-		error = dcs.ShoppingListItemRepository.SetDealExpired(dbTransaction, dealGUID)
+		error = dcs.ShoppingListItemRepository.SetDealExpired(dbTransaction, userGUID, shoppingListGUID, dealGUID)
 
 		if error != nil {
 			return error

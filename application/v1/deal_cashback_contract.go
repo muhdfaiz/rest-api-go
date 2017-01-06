@@ -15,6 +15,7 @@ type DealCashbackTransformerInterface interface {
 
 // DealCashbackServiceInterface is a contract that defines the method needed for Deal Cashback Service.
 type DealCashbackServiceInterface interface {
+	CheckDealAlreadyAddedToShoppingList(userGUID, shoppingListGUID, dealGUID string) *systems.ErrorData
 	CreateDealCashbackAndShoppingListItem(dbTransaction *gorm.DB, userGUID string, dealCashbackData CreateDealCashback) *systems.ErrorData
 	CountTotalNumberOfDealUserAddedToList(userGUID string, dealGUID string) int
 	SumTotalAmountOfDealAddedTolistByUser(userGUID string) float64

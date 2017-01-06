@@ -12,6 +12,7 @@ import (
 
 type DealCashbackTransactionHandler struct {
 	DealCashbackTransactionService DealCashbackTransactionServiceInterface
+	TransactionService             TransactionServiceInterface
 }
 
 func (dcth *DealCashbackTransactionHandler) Create(context *gin.Context) {
@@ -45,7 +46,7 @@ func (dcth *DealCashbackTransactionHandler) Create(context *gin.Context) {
 
 	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
 
-	result, error := dcth.DealCashbackTransactionService.CreateTransaction(dbTransaction, receipt[0], userGUID, dealCashbackGUIDs, relations)
+	transaction, error := dcth.DealCashbackTransactionService.CreateTransaction(dbTransaction, receipt[0], userGUID, dealCashbackGUIDs, relations)
 
 	if error != nil {
 		dbTransaction.Rollback()
@@ -56,5 +57,7 @@ func (dcth *DealCashbackTransactionHandler) Create(context *gin.Context) {
 
 	dbTransaction.Commit()
 
-	context.JSON(http.StatusOK, gin.H{"data": result})
+	transaction = dcth.TransactionService.ViewTransactionDetails(transaction.GUID, relations)
+
+	context.JSON(http.StatusOK, gin.H{"data": transaction})
 }

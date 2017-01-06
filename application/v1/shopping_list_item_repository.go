@@ -170,8 +170,9 @@ func (slir *ShoppingListItemRepository) UpdateByUserGUIDShoppingListGUIDAndDealG
 }
 
 // SetDealExpired function used to set deal expired on shopping list item when the deal already expired.
-func (slir *ShoppingListItemRepository) SetDealExpired(dbTransaction *gorm.DB, dealGUID string) *systems.ErrorData {
-	result := dbTransaction.Model(&ShoppingListItem{}).Where("deal_guid = ?", dealGUID).Select("deal_expired").Updates(map[string]interface{}{"deal_expired": 1})
+func (slir *ShoppingListItemRepository) SetDealExpired(dbTransaction *gorm.DB, userGUID, shoppingListGUID, dealGUID string) *systems.ErrorData {
+	result := dbTransaction.Model(&ShoppingListItem{}).Select("deal_expired").Where(&ShoppingListItem{UserGUID: userGUID,
+		ShoppingListGUID: shoppingListGUID, DealGUID: &dealGUID}).Updates(map[string]interface{}{"deal_expired": 1})
 
 	if result.Error != nil {
 		return Error.InternalServerError(result.Error, systems.DatabaseError)

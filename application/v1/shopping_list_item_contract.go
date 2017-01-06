@@ -48,7 +48,7 @@ type ShoppingListItemRepositoryInterface interface {
 	UpdateByUserGUIDAndDealGUID(dbTransaction *gorm.DB, userGUID string, dealGUID string, data map[string]interface{}) *systems.ErrorData
 	UpdateByUserGUIDShoppingListGUIDAndDealGUID(dbTransaction *gorm.DB, userGUID string, shoppingListGUID string, dealGUID string,
 		data map[string]interface{}) *systems.ErrorData
-	SetDealExpired(dbTransaction *gorm.DB, dealGUID string) *systems.ErrorData
+	SetDealExpired(dbTransaction *gorm.DB, userGUID, shoppingListGUID, dealGUID string) *systems.ErrorData
 	DeleteByGUID(dbTransaction *gorm.DB, shoppingListItemGUID string) *systems.ErrorData
 	DeleteByShoppingListGUID(dbTransaction *gorm.DB, shoppingListGUID string) *systems.ErrorData
 	DeleteByUserGUIDAndShoppingListGUID(dbTransaction *gorm.DB, userGUID string, shoppingListGUID string) *systems.ErrorData

@@ -10,10 +10,13 @@ type DealCashback struct {
 	ShoppingListGUID            string     `json:"shopping_list_guid"`
 	DealGUID                    string     `json:"deal_guid"`
 	DealCashbackTransactionGUID *string    `json:"deal_cashback_transaction_guid"`
-	Expired                     int        `sql:"-" json:"expired"`
 	CreatedAt                   time.Time  `json:"created_at"`
 	UpdatedAt                   time.Time  `json:"updated_at"`
 	DeletedAt                   *time.Time `json:"deleted_at"`
+
+	// Virtual Columns
+	Expired               int `sql:"-" json:"expired"`
+	RemainingDaysToRemove int `sql:"-" json:"remaining_days_to_remove"`
 
 	// Deal Cashback Has One Deal Cashback Status.
 	Dealcashbackstatus *DealCashbackStatus `json:"deal_cashback_statuses" gorm:"ForeignKey:GUID;AssociationForeignKey:DealCashbackGUID"`

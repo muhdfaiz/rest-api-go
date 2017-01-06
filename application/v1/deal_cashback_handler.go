@@ -105,15 +105,12 @@ func (dch *DealCashbackHandler) ViewByShoppingList(context *gin.Context) {
 		transactionStatus, pageNumber, pageLimit, relations)
 
 	if error != nil {
-		dbTransaction.Rollback()
 		errorCode, _ := strconv.Atoi(error.Error.Status)
 		context.JSON(errorCode, error)
 		return
 	}
 
 	dealCashbackResponse := dch.DealCashbackTransformer.transformCollection(context.Request, userDealCashbacks, totalUserDealCashback, pageLimit)
-
-	dbTransaction.Commit()
 
 	context.JSON(http.StatusOK, gin.H{"data": dealCashbackResponse})
 }

@@ -2,6 +2,7 @@ package v1
 
 import (
 	"strconv"
+	"time"
 
 	"github.com/fatih/structs"
 	"github.com/jinzhu/gorm"
@@ -15,6 +16,7 @@ type ShoppingListItemService struct {
 	ItemCategoryService        ItemCategoryServiceInterface
 	ItemSubCategoryService     ItemSubCategoryServiceInterface
 	DealService                DealServiceInterface
+	DealRepository             DealRepositoryInterface
 	GenericService             GenericServiceInterface
 }
 
@@ -410,12 +412,18 @@ func (slis *ShoppingListItemService) GetAndSetDealForShoppingListItems(dbTransac
 			userShoppingListItems[key].Deals = deals
 		}
 
-		// If user shopping list item was added from deal and not added to cart, check deal expired or not
+		// If user shopping list item was added from dealcheck deal expired or not
 		if userShoppingListItem.AddedFromDeal == 1 {
-			error := slis.DealService.RemoveDealCashbackAndSetItemDealExpired(dbTransaction, userGUID, shoppingListGUID, *userShoppingListItem.DealGUID)
+			currentDateInGMT8 := time.Now().UTC().Add(time.Hour * 8).Format("2006-01-02")
 
-			if error != nil {
-				return nil, nil, error
+			deal := slis.DealRepository.GetDealByGUIDAndValidStartEndDate(*userShoppingListItem.DealGUID, currentDateInGMT8)
+
+			if deal.GUID == "" {
+				error := slis.ShoppingListItemRepository.SetDealExpired(dbTransaction, userGUID, shoppingListGUID, *userShoppingListItem.DealGUID)
+
+				if error != nil {
+					return nil, nil, error
+				}
 			}
 		}
 	}

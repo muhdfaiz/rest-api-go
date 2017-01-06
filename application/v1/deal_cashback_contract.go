@@ -2,6 +2,7 @@ package v1
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/jinzhu/gorm"
 
@@ -23,7 +24,8 @@ type DealCashbackServiceInterface interface {
 	GetUserDealCashbacksByDealGUID(userGUID, dealGUID, pageNumber, pageLimit, relations string) ([]*DealCashback, int)
 	GetUserDealCashbacksByShoppingList(dbTransaction *gorm.DB, userGUID string, shoppingListGUID string, transactionStatus string,
 		pageNumber string, pageLimit string, relations string) ([]*DealCashback, int, *systems.ErrorData)
-	RemoveDealCashbackAndSetItemDealExpired(dbTransaction *gorm.DB, userGUID, shoppingListGUID, dealGUID string) *systems.ErrorData
+	RemoveDealCashbackIfDealExpiredMoreThan7Days(dbTransaction *gorm.DB, userGUID, shoppingListGUID,
+		dealGUID string, dealEndDate time.Time) *systems.ErrorData
 }
 
 // DealCashbackRepositoryInterface is a contract that defines the method needed for deal cashback repository.

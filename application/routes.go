@@ -111,7 +111,8 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 
 	// Shopping List Item Repository
 	shoppingListItemService := &v1.ShoppingListItemService{ShoppingListItemRepository: shoppingListItemRepository, ItemService: itemService,
-		ItemCategoryService: itemCategoryService, ItemSubCategoryService: itemSubCategoryService, DealService: dealService, GenericService: genericService}
+		ItemCategoryService: itemCategoryService, ItemSubCategoryService: itemSubCategoryService, DealService: dealService, GenericService: genericService,
+		DealRepository: dealRepository}
 
 	// Shopping List Item Image Objects
 	shoppingListItemImageRepository := &v1.ShoppingListItemImageRepository{DB: DB}

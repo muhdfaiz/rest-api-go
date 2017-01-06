@@ -99,51 +99,49 @@ func (dcs *DealCashbackService) GetUserDealCashbacksByShoppingList(dbTransaction
 	userDealCashbacks, totalUserDealCashbacks := dcs.DealCashbackRepository.GetByUserGUIDShoppingListGUIDAndTransactionStatus(userGUID, shoppingListGUID,
 		transactionStatus, pageNumber, pageLimit, "deals")
 
-	currentDateInGMT8 := time.Now().UTC().Add(time.Hour * 8)
-
 	for _, userDealCashback := range userDealCashbacks {
-		diffInDays := currentDateInGMT8.Sub(userDealCashback.Deals.EndDate).Hours() / 24
+		error := dcs.RemoveDealCashbackIfDealExpiredMoreThan7Days(dbTransaction, userGUID, shoppingListGUID,
+			userDealCashback.Deals.GUID, userDealCashback.Deals.EndDate)
 
-		// When the deal already expired more than 7 days
-		if diffInDays > 7 {
-			error := dcs.RemoveDealCashbackAndSetItemDealExpired(dbTransaction, userGUID, shoppingListGUID, userDealCashback.Deals.GUID)
-
+		if error != nil {
+			dbTransaction.Rollback()
 			return nil, 0, error
 		}
-
 	}
+
+	dbTransaction.Commit()
 
 	relations = relations + ",deals"
 
 	userDealCashbacks, totalUserDealCashbacks = dcs.DealCashbackRepository.GetByUserGUIDShoppingListGUIDAndTransactionStatus(userGUID, shoppingListGUID,
 		transactionStatus, pageNumber, pageLimit, relations)
 
+	currentDateInGMT8 := time.Now().UTC().Add(time.Hour * 8)
+
 	for key, userDealCashback := range userDealCashbacks {
+
 		diffInDays := currentDateInGMT8.Sub(userDealCashback.Deals.EndDate).Hours() / 24
 
-		// When the deal already expired not more than 7 days
-		if diffInDays > 0 && diffInDays < 7 {
+		// When the deal already expired
+		if diffInDays > 0 {
 			userDealCashbacks[key].Expired = 1
+			userDealCashbacks[key].RemainingDaysToRemove = int(diffInDays)
 		}
 	}
 
 	return userDealCashbacks, totalUserDealCashbacks, nil
 }
 
-// RemoveDealCashbackAndSetItemDealExpired function used to soft delete deal cashback that already expired and set the item deal expired.
-func (dcs *DealCashbackService) RemoveDealCashbackAndSetItemDealExpired(dbTransaction *gorm.DB, userGUID, shoppingListGUID, dealGUID string) *systems.ErrorData {
-	currentDateInGMT8 := time.Now().UTC().Add(time.Hour * 8).Format("2006-01-02")
+// RemoveDealCashbackIfDealExpiredMoreThan7Days function used to soft delete deal cashback that already expired.
+func (dcs *DealCashbackService) RemoveDealCashbackIfDealExpiredMoreThan7Days(dbTransaction *gorm.DB, userGUID, shoppingListGUID,
+	dealGUID string, dealEndDate time.Time) *systems.ErrorData {
 
-	deal := dcs.DealRepository.GetDealByGUIDAndValidStartEndDate(dealGUID, currentDateInGMT8)
+	currentDateInGMT8 := time.Now().UTC().Add(time.Hour * 8)
 
-	if deal.GUID == "" {
+	diffInDays := currentDateInGMT8.Sub(dealEndDate).Hours() / 24
+
+	if diffInDays > 7 {
 		error := dcs.DealCashbackRepository.DeleteByUserGUIDAndShoppingListGUIDAndDealGUID(dbTransaction, userGUID, shoppingListGUID, dealGUID)
-
-		if error != nil {
-			return error
-		}
-
-		error = dcs.ShoppingListItemRepository.SetDealExpired(dbTransaction, userGUID, shoppingListGUID, dealGUID)
 
 		if error != nil {
 			return error

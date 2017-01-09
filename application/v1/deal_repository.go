@@ -258,7 +258,7 @@ func (dr *DealRepository) GetDealsWithinRangeAndDateRangeAndUserLimitAndQuotaAnd
 	offset := SetOffsetValue(pageNumber, pageLimit)
 
 	sqlQueryStatement := `SELECT deals.*, count(deal_cashbacks.deal_guid) AS total_deal_cashback,
-	(SELECT count(*) FROM deal_cashbacks WHERE deal_cashbacks.deal_guid = deals.ads_guid AND user_guid = ?) AS total_user_deal_cashback
+	(SELECT count(*) FROM deal_cashbacks WHERE deal_cashbacks.deal_guid = deals.ads_guid AND user_guid = ? AND deal_cashbacks.deleted_at IS NULL) AS total_user_deal_cashback
 	FROM
 		(SELECT ads.id AS ads_id,
 				ads.guid AS ads_guid,
@@ -497,7 +497,7 @@ func (dr *DealRepository) GetDealsByCategoryNameWithinRangeAndDateRangeAndUserLi
 	offset := SetOffsetValue(pageNumber, pageLimit)
 
 	sqlQueryStatement := `SELECT SQL_CALC_FOUND_ROWS deals.*, count(deal_cashbacks.deal_guid) AS total_deal_cashback,
-	(SELECT count(*) FROM deal_cashbacks WHERE deal_cashbacks.deal_guid = deals.ads_guid AND user_guid = ?) AS total_user_deal_cashback
+	(SELECT count(*) FROM deal_cashbacks WHERE deal_cashbacks.deal_guid = deals.ads_guid AND user_guid = ? AND deal_cashbacks.deleted_at IS NULL) AS total_user_deal_cashback
 	FROM
 		(SELECT ads.id AS ads_id,
 				ads.guid AS ads_guid,
@@ -583,7 +583,7 @@ func (dr *DealRepository) GetDealsBySubcategoryNameWithinRangeAndDateRangeAndUse
 	offset := SetOffsetValue(pageNumber, pageLimit)
 
 	sqlQueryStatement := `SELECT SQL_CALC_FOUND_ROWS deals.*, count(deal_cashbacks.deal_guid) AS total_deal_cashback,
-	(SELECT count(*) FROM deal_cashbacks WHERE deal_cashbacks.deal_guid = deals.ads_guid AND user_guid = ?) AS total_user_deal_cashback
+	(SELECT count(*) FROM deal_cashbacks WHERE deal_cashbacks.deal_guid = deals.ads_guid AND user_guid = ? AND deal_cashbacks.deleted_at IS NULL) AS total_user_deal_cashback
 	FROM
 		(SELECT ads.id AS ads_id,
 				ads.guid AS ads_guid,
@@ -669,7 +669,7 @@ func (dr *DealRepository) GetDealsForGrocerWithinRangeAndDateRangeAndUserLimitAn
 	offset := SetOffsetValue(pageNumber, pageLimit)
 
 	sqlQueryStatement := `SELECT deals.*, count(deal_cashbacks.deal_guid) AS total_deal_cashback,
-		(SELECT count(*) FROM deal_cashbacks WHERE deal_cashbacks.deal_guid = deals.ads_guid AND user_guid = ?) AS total_user_deal_cashback
+		(SELECT count(*) FROM deal_cashbacks WHERE deal_cashbacks.deal_guid = deals.ads_guid AND user_guid = ? AND deal_cashbacks.deleted_at IS NULL) AS total_user_deal_cashback
 		FROM
 		(SELECT ads.id AS ads_id,
 				ads.guid AS ads_guid,
@@ -753,7 +753,7 @@ func (dr *DealRepository) CountDealsForGrocerWithinRangeAndDateRangeAndUserLimit
 	deals := []*Deal{}
 
 	sqlQueryStatement := `SELECT deals.*, count(deal_cashbacks.deal_guid) AS total_deal_cashback,
-	(SELECT count(*) FROM deal_cashbacks WHERE deal_cashbacks.deal_guid = deals.ads_guid AND user_guid = ?) AS total_user_deal_cashback
+	(SELECT count(*) FROM deal_cashbacks WHERE deal_cashbacks.deal_guid = deals.ads_guid AND user_guid = ? AND deal_cashbacks.deleted_at IS NULL) AS total_user_deal_cashback
 	FROM
 		(SELECT ads.id AS ads_id,
 				ads.guid AS ads_guid,
@@ -825,7 +825,7 @@ func (dr *DealRepository) GetDealBySubCategoryGUIDWithinRangeAndDateRangeAndUser
 	offset := SetOffsetValue(pageNumber, pageLimit)
 
 	sqlQueryStatement := `SELECT SQL_CALC_FOUND_ROWS deals.*, count(deal_cashbacks.deal_guid) AS total_deal_cashback,
-	(SELECT count(*) FROM deal_cashbacks WHERE deal_cashbacks.deal_guid = deals.ads_guid AND user_guid = ?) AS total_user_deal_cashback
+	(SELECT count(*) FROM deal_cashbacks WHERE deal_cashbacks.deal_guid = deals.ads_guid AND user_guid = ? AND deal_cashbacks.deleted_at IS NULL) AS total_user_deal_cashback
 	FROM
 		(SELECT subcategory.id as subcategory_id,
 				subcategory.guid as subcategory_guid,

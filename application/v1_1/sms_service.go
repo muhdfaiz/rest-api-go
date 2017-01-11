@@ -19,7 +19,7 @@ type SmsService struct {
 }
 
 // SendVerificationCode function handle sending sms contain verification code during registration & login
-func (sf *SmsService) SendVerificationCode(dbTransaction *gorm.DB, phoneNo string, userGUID string) (interface{}, *systems.ErrorData) {
+func (sf *SmsService) SendVerificationCode(dbTransaction *gorm.DB, phoneNo, eventName string) (interface{}, *systems.ErrorData) {
 	smsVerificationCode := Helper.RandomString("Digit", 4, "", "")
 
 	smsText := fmt.Sprintf("Your verification code is %s - Shoppermate", smsVerificationCode)
@@ -36,13 +36,12 @@ func (sf *SmsService) SendVerificationCode(dbTransaction *gorm.DB, phoneNo strin
 
 	smsHistory := make(map[string]string)
 	smsHistory["guid"] = Helper.GenerateUUID()
-	smsHistory["user_guid"] = userGUID
 	smsHistory["provider"] = "moceansms"
 	smsHistory["sms_id"] = smsResponse["sms_id"]
 	smsHistory["text"] = smsText
 	smsHistory["recipient_no"] = phoneNo
 	smsHistory["verification_code"] = smsVerificationCode
-	smsHistory["status"] = "0"
+	smsHistory["event"] = eventName
 
 	result, err := sf.SmsHistoryRepository.Create(dbTransaction, smsHistory)
 
@@ -54,7 +53,7 @@ func (sf *SmsService) SendVerificationCode(dbTransaction *gorm.DB, phoneNo strin
 }
 
 // Send SMS message
-func (sf *SmsService) send(message string, recipientNumber string) (map[string]string, *systems.ErrorData) {
+func (sf *SmsService) send(message, recipientNumber string) (map[string]string, *systems.ErrorData) {
 	apiURL := os.Getenv("MOCEAN_SMS_URL")
 	username := os.Getenv("MOCEAN_SMS_USERNAME")
 	password := os.Getenv("MOCEAN_SMS_PASSWORD")

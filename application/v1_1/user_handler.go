@@ -8,7 +8,7 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-// UserHandler will handle all request related to User
+// UserHandler will handle all request related to User resources.
 type UserHandler struct {
 	UserService    UserServiceInterface
 	SettingService SettingServiceInterface
@@ -45,6 +45,8 @@ func (uh *UserHandler) Create(context *gin.Context) {
 	profilePicture, _, _ := context.Request.FormFile("profile_picture")
 
 	debug := context.Query("debug")
+	debugToken := context.Query("debug_token")
+	debugFacebook := context.Query("debug_facebook")
 
 	referralActive := uh.SettingService.GetSettingBySlug("referral_active").Value
 	pricePerReferral := uh.SettingService.GetSettingBySlug("referral_price").Value
@@ -58,7 +60,7 @@ func (uh *UserHandler) Create(context *gin.Context) {
 
 	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
 
-	newUser, error := uh.UserService.CreateUser(dbTransaction, userData, profilePicture, referralSettings, debug)
+	user, error := uh.UserService.CreateUser(dbTransaction, userData, profilePicture, referralSettings, debug, debugFacebook)
 
 	if error != nil {
 		dbTransaction.Rollback()
@@ -67,9 +69,22 @@ func (uh *UserHandler) Create(context *gin.Context) {
 		return
 	}
 
+	jwtToken, error := JWT.GenerateToken(user.GUID, userData.PhoneNo, userData.DeviceUUID, debugToken)
+
+	if error != nil {
+		dbTransaction.Rollback()
+		errorCode, _ := strconv.Atoi(error.Error.Status)
+		context.JSON(errorCode, error)
+		return
+	}
+
+	response := make(map[string]interface{})
+	response["user"] = user
+	response["access_token"] = jwtToken
+
 	dbTransaction.Commit()
 
-	context.JSON(http.StatusOK, gin.H{"data": newUser})
+	context.JSON(http.StatusOK, gin.H{"data": response})
 }
 
 // Update function used to update user data

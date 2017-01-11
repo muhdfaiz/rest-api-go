@@ -14,4 +14,5 @@ var (
 	FileSystem        = &filesystem.FileSystem{}
 	PaginationReponse = &systems.PaginationResponse{}
 	Validation        = &systems.Validation{}
+	JWT               = &systems.Jwt{}
 )

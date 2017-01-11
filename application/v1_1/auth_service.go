@@ -11,9 +11,9 @@ type AuthService struct {
 }
 
 // AuthenticateUserViaPhoneNumber function used to login user using phone number.
-func (as *AuthService) AuthenticateUserViaPhoneNumber(dbTransaction *gorm.DB, userGUID, phoneNo, debug string) *systems.ErrorData {
+func (as *AuthService) AuthenticateUserViaPhoneNumber(dbTransaction *gorm.DB, phoneNo, debug string) *systems.ErrorData {
 	if debug != "1" {
-		_, error := as.SmsService.SendVerificationCode(dbTransaction, phoneNo, userGUID)
+		_, error := as.SmsService.SendVerificationCode(dbTransaction, phoneNo, "login")
 
 		if error != nil {
 			return error

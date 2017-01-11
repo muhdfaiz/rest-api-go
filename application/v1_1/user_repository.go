@@ -6,6 +6,7 @@ import (
 	"github.com/serenize/snaker"
 )
 
+// UserRepository will handle all CRUD function for User Resource.
 type UserRepository struct {
 	DB *gorm.DB
 }
@@ -27,7 +28,6 @@ func (ur *UserRepository) Create(dbTransansaction *gorm.DB, data CreateUser) (*U
 		ProfilePicture: &data.ProfilePicture,
 		RegisterBy:     registerBy,
 		ReferralCode:   data.ReferralCode,
-		Verified:       0,
 	}
 
 	if data.FacebookID == "" {
@@ -72,6 +72,7 @@ func (ur *UserRepository) Update(dbTransaction *gorm.DB, guid string, data map[s
 	return nil
 }
 
+// UpdateUserWallet function used to update wallet amount for specific user.
 func (ur *UserRepository) UpdateUserWallet(dbTransaction *gorm.DB, userGUID string, amount float64) *systems.ErrorData {
 	result := dbTransaction.Model(&User{}).Where(&User{GUID: userGUID}).Updates(map[string]interface{}{
 		"wallet": amount,
@@ -84,6 +85,7 @@ func (ur *UserRepository) UpdateUserWallet(dbTransaction *gorm.DB, userGUID stri
 	return nil
 }
 
+// Delete function used to soft delete user in database.
 func (ur *UserRepository) Delete(dbTransaction *gorm.DB, attribute string, value string) *systems.ErrorData {
 	result := dbTransaction.Where(attribute+" = ?", value).Delete(&User{})
 

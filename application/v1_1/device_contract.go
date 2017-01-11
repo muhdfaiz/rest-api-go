@@ -8,6 +8,7 @@ import (
 // DeviceServiceInterface is a contract that defines the method needed for Device Service.
 type DeviceServiceInterface interface {
 	CheckDuplicateDevice(deviceUUID string) *systems.ErrorData
+	CheckDeviceExistOrNot(deviceUUID string) (*Device, *systems.ErrorData)
 	CreateDevice(dbTransaction *gorm.DB, deviceData CreateDevice) (*Device, *systems.ErrorData)
 	UpdateDevice(dbTransaction *gorm.DB, deviceUUID string, deviceData UpdateDevice) (*Device, *systems.ErrorData)
 	UpdateByDeviceUUID(dbTransaction *gorm.DB, deviceUUID string, deviceData UpdateDevice) (*Device, *systems.ErrorData)

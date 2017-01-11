@@ -35,7 +35,7 @@ func (ah *AuthHandler) LoginViaPhone(context *gin.Context) {
 
 	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
 
-	error = ah.AuthService.AuthenticateUserViaPhoneNumber(dbTransaction, user.GUID, authData.PhoneNo, debug)
+	error = ah.AuthService.AuthenticateUserViaPhoneNumber(dbTransaction, authData.PhoneNo, debug)
 
 	if error != nil {
 		dbTransaction.Rollback()

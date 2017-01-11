@@ -2,7 +2,6 @@ package v1
 
 import "github.com/jinzhu/gorm"
 
-
 type EventRepository struct {
 	DB *gorm.DB
 }

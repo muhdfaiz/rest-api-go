@@ -27,6 +27,7 @@ type UserService struct {
 	DeviceService                      DeviceServiceInterface
 	AmazonS3FileSystem                 *filesystem.AmazonS3Upload
 	ReferralCashbackTransactionService ReferralCashbackTransactionServiceInterface
+	SmsHistoryService                  SmsHistoryServiceInterface
 }
 
 // ViewUser function used to view user details.
@@ -40,7 +41,7 @@ func (us *UserService) ViewUser(userGUID, relations string) *User {
 
 // CreateUser function used to create new user and store in database.
 func (us *UserService) CreateUser(dbTransaction *gorm.DB, userData CreateUser, profilePicture multipart.File,
-	referralSettings map[string]string, debug string) (*User, *systems.ErrorData) {
+	referralSettings map[string]string, debug, debugFacebook string) (*User, *systems.ErrorData) {
 
 	error := us.CheckUserPhoneNumberDuplicate(userData.PhoneNo)
 
@@ -48,7 +49,13 @@ func (us *UserService) CreateUser(dbTransaction *gorm.DB, userData CreateUser, p
 		return nil, error
 	}
 
-	error = us.CheckUserFacebookIDValidOrNot(userData.FacebookID, userData.Debug)
+	error = us.CheckUserFacebookIDValidOrNot(userData.FacebookID, debugFacebook)
+
+	if error != nil {
+		return nil, error
+	}
+
+	error = us.CheckUserFacebookIDDuplicate(userData.FacebookID)
 
 	if error != nil {
 		return nil, error
@@ -58,6 +65,20 @@ func (us *UserService) CreateUser(dbTransaction *gorm.DB, userData CreateUser, p
 
 	if error != nil {
 		return nil, error
+	}
+
+	_, error = us.DeviceService.CheckDeviceExistOrNot(userData.DeviceUUID)
+
+	if error != nil {
+		return nil, error
+	}
+
+	if debug != "1" {
+		error := us.SmsHistoryService.VerifyVerificationCode(userData.PhoneNo, userData.VerificationCode, "register")
+
+		if error != nil {
+			return nil, error
+		}
 	}
 
 	uploadedProfilePicture, error := us.UploadUserProfilePicture(profilePicture)
@@ -78,18 +99,16 @@ func (us *UserService) CreateUser(dbTransaction *gorm.DB, userData CreateUser, p
 		return nil, error
 	}
 
-	error = us.CreateReferralCashbackTransaction(dbTransaction, newUser, referentUser, referralSettings)
+	_, error = us.DeviceService.UpdateByDeviceUUID(dbTransaction, userData.DeviceUUID, UpdateDevice{UserGUID: newUser.GUID})
 
 	if error != nil {
 		return nil, error
 	}
 
-	if debug != "1" {
-		_, error = us.SmsService.SendVerificationCode(dbTransaction, newUser.PhoneNo, newUser.GUID)
+	error = us.CreateReferralCashbackTransaction(dbTransaction, newUser, referentUser, referralSettings)
 
-		if error != nil {
-			return nil, error
-		}
+	if error != nil {
+		return nil, error
 	}
 
 	newUser = us.CalculateAllTimeAmountAndPendingAmount(newUser)
@@ -190,6 +209,19 @@ func (us *UserService) CheckUserReferralCodeExistOrNot(referralCode string, refe
 	return nil, nil
 }
 
+// CheckUserFacebookIDDuplicate function used to check if user facebook id already exist in the database.
+func (us *UserService) CheckUserFacebookIDDuplicate(facebookID string) *systems.ErrorData {
+	if facebookID != "" {
+		user := us.UserRepository.GetByFacebookID(facebookID, "")
+
+		if user.FacebookID != nil {
+			return Error.DuplicateValueErrors("User", "facebook_id", facebookID)
+		}
+	}
+
+	return nil
+}
+
 // CheckUserFacebookIDExistOrNot function used to check user facebook ID exist or not in database.
 func (us *UserService) CheckUserFacebookIDExistOrNot(facebookID string) (*User, *systems.ErrorData) {
 	user := us.UserRepository.GetByFacebookID(facebookID, "")
@@ -202,9 +234,11 @@ func (us *UserService) CheckUserFacebookIDExistOrNot(facebookID string) (*User, 
 }
 
 // CheckUserFacebookIDValidOrNot function used to check user facebook ID valid or not by querying Facebook API.
-func (us *UserService) CheckUserFacebookIDValidOrNot(facebookID string, debug int) *systems.ErrorData {
+func (us *UserService) CheckUserFacebookIDValidOrNot(facebookID, debug string) *systems.ErrorData {
+	debugInInt, _ := strconv.Atoi(debug)
+
 	if facebookID != "" {
-		valid := us.FacebookService.IDIsValid(facebookID, debug)
+		valid := us.FacebookService.IDIsValid(facebookID, debugInInt)
 
 		if !valid {
 			mesg := fmt.Sprintf(systems.ErrorFacebookIDNotValid, facebookID)
@@ -265,7 +299,7 @@ func (us *UserService) SendSMSAndSetUserStatusToUnverifyWhenPhoneNumberIsNew(dbT
 	deviceUUID string) *systems.ErrorData {
 
 	if oldPhoneNo != newPhoneNo && newPhoneNo != "" {
-		_, error := us.SmsService.SendVerificationCode(dbTransaction, newPhoneNo, userGUID)
+		_, error := us.SmsService.SendVerificationCode(dbTransaction, newPhoneNo, "update")
 
 		if error != nil {
 			return error

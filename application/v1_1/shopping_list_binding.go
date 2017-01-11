@@ -1,4 +1,4 @@
-package v1
+package v1_1
 
 // CreateShoppingList will bind request data based on header content type
 type CreateShoppingList struct {

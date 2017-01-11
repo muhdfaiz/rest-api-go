@@ -1,4 +1,4 @@
-package v1
+package v1_1
 
 type LoginViaPhone struct {
 	PhoneNo string `form:"phone_no" json:"phone_no" binding:"required,numeric"`

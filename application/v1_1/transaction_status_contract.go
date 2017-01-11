@@ -1,4 +1,4 @@
-package v1
+package v1_1
 
 // TransactionStatusServiceInterface is a contract that defines the method needed
 // for Transaction Status Service.

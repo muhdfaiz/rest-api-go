@@ -1,4 +1,4 @@
-package v1
+package v1_1
 
 // EventServiceInterface is a contract that defines the method needed for Event Service.
 type EventServiceInterface interface {

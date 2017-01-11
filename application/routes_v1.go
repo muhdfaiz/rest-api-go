@@ -13,7 +13,7 @@ import (
 )
 
 // InitializeObjectAndSetRoutes will initialize object and set all routes across the API
-func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
+func InitializeObjectAndSetRoutesV1(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 	router.Use(func(context *gin.Context) {
 		context.Set("DB", DB)
 	})
@@ -38,7 +38,6 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 
 	// Sms Objects
 	smsHistoryRepository := &v1.SmsHistoryRepository{DB: DB}
-	smsHistoryService := &v1.SmsHistoryService{SmsHistoryRepository: smsHistoryRepository}
 	smsService := &v1.SmsService{DB: DB, SmsHistoryRepository: smsHistoryRepository}
 
 	// Auth Service
@@ -156,7 +155,7 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 	userRepository := &v1.UserRepository{DB: DB}
 	userService := &v1.UserService{UserRepository: userRepository, TransactionService: transactionService, DealCashbackService: dealCashbackService,
 		FacebookService: facebookService, SmsService: smsService, DeviceService: deviceService, ReferralCashbackTransactionService: referralCashbackTransactionService,
-		AmazonS3FileSystem: amazonS3FileSystem, SmsHistoryService: smsHistoryService}
+		AmazonS3FileSystem: amazonS3FileSystem}
 
 	//Deal Cashback Transaction
 	dealCashbackTransactionRepository := &v1.DealCashbackTransactionRepository{DB: DB}
@@ -179,7 +178,7 @@ func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 
 	// Sms Handler
 	smsHandler := v1.SmsHandler{UserRepository: userRepository, SmsService: smsService,
-		SmsHistoryService: smsHistoryService, DeviceService: deviceService, UserService: userService}
+		SmsHistoryRepository: smsHistoryRepository, DeviceService: deviceService}
 
 	// User Handler
 	userHandler := v1.UserHandler{UserService: userService, SettingService: settingService}

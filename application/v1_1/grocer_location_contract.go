@@ -1,4 +1,4 @@
-package v1
+package v1_1
 
 // GrocerLocationServiceInterface is a contract that defines the method needed for Grocer Location Service.
 type GrocerLocationServiceInterface interface {

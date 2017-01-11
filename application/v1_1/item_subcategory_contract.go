@@ -1,4 +1,4 @@
-package v1
+package v1_1
 
 // ItemSubCategoryServiceInterface is a contract that defines the methods needed for Item Subcategory Service.
 type ItemSubCategoryServiceInterface interface {

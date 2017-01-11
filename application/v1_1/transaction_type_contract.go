@@ -1,4 +1,4 @@
-package v1
+package v1_1
 
 // TransactionTypeRepositoryInterface ia a contradt that defines the method needed
 // for Transaction Type Repository.

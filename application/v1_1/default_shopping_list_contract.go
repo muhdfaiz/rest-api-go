@@ -1,4 +1,4 @@
-package v1
+package v1_1
 
 // DefaultShoppingListServiceInterface is a contract that defines the method needed for
 // Default Shopping List Service.

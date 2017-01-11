@@ -1,4 +1,4 @@
-package v1
+package v1_1
 
 type CreateCashoutTransaction struct {
 	Amount                float64 `form:"amount" json:"amount" binding:"required,gt=0"`

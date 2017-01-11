@@ -1,4 +1,4 @@
-package v1
+package v1_1
 
 type CreateShoppingListItem struct {
 	UserGUID         string  `form:"user_guid" json:"user_guid" binding:"omitempty"`

@@ -1,4 +1,4 @@
-package v1
+package v1_1
 
 // SettingServiceInterface is a contract that defines the method needed for Setting Service.
 type SettingServiceInterface interface {

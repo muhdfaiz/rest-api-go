@@ -1,4 +1,4 @@
-package v1
+package v1_1
 
 // AddDealToShoppingListAndCashback will bind request data based on header content type
 type CreateDealCashback struct {

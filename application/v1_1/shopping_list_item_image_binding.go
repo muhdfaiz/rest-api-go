@@ -1,3 +1,3 @@
-package v1
+package v1_1
 
 type CreateShoppingListItemImage struct{}

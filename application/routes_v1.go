@@ -13,7 +13,7 @@ import (
 )
 
 // InitializeObjectAndSetRoutes will initialize object and set all routes across the API
-func InitializeObjectAndSetRoutes(router *gin.Engine, DB *gorm.DB) *gin.Engine {
+func InitializeObjectAndSetRoutesV1(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 	router.Use(func(context *gin.Context) {
 		context.Set("DB", DB)
 	})

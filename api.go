@@ -15,6 +15,12 @@ import (
 )
 
 func main() {
+	gin.SetMode(gin.ReleaseMode)
+
+	if os.Getenv("DEBUG") == "true" {
+		gin.SetMode(gin.DebugMode)
+	}
+
 	err := godotenv.Load(os.Getenv("GOPATH") + "src/bitbucket.org/cliqers/shoppermate-api/.env")
 
 	if err != nil {
@@ -34,10 +40,14 @@ func main() {
 	routerForSSL.Use(gin.Recovery())
 
 	if os.Getenv("ENABLE_HTTPS") == "true" {
-		go application.Bootstrap(application.InitializeObjectAndSetRoutes(routerForSSL, DB)).RunTLS(":8081", os.Getenv("FULLCHAIN_KEY"), os.Getenv("PRIVATE_KEY"))
+		routerForSSL = application.InitializeObjectAndSetRoutesV1(routerForSSL, DB)
+		routerForSSL = application.InitializeObjectAndSetRoutesV1_1(routerForSSL, DB)
+		go routerForSSL.RunTLS(":8081", os.Getenv("FULLCHAIN_KEY"), os.Getenv("PRIVATE_KEY"))
 	}
 
-	application.Bootstrap(application.InitializeObjectAndSetRoutes(router, DB)).Run(":8080")
+	router = application.InitializeObjectAndSetRoutesV1(router, DB)
+	router = application.InitializeObjectAndSetRoutesV1_1(router, DB)
+	router.Run(":8080")
 }
 
 type defaultValidator struct {

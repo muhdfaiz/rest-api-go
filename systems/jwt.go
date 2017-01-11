@@ -1,7 +1,6 @@
 package systems
 
 import (
-	"fmt"
 	"os"
 	"time"
 
@@ -66,10 +65,9 @@ func (j *Jwt) GenerateToken(userGUID string, phoneNo string, deviceUUID string, 
 
 	tokenData := &JwtToken{}
 	tokenData.Token = tokenString
-	fmt.Println("current time")
-	fmt.Println(time.Now().UTC().Format(time.RFC3339))
-	tokenExpiredDate := time.Unix(expired, 0).UTC().Format(time.RFC3339)
 
+	tokenExpiredDate := time.Unix(expired, 0).UTC().Format(time.RFC3339)
 	tokenData.Expired = tokenExpiredDate
+
 	return tokenData, nil
 }

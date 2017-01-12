@@ -15,16 +15,16 @@ import (
 )
 
 func main() {
-	gin.SetMode(gin.ReleaseMode)
-
-	if os.Getenv("DEBUG") == "true" {
-		gin.SetMode(gin.DebugMode)
-	}
-
 	err := godotenv.Load(os.Getenv("GOPATH") + "src/bitbucket.org/cliqers/shoppermate-api/.env")
 
 	if err != nil {
 		log.Fatal("Error loading .env file")
+	}
+
+	gin.SetMode(gin.DebugMode)
+
+	if os.Getenv("DEBUG") == "true" {
+		gin.SetMode(gin.DebugMode)
 	}
 
 	binding.Validator = new(defaultValidator)
@@ -33,11 +33,8 @@ func main() {
 	DB := Database.Connect("production")
 
 	// Initialize Router
-	router := gin.New()
-	router.Use(gin.Recovery())
-
-	routerForSSL := gin.New()
-	routerForSSL.Use(gin.Recovery())
+	router := gin.Default()
+	routerForSSL := gin.Default()
 
 	if os.Getenv("ENABLE_HTTPS") == "true" {
 		routerForSSL = application.InitializeObjectAndSetRoutesV1(routerForSSL, DB)

@@ -6,11 +6,13 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
+// DealRepository will handle all CRUD function for task related to Deal resource.
 type DealRepository struct {
 	DB                    *gorm.DB
 	GrocerLocationService GrocerLocationServiceInterface
 }
 
+// SumCashbackAmount function used to sum total amount of cashback from multiple deal GUID.
 func (dr *DealRepository) SumCashbackAmount(dealGUIDs []string) float64 {
 	type Ads struct {
 		TotalCashbackAmount float64 `json:"total_cashback_amount"`
@@ -23,27 +25,7 @@ func (dr *DealRepository) SumCashbackAmount(dealGUIDs []string) float64 {
 	return deal.TotalCashbackAmount
 }
 
-// GetDealsByCategoryAndValidStartEndDate used to retrieve deals by category and between start date & end date
-func (dr *DealRepository) GetDealsByCategoryAndValidStartEndDate(todayDateInGMT8 string, shoppingListItem *ShoppingListItem) []*Deal {
-	deals := []*Deal{}
-
-	dr.DB.Model(&Deal{}).Preload("Category", func(db *gorm.DB) *gorm.DB {
-		return db.Where(&ItemCategory{Name: shoppingListItem.Category})
-	}).Where("start_date <= ? AND end_date > ? AND status = ?", todayDateInGMT8, todayDateInGMT8, "publish").Find(&deals)
-
-	return deals
-}
-
-// GetDealsByValidStartEndDate used to retrieve deals that still valid between start date & end date
-func (dr *DealRepository) GetDealsByValidStartEndDate(todayDateInGMT8 string) []*Deal {
-	deals := []*Deal{}
-
-	dr.DB.Model(&Deal{}).Where("start_date <= ? AND end_date > ? AND status = ?", todayDateInGMT8, todayDateInGMT8, "publish").Find(&deals)
-
-	return deals
-}
-
-// GetDealByGUID used to retrieve deal by GUID
+// GetDealByGUID used to retrieve deal by GUID from database.
 func (dr *DealRepository) GetDealByGUID(dealGUID string) *Deal {
 	deal := &Deal{}
 
@@ -52,17 +34,18 @@ func (dr *DealRepository) GetDealByGUID(dealGUID string) *Deal {
 	return deal
 }
 
-// GetUniqueDealCategories used to retrieve deal by GUID
-func (dr *DealRepository) GetUniqueDealCategories() *Deal {
+// GetDealByGUIDAndStartEndDate used to retrieve deal by GUID and the deal start date and end date within the current date.
+func (dr *DealRepository) GetDealByGUIDAndStartEndDateAndPublishStatus(dealGUID, todayDateInGMT8 string) *Deal {
 	deal := &Deal{}
 
-	dr.DB.Model(&Deal{}).Group("category").Find(&deal)
+	dr.DB.Model(&Deal{}).Where("guid = ? AND start_date <= ? AND end_date > ? AND status = ?", dealGUID, todayDateInGMT8, todayDateInGMT8, "publish").
+		Find(&deal)
 
 	return deal
 }
 
 // GetDealByIDWithRelations used to retrieve deal by ID including the relations like grocers, grocer locations and item
-// Note: Need to use `Ads` model due to GORM ORM set the column name based on struct name on pivot table
+// Note: Need to use `Ads` model because GORM ORM set the column name based on struct name on pivot table
 // For example if the model name is `Deal` then GORM ORM will use deal_id to match inside pivot table `ads_grocer`
 // Right now, column name inside pivot table `ads_grocer` is `ads_id`. So must use `Ads` model.
 func (dr *DealRepository) GetDealByIDWithRelations(dealID int, relations string) *Ads {
@@ -92,12 +75,91 @@ func (dr *DealRepository) GetDealByIDWithRelations(dealID int, relations string)
 
 }
 
-// GetAllDealsWithinStartDateEndDateAndQuota used to retrieve deal within start date, end date and the
+// GetDealByGUIDAndUserGUIDWithinDateRangeAndValidQuotaAndLimitPerUserAndPublished function used to retrieve deal by GUID with conditions below.
+// Deal is valid if the deal start date and end date within current date.
+// Deal is valid if the deal status is published.
+// Deal is valid if the deal quota still not reach the limit.
+// Deal is valid if the user still not reach deal limit per user.
+func (dr *DealRepository) GetDealByGUIDAndUserGUIDWithinDateRangeAndValidQuotaAndLimitPerUserAndPublished(userGUID, dealGUID, currentDateInGMT8 string) *Deal {
+	deal := &Deal{}
+
+	sqlQueryStatement := `SELECT deals.*,
+       count(deal_cashbacks.deal_guid) AS total_deal_cashback,
+	   (SELECT count(*) FROM deal_cashbacks WHERE deal_cashbacks.deal_guid = deals.ads_guid AND user_guid = ?) AS total_user_deal_cashback
+	FROM
+		(SELECT ads.id AS ads_id,
+				ads.guid AS ads_guid,
+				ads.advertiser_id,
+				ads.campaign_id,
+				ads.item_id,
+				ads.category_id,
+				ads.img,
+				ads.front_name,
+				ads.name,
+				ads.body,
+				ads.start_date,
+				ads.end_date,
+				ads.positive_tag,
+				ads.negative_tag,
+				ads.time,
+				ads.refresh_period,
+				ads.perlimit AS ads_perlimit,
+				ads.cashback_amount,
+				ads.quota AS ads_quota,
+				ads.quota,
+				ads.status,
+				ads.grocer_exclusive,
+				ads.terms,
+				ads.created_at as deal_created_time,
+				ads.created_at,
+				ads.updated_at,
+				ads.deleted_at
+		FROM ads
+		WHERE ads.status = "publish" AND ads.guid = ? AND ads.start_date <= ? AND ads.end_date > ?
+		GROUP BY ads.guid
+		ORDER BY ads.created_at DESC) AS deals
+	LEFT JOIN deal_cashbacks ON deal_cashbacks.deal_guid = ads_guid
+	GROUP BY ads_guid
+	HAVING total_deal_cashback < ads_quota AND total_user_deal_cashback < ads_perlimit
+	ORDER BY deal_created_time DESC`
+
+	dr.DB.Raw(sqlQueryStatement, userGUID, dealGUID, currentDateInGMT8, currentDateInGMT8).Scan(&deal)
+
+	return deal
+}
+
+// GetTodayDealsWithPublishStatusByShoppingListItemCategoryName function used to retrieve deal by Shopping List Item Category with conditions below.
+// Deal is valid if the shopping list item category name matched with category.
+// Deal is valid if the deal start date and end date within current date.
+// Deal is valid if the deal status is published.
+func (dr *DealRepository) GetTodayDealsWithPublishStatusByShoppingListItemCategoryName(todayDateInGMT8 string, shoppingListItem *ShoppingListItem) []*Deal {
+	deals := []*Deal{}
+
+	dr.DB.Model(&Deal{}).Preload("Category", func(db *gorm.DB) *gorm.DB {
+		return db.Where(&ItemCategory{Name: shoppingListItem.Category})
+	}).Where("start_date <= ? AND end_date > ? AND status = ?", todayDateInGMT8, todayDateInGMT8, "publish").Find(&deals)
+
+	return deals
+}
+
+// GetTodayDealsWithPublishedStatus
+// GetTodayDealsWithPublishedStatus function used to retrieve deal by Shopping List Item Category with conditions below.
+// Deal is valid if the shopping list item category name matched with category.
+// Deal is valid if the deal start date and end date within current date.
+// Deal is valid if the deal status is published.
+func (dr *DealRepository) GetTodayDealsWithPublishStatus(todayDateInGMT8 string) []*Deal {
+	deals := []*Deal{}
+
+	dr.DB.Model(&Deal{}).Where("start_date <= ? AND end_date > ? AND status = ?", todayDateInGMT8, todayDateInGMT8, "publish").Find(&deals)
+
+	return deals
+}
+
+// GetTodayDealsWithValidQuotaNearUserLocation used to retrieve deal within start date, end date and the
 // deal quota still available including the relations like grocers, grocer locations and item.
 // The deal is valid if today date is within deal start date and end date.
 // The deal is valid when total deal added to list by all user below the deal quota.
-func (dr *DealRepository) GetAllDealsWithinStartDateEndDateAndQuota(currentDateInGMT8, pageNumber,
-	pageLimit, relations string) ([]*Deal, int) {
+func (dr *DealRepository) GetTodayDealsWithValidQuotaAndNearUserLocation(currentDateInGMT8, pageNumber, pageLimit, relations string) ([]*Deal, int) {
 
 	deals := []*Deal{}
 
@@ -147,18 +209,18 @@ func (dr *DealRepository) GetAllDealsWithinStartDateEndDateAndQuota(currentDateI
 	ORDER BY deal_created_time DESC`
 
 	if pageLimit == "" {
-		dr.DB.Raw(sqlQueryStatement, currentDateInGMT8, currentDateInGMT8, os.Getenv("MAX_DEAL_RADIUS_IN_KM")).Scan(&deals)
+		dr.DB.Raw(sqlQueryStatement, currentDateInGMT8, currentDateInGMT8).Scan(&deals)
 
 		return deals, len(deals)
 	}
 
 	totalDeal := []*Deal{}
 
-	dr.DB.Raw(sqlQueryStatement, currentDateInGMT8, currentDateInGMT8, os.Getenv("MAX_DEAL_RADIUS_IN_KM")).Scan(&totalDeal)
+	dr.DB.Raw(sqlQueryStatement, currentDateInGMT8, currentDateInGMT8).Scan(&totalDeal)
 
 	sqlQueryStatement = sqlQueryStatement + " LIMIT ? OFFSET ?"
 
-	dr.DB.Raw(sqlQueryStatement, currentDateInGMT8, currentDateInGMT8, os.Getenv("MAX_DEAL_RADIUS_IN_KM"), pageLimit, offset).Scan(&deals)
+	dr.DB.Raw(sqlQueryStatement, currentDateInGMT8, currentDateInGMT8, pageLimit, offset).Scan(&deals)
 
 	return deals, len(totalDeal)
 }
@@ -896,14 +958,4 @@ func (dr *DealRepository) GetDealBySubCategoryGUIDWithinRangeAndDateRangeAndUser
 		subCategoryGUID, os.Getenv("MAX_DEAL_RADIUS_IN_KM"), pageLimit, offset).Scan(&deals)
 
 	return deals, len(totalDeal)
-}
-
-// GetDealByGUIDAndValidStartEndDate used to retrieve deal by GUID
-func (dr *DealRepository) GetDealByGUIDAndValidStartEndDate(dealGUID, todayDateInGMT8 string) *Deal {
-	deal := &Deal{}
-
-	dr.DB.Model(&Deal{}).Where("guid = ? AND start_date <= ? AND end_date > ?", dealGUID, todayDateInGMT8, todayDateInGMT8).
-		Find(&deal)
-
-	return deal
 }

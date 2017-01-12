@@ -14,6 +14,7 @@ type DealTransformerInterface interface {
 // DealServiceInterface is a contract the defines the method needed for Deal Service.
 type DealServiceInterface interface {
 	CheckDealExistOrNotByGUID(dealGUID string) (*Deal, *systems.ErrorData)
+	CheckDealExpiredOrNot(dealGUID, currentDateInGMT8 string) bool
 	GetDealsBasedOnUserShoppingListItem(userGUID, shoppingListGUID string, shopppingListItems *ShoppingListItem, latitude,
 		longitude string) []*Deal
 	GetDealsBasedOnSampleShoppingListItem(defaultShoppingListItem *DefaultShoppingListItem, latitude,
@@ -44,10 +45,12 @@ type DealServiceInterface interface {
 // DealRepositoryInterface is a contract that defines the method needed for Deal Repository.
 type DealRepositoryInterface interface {
 	SumCashbackAmount(dealGUIDs []string) float64
-	GetDealsByCategoryAndValidStartEndDate(todayDateInGMT8 string, shoppingListItem *ShoppingListItem) []*Deal
-	GetDealsByValidStartEndDate(todayDateInGMT8 string) []*Deal
 	GetDealByGUID(dealGUID string) *Deal
+	GetDealByGUIDAndStartEndDateAndPublishStatus(dealGUID, todayDateInGMT8 string) *Deal
 	GetDealByIDWithRelations(dealID int, relations string) *Ads
+	GetDealByGUIDAndUserGUIDWithinDateRangeAndValidQuotaAndLimitPerUserAndPublished(userGUID, dealGUID, currentDateInGMT8 string) *Deal
+	GetTodayDealsWithPublishStatusByShoppingListItemCategoryName(todayDateInGMT8 string, shoppingListItem *ShoppingListItem) []*Deal
+	GetTodayDealsWithPublishStatus(todayDateInGMT8 string) []*Deal
 	GetDealsWithinRangeAndDateRangeAndQuota(latitude, longitude float64, currentDateInGMT8,
 		pageNumber, pageLimit, relations string) ([]*Deal, int)
 	GetDealsWithinRangeAndDateRangeAndUserLimitAndQuotaAndName(userGUID, name string, latitude, longitude float64,
@@ -66,5 +69,4 @@ type DealRepositoryInterface interface {
 		latitude, longitude float64, currentDateInGMT8 string) int
 	GetDealBySubCategoryGUIDWithinRangeAndDateRangeAndUserLimitAndQuota(userGUID, subCategoryGUID string, latitude, longitude float64,
 		currentDateInGMT8, pageNumber, pageLimit, relations string) ([]*Deal, int)
-	GetDealByGUIDAndValidStartEndDate(dealGUID, todayDateInGMT8 string) *Deal
 }

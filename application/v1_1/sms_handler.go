@@ -120,8 +120,7 @@ func (sh *SmsHandler) Verify(context *gin.Context) {
 
 	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
 
-	// If Device User GUID empty, update device with User GUID
-	if device.UserGUID == nil && user.GUID != "" {
+	if user.GUID != "" {
 		_, error := sh.DeviceService.UpdateDevice(dbTransaction, smsData.DeviceUUID, UpdateDevice{UserGUID: user.GUID})
 
 		if error != nil {

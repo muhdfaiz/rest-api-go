@@ -21,8 +21,8 @@ func (dcs *DealCashbackService) CheckDealAlreadyAddedToShoppingList(userGUID, sh
 	dealCashback := dcs.DealCashbackRepository.GetByUserGUIDAndShoppingListGUIDAndDealGUID(userGUID, shoppingListGUID, dealGUID)
 
 	if dealCashback.GUID != "" {
-		return Error.GenericError("409", systems.UserAlreadyAddDealIntoTheShoppingList,
-			"Failed to added deal into the shopping list.", "message", "User already add the deal into the shopping list.")
+		return Error.GenericError("409", systems.UserAlreadyAddDealIntoShoppingList,
+			systems.TitleUserAlreadyAddDealIntoShoppingList, "message", systems.ErrorUserAlreadyAddDealIntoShoppingList)
 	}
 
 	return nil

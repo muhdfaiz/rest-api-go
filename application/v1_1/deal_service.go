@@ -34,6 +34,16 @@ func (ds *DealService) CheckDealExistOrNotByGUID(dealGUID string) (*Deal, *syste
 	return deal, nil
 }
 
+func (ds *DealService) CheckDealExpiredOrNot(dealGUID, currentDateInGMT8 string) bool {
+	deal := ds.DealRepository.GetDealByGUIDAndStartEndDateAndPublishStatus(dealGUID, currentDateInGMT8)
+
+	if deal.GUID == "" {
+		return true
+	}
+
+	return false
+}
+
 // GetDealsBasedOnUserShoppingListItem function used to retrieve deals for each of user shopping list items.
 // Maximum 3 deals for each of shopping list items.
 // The deal is valid if item category must be same with shopping list item category.

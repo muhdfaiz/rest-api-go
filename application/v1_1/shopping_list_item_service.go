@@ -16,7 +16,6 @@ type ShoppingListItemService struct {
 	ItemCategoryService        ItemCategoryServiceInterface
 	ItemSubCategoryService     ItemSubCategoryServiceInterface
 	DealService                DealServiceInterface
-	DealRepository             DealRepositoryInterface
 	GenericService             GenericServiceInterface
 }
 
@@ -416,14 +415,18 @@ func (slis *ShoppingListItemService) GetAndSetDealForShoppingListItems(dbTransac
 		if userShoppingListItem.AddedFromDeal == 1 {
 			currentDateInGMT8 := time.Now().UTC().Add(time.Hour * 8).Format("2006-01-02")
 
-			deal := slis.DealRepository.GetDealByGUIDAndValidStartEndDate(*userShoppingListItem.DealGUID, currentDateInGMT8)
+			dealExpired := slis.DealService.CheckDealExpiredOrNot(*userShoppingListItem.DealGUID, currentDateInGMT8)
 
-			if deal.GUID == "" {
+			if dealExpired == true {
 				error := slis.ShoppingListItemRepository.SetDealExpired(dbTransaction, userGUID, shoppingListGUID, *userShoppingListItem.DealGUID)
 
 				if error != nil {
 					return nil, nil, error
 				}
+
+				expired := 1
+
+				userShoppingListItems[key].DealExpired = &expired
 			}
 		}
 	}

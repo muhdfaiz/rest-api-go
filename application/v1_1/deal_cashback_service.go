@@ -1,6 +1,7 @@
 package v1_1
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/jinzhu/gorm"
@@ -8,6 +9,7 @@ import (
 	"bitbucket.org/cliqers/shoppermate-api/systems"
 )
 
+// DealCashbackService will handle all application logic related to Deal Cashback resources.
 type DealCashbackService struct {
 	ShoppingListItemService    ShoppingListItemServiceInterface
 	ShoppingListItemRepository ShoppingListItemRepositoryInterface
@@ -21,8 +23,8 @@ func (dcs *DealCashbackService) CheckDealAlreadyAddedToShoppingList(userGUID, sh
 	dealCashback := dcs.DealCashbackRepository.GetByUserGUIDAndShoppingListGUIDAndDealGUID(userGUID, shoppingListGUID, dealGUID)
 
 	if dealCashback.GUID != "" {
-		return Error.GenericError("409", systems.UserAlreadyAddDealIntoTheShoppingList,
-			"Failed to added deal into the shopping list.", "message", "User already add the deal into the shopping list.")
+		return Error.GenericError("409", systems.UserAlreadyAddDealIntoShoppingList,
+			systems.TitleUserAlreadyAddDealIntoShoppingList, "message", systems.ErrorUserAlreadyAddDealIntoShoppingList)
 	}
 
 	return nil
@@ -30,6 +32,15 @@ func (dcs *DealCashbackService) CheckDealAlreadyAddedToShoppingList(userGUID, sh
 
 // CreateDealCashbackAndShoppingListItem function used to create deal cashback and store new shopping list item based on deal item
 func (dcs *DealCashbackService) CreateDealCashbackAndShoppingListItem(dbTransaction *gorm.DB, userGUID string, dealCashbackData CreateDealCashback) *systems.ErrorData {
+	currentDateInGMT8 := time.Now().UTC().Add(time.Hour * 8).Format("2006-01-02")
+
+	deal := dcs.DealRepository.GetDealByGUIDAndUserGUIDWithinDateRangeAndValidQuotaAndLimitPerUserAndPublished(userGUID, dealCashbackData.DealGUID, currentDateInGMT8)
+
+	if deal.GUID == "" {
+		return Error.GenericError("422", systems.DealAlreadyExpiredOrNotValid,
+			systems.TitleDealAlreadyExpiredOrNotValid, "message", systems.ErrorDealAlreadyExpiredOrNotValid)
+	}
+
 	error := dcs.CheckDealAlreadyAddedToShoppingList(userGUID, dealCashbackData.ShoppingListGUID, dealCashbackData.DealGUID)
 
 	if error != nil {
@@ -41,8 +52,6 @@ func (dcs *DealCashbackService) CreateDealCashbackAndShoppingListItem(dbTransact
 	if error != nil {
 		return error
 	}
-
-	deal := dcs.DealRepository.GetDealByGUID(dealCashbackData.DealGUID)
 
 	shoppingListItemData := CreateShoppingListItem{
 		UserGUID:         userGUID,
@@ -98,14 +107,17 @@ func (dcs *DealCashbackService) GetUserDealCashbacksByShoppingList(dbTransaction
 
 	userDealCashbacks, totalUserDealCashbacks := dcs.DealCashbackRepository.GetByUserGUIDShoppingListGUIDAndTransactionStatus(userGUID, shoppingListGUID,
 		transactionStatus, pageNumber, pageLimit, "deals")
+	fmt.Println(transactionStatus)
+	if transactionStatus == "empty" {
+		for _, userDealCashback := range userDealCashbacks {
 
-	for _, userDealCashback := range userDealCashbacks {
-		error := dcs.RemoveDealCashbackIfDealExpiredMoreThan7Days(dbTransaction, userGUID, shoppingListGUID,
-			userDealCashback.Deals.GUID, userDealCashback.Deals.EndDate)
+			error := dcs.RemoveDealCashbackIfDealExpiredMoreThan7Days(dbTransaction, userGUID, shoppingListGUID,
+				userDealCashback.Deals.GUID, userDealCashback.Deals.EndDate)
 
-		if error != nil {
-			dbTransaction.Rollback()
-			return nil, 0, error
+			if error != nil {
+				dbTransaction.Rollback()
+				return nil, 0, error
+			}
 		}
 	}
 

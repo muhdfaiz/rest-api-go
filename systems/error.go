@@ -44,6 +44,7 @@ const (
 	UserAlreadyAddDealIntoShoppingList = "1030"
 	ReachLimitSmsSentForToday          = "1031"
 	DealAlreadyExpiredOrNotValid       = "1032"
+	GrocerNotPublish                   = "1033"
 
 	TitleValidationError                    = "Validation failed."
 	TitleInternalServerError                = "Internal server error."
@@ -67,6 +68,7 @@ const (
 	TitleReachLimitSmsSentForToday          = "Phone number %s have reached limit SMS sent for today"
 	TitleDealAlreadyExpiredOrNotValid       = "Deal already expired or not valid."
 	TitleUserAlreadyAddDealIntoShoppingList = "Failed to added deal into the shopping list."
+	TitleGrocerNotPublish                   = "Grocer GUID %s not available."
 
 	ErrorValidationRequired  = "The %s parameter is required."
 	ErrorValidationUUID5     = "The %s parameter is not valid uuid v5."
@@ -103,6 +105,7 @@ const (
 	ErrorReachLimitSmsSentForToday          = "You are allowed to sent SMS 3 times per day. Please try again tomorrow."
 	ErrorDealAlreadyExpiredOrNotValid       = "Please try add another deal."
 	ErrorUserAlreadyAddDealIntoShoppingList = "User already add the deal into the shopping list."
+	ErrorGrocerNotPublish                   = "You are not allowed to view grocer with draft status."
 )
 
 type ErrorMessage struct{}

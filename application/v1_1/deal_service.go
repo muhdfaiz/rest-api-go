@@ -446,6 +446,12 @@ func (ds *DealService) GetAvailableDealsForGrocerByCategory(request *http.Reques
 		return nil, error
 	}
 
+	_, error = ds.GrocerService.CheckGrocerPublishOrNotByGUID(grocerGUID)
+
+	if error != nil {
+		return nil, error
+	}
+
 	itemCategory := ds.ItemCategoryRepository.GetByGUID(categoryGUID)
 
 	if itemCategory.GUID == "" {

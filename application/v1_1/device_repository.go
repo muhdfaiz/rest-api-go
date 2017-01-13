@@ -79,33 +79,27 @@ func (dr *DeviceRepository) Delete(dbTransaction *gorm.DB, attribute string, val
 
 // GetByUUID function used to retrieve device by device uuid
 func (dr *DeviceRepository) GetByUUID(uuid string) *Device {
-	result := dr.DB.Where(&Device{UUID: uuid}).First(&Device{})
+	device := &Device{}
 
-	if result.RowsAffected == 0 {
-		return &Device{}
-	}
+	dr.DB.Where(&Device{UUID: uuid}).First(device)
 
-	return result.Value.(*Device)
+	return device
 }
 
 // GetByUUIDAndUserGUID function used to retrieve device by device uuid and user guid
 func (dr *DeviceRepository) GetByUUIDAndUserGUID(uuid string, userGUID string) *Device {
-	result := dr.DB.Where(&Device{UUID: uuid, UserGUID: &userGUID}).First(&Device{})
+	device := &Device{}
 
-	if result.RowsAffected == 0 {
-		return &Device{}
-	}
+	dr.DB.Where(&Device{UUID: uuid, UserGUID: &userGUID}).First(device)
 
-	return result.Value.(*Device)
+	return device
 }
 
 // GetByUUIDUnscoped function used to retrieve device by device uuid and user guid
 func (dr *DeviceRepository) GetByUUIDUnscoped(uuid string) *Device {
-	result := dr.DB.Unscoped().Where(&Device{UUID: uuid}).First(&Device{})
+	device := &Device{}
 
-	if result.RowsAffected == 0 {
-		return &Device{}
-	}
+	dr.DB.Unscoped().Where(&Device{UUID: uuid}).First(device)
 
-	return result.Value.(*Device)
+	return device
 }

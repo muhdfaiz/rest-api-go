@@ -5,12 +5,27 @@ import (
 	"strings"
 	"time"
 
+	"fmt"
+
 	"bitbucket.org/cliqers/shoppermate-api/systems"
 )
 
+// GrocerService will handle all application logic related to Grocer resource.
 type GrocerService struct {
 	GrocerRepository GrocerRepositoryInterface
 	DealRepository   DealRepositoryInterface
+}
+
+// CheckGrocerPublishOrNotByGUID function used to check grocer publish or not by Grocer GUID.
+func (gs *GrocerService) CheckGrocerPublishOrNotByGUID(grocerGUID string) (*Grocer, *systems.ErrorData) {
+	grocer := gs.GrocerRepository.GetByGUIDAndStatus(grocerGUID, "publish", "")
+
+	if grocer.GUID == "" {
+		return nil, Error.GenericError("403", systems.GrocerNotPublish, fmt.Sprintf(systems.TitleGrocerNotPublish, grocerGUID),
+			"message", systems.ErrorGrocerNotPublish)
+	}
+
+	return grocer, nil
 }
 
 // CheckGrocerExistOrNotByGUID function used to check grocer exist or not by checking

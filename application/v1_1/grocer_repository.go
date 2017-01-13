@@ -32,7 +32,7 @@ func (gr *GrocerRepository) GetAll(pageNumber string, pageLimit string, relation
 func (gr *GrocerRepository) GetAllGrocersThoseOnlyHaveDeal() []*Grocer {
 	grocers := []*Grocer{}
 
-	gr.DB.Model(&Grocer{}).Joins("INNER JOIN ads_grocer ON ads_grocer.grocer_id = grocer.id").Group("grocer.id").Find(&grocers)
+	gr.DB.Model(&Grocer{}).Joins("INNER JOIN ads_grocer ON ads_grocer.grocer_id = grocer.id").Where(&Grocer{Status: "publish"}).Group("grocer.id").Find(&grocers)
 
 	return grocers
 }
@@ -51,6 +51,15 @@ func (gr *GrocerRepository) GetByGUID(grocerGUID, relations string) *Grocer {
 	grocer := &Grocer{}
 
 	gr.DB.Model(&Grocer{}).Where(&Grocer{GUID: grocerGUID}).First(&grocer)
+
+	return grocer
+}
+
+// GetByGUIDAndStatus function used to retrieve grocer by GUID and status in the database
+func (gr *GrocerRepository) GetByGUIDAndStatus(grocerGUID, status, relations string) *Grocer {
+	grocer := &Grocer{}
+
+	gr.DB.Model(&Grocer{}).Where(&Grocer{GUID: grocerGUID, Status: "publish"}).First(&grocer)
 
 	return grocer
 }

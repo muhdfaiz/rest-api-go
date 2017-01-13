@@ -21,7 +21,7 @@ type Grocer struct {
 	Deals []*Deal `json:"deals,omitempty"`
 
 	// Virtual Column. Not exist in real database table.
-	TotalDeals int `json:"total_deals"`
+	TotalDeals int `json:"total_deals,omitempty"`
 }
 
 // TableName function used to override default plural table name used by gorm based on struct name.

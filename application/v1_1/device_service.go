@@ -11,7 +11,7 @@ type DeviceService struct {
 
 // CheckDuplicateDevice function used to check if the device already exist in database.
 func (ds *DeviceService) CheckDuplicateDevice(deviceUUID string) *systems.ErrorData {
-	device := ds.DeviceRepository.GetByUUID(deviceUUID)
+	device := ds.DeviceRepository.GetByUUIDUnscoped(deviceUUID)
 
 	if device.UUID != "" {
 		return Error.DuplicateValueErrors("Device", "uuid", deviceUUID)
@@ -23,7 +23,7 @@ func (ds *DeviceService) CheckDuplicateDevice(deviceUUID string) *systems.ErrorD
 // CheckDeviceExistOrNot function used to check if the device exist or not in database by checking
 // device UUID.
 func (ds *DeviceService) CheckDeviceExistOrNot(deviceUUID string) (*Device, *systems.ErrorData) {
-	device := ds.DeviceRepository.GetByUUID(deviceUUID)
+	device := ds.DeviceRepository.GetByUUIDUnscoped(deviceUUID)
 
 	if device.UUID == "" {
 		return nil, Error.ResourceNotFoundError("Device", "uuid", deviceUUID)

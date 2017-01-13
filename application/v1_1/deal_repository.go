@@ -58,7 +58,7 @@ func (dr *DealRepository) GetDealByIDWithRelations(dealID int, relations string)
 	}
 
 	DB.Where(&Ads{ID: dealID}).Preload("Grocers", func(db *gorm.DB) *gorm.DB {
-		return db.Where("ads_id = ?", dealID).Group("grocer_id")
+		return db.Where("ads_grocer.ads_id = ? AND grocer.status = ?", dealID, "publish").Group("ads_grocer.grocer_id")
 	}).Find(&deal)
 
 	for key, dealGrocer := range deal.Grocers {

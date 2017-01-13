@@ -13,6 +13,7 @@ type GrocerTransformerInterface interface {
 
 // GrocerServiceInterface is a contract that defines the method needed for Grocer Service.
 type GrocerServiceInterface interface {
+	CheckGrocerPublishOrNotByGUID(grocerGUID string) (*Grocer, *systems.ErrorData)
 	CheckGrocerExistOrNotByGUID(grocerGUID string) (*Grocer, *systems.ErrorData)
 	GetGrocerByID(grocerID int, relations string) *Grocer
 	GetAllGrocers(pageNumber, pageLimit, relations string) ([]*Grocer, int)
@@ -25,4 +26,5 @@ type GrocerRepositoryInterface interface {
 	GetAllGrocersThoseOnlyHaveDeal() []*Grocer
 	GetByID(id int, relations string) *Grocer
 	GetByGUID(grocerGUID, relations string) *Grocer
+	GetByGUIDAndStatus(grocerGUID, status, relations string) *Grocer
 }

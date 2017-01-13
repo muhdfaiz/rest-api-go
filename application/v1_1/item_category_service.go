@@ -54,6 +54,12 @@ func (ics *ItemCategoryService) GetGrocerCategoriesThoseHaveDealsIncludingDeals(
 		return nil, error
 	}
 
+	_, error = ics.GrocerService.CheckGrocerPublishOrNotByGUID(grocerGUID)
+
+	if error != nil {
+		return nil, error
+	}
+
 	currentDateInGMT8 := time.Now().UTC().Add(time.Hour * 8).Format("2006-01-02")
 
 	latitudeInFLoat64, _ := strconv.ParseFloat(strings.TrimSpace(latitude), 64)

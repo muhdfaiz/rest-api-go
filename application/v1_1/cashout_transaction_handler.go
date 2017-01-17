@@ -51,5 +51,9 @@ func (cth CashoutTransactionHandler) Create(context *gin.Context) {
 
 	dbTransaction.Commit()
 
+	relations := "transactiontypes,transactionstatuses,cashouttransactions,users"
+
+	transaction = cth.TransactionService.ViewTransactionDetails(transaction.GUID, relations)
+
 	context.JSON(http.StatusOK, gin.H{"data": transaction})
 }

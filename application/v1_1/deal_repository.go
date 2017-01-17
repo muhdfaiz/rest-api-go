@@ -83,12 +83,13 @@ func (dr *DealRepository) GetDealByIDWithRelations(dealID int, relations string)
 func (dr *DealRepository) GetDealByGUIDAndUserGUIDWithinDateRangeAndValidQuotaAndLimitPerUserAndPublished(userGUID, dealGUID, currentDateInGMT8 string) *Deal {
 	deal := &Deal{}
 
-	sqlQueryStatement := `SELECT deals.*,
-       count(deal_cashbacks.deal_guid) AS total_deal_cashback,
+	sqlQueryStatement := `SELECT deals.*, count(deal_cashbacks.deal_guid) AS total_deal_cashback,
 	   (SELECT count(*) FROM deal_cashbacks WHERE deal_cashbacks.deal_guid = deals.ads_guid AND user_guid = ?) AS total_user_deal_cashback
 	FROM
 		(SELECT ads.id AS ads_id,
 				ads.guid AS ads_guid,
+				ads.id,
+				ads.guid,
 				ads.advertiser_id,
 				ads.campaign_id,
 				ads.item_id,
@@ -123,7 +124,7 @@ func (dr *DealRepository) GetDealByGUIDAndUserGUIDWithinDateRangeAndValidQuotaAn
 	HAVING total_deal_cashback < ads_quota AND total_user_deal_cashback < ads_perlimit
 	ORDER BY deal_created_time DESC`
 
-	dr.DB.Raw(sqlQueryStatement, userGUID, dealGUID, currentDateInGMT8, currentDateInGMT8).Scan(&deal)
+	dr.DB.Raw(sqlQueryStatement, userGUID, dealGUID, currentDateInGMT8, currentDateInGMT8).Scan(deal)
 
 	return deal
 }
@@ -142,7 +143,6 @@ func (dr *DealRepository) GetTodayDealsWithPublishStatusByShoppingListItemCatego
 	return deals
 }
 
-// GetTodayDealsWithPublishedStatus
 // GetTodayDealsWithPublishedStatus function used to retrieve deal by Shopping List Item Category with conditions below.
 // Deal is valid if the shopping list item category name matched with category.
 // Deal is valid if the deal start date and end date within current date.
@@ -155,7 +155,7 @@ func (dr *DealRepository) GetTodayDealsWithPublishStatus(todayDateInGMT8 string)
 	return deals
 }
 
-// GetTodayDealsWithValidQuotaNearUserLocation used to retrieve deal within start date, end date and the
+// GetTodayDealsWithValidQuotaAndNearUserLocation used to retrieve deal within start date, end date and the
 // deal quota still available including the relations like grocers, grocer locations and item.
 // The deal is valid if today date is within deal start date and end date.
 // The deal is valid when total deal added to list by all user below the deal quota.

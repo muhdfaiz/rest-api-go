@@ -34,8 +34,6 @@ func (sls *ShoppingListService) CreateUserShoppingList(dbTransaction *gorm.DB, u
 		return nil, error
 	}
 
-	createdShoppingList = sls.ViewShoppingListByGUID(createdShoppingList.GUID, "")
-
 	return createdShoppingList, nil
 }
 

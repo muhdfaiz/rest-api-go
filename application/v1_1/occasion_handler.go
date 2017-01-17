@@ -22,13 +22,13 @@ func (oh *OccasionHandler) Index(context *gin.Context) {
 	lastSyncDate := context.Query("last_sync_date")
 
 	if lastSyncDate != "" {
-		occasions := oh.OccasionService.GetLatestOccasionAfterLastSyncDate(lastSyncDate)
+		occasions := oh.OccasionService.GetLatestActiveOccasionAfterLastSyncDate(lastSyncDate)
 
 		context.JSON(http.StatusOK, occasions)
 		return
 	}
 
-	occasions := oh.OccasionService.GetAllOccasions()
+	occasions := oh.OccasionService.GetAllActiveOccasions()
 
 	context.JSON(http.StatusOK, occasions)
 }

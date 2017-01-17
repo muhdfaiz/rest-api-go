@@ -10,13 +10,13 @@ type OccasionTransformerInterface interface {
 // OccasionServiceInterface is a contract that defines the methods needed for Occasion Service.
 type OccasionServiceInterface interface {
 	CheckOccassionExistOrNot(occasionGUID string) (*Occasion, *systems.ErrorData)
-	GetLatestOccasionAfterLastSyncDate(lastSyncDate string) *OccasionResponse
-	GetAllOccasions() *OccasionResponse
+	GetLatestActiveOccasionAfterLastSyncDate(lastSyncDate string) *OccasionResponse
+	GetAllActiveOccasions() *OccasionResponse
 }
 
 // OccasionRepositoryInterface is a contract that defines the method needed for Occasion Repository.
 type OccasionRepositoryInterface interface {
-	GetAll() ([]*Occasion, int)
-	GetLatestUpdate(lastSyncDate string) ([]*Occasion, int)
+	GetAllWithActiveStatus() ([]*Occasion, int)
+	GetLatestUpdateWithActiveStatus(lastSyncDate string) ([]*Occasion, int)
 	GetByGUID(guid string) *Occasion
 }

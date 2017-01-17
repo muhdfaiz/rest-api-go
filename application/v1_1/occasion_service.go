@@ -18,19 +18,19 @@ func (os *OccasionService) CheckOccassionExistOrNot(occasionGUID string) (*Occas
 	return occasion, nil
 }
 
-// GetLatestOccasionAfterLastSyncDate function used to retrieve latest occasion after
+// GetLatestActiveOccasionAfterLastSyncDate function used to retrieve latest active occasion after
 // last sync date.
-func (os *OccasionService) GetLatestOccasionAfterLastSyncDate(lastSyncDate string) *OccasionResponse {
-	occasions, totalOccasion := os.OccasionRepository.GetLatestUpdate(lastSyncDate)
+func (os *OccasionService) GetLatestActiveOccasionAfterLastSyncDate(lastSyncDate string) *OccasionResponse {
+	occasions, totalOccasion := os.OccasionRepository.GetLatestUpdateWithActiveStatus(lastSyncDate)
 
 	occasionsData := os.OccasionTransformer.TransformCollection(occasions, totalOccasion)
 
 	return occasionsData
 }
 
-// GetAllOccasions function used to retrieve all occasions available from database.
-func (os *OccasionService) GetAllOccasions() *OccasionResponse {
-	occasions, totalOccasion := os.OccasionRepository.GetAll()
+// GetAllActiveOccasions function used to retrieve all active occasions available from database.
+func (os *OccasionService) GetAllActiveOccasions() *OccasionResponse {
+	occasions, totalOccasion := os.OccasionRepository.GetAllWithActiveStatus()
 
 	occasionsData := os.OccasionTransformer.TransformCollection(occasions, totalOccasion)
 

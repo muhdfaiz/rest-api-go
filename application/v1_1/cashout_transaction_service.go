@@ -38,9 +38,5 @@ func (cts *CashoutTransactionService) CreateCashoutTransaction(dbTransaction *go
 	// 	return nil, error
 	// }
 
-	relations := "transactiontypes,transactionstatuses,cashouttransactions,users"
-
-	transaction = cts.TransactionService.ViewTransactionDetails(transaction.GUID, relations)
-
 	return transaction, nil
 }

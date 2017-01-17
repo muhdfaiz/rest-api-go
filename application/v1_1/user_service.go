@@ -415,7 +415,9 @@ func (us *UserService) CalculateAllTimeAmountAndPendingAmount(user *User) *User 
 
 	totalCashoutAmount := us.TransactionService.SumTotalAmountOfUserCashoutTransaction(user.GUID)
 
-	user.AllTimeAmount = &totalCashoutAmount
+	allTimeAmount := totalCashoutAmount + user.Wallet
+
+	user.AllTimeAmount = &allTimeAmount
 
 	return user
 }

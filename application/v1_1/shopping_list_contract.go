@@ -8,7 +8,7 @@ import (
 // ShoppingListServiceInterface is a contract that defines the methods needed for Shopping List Service
 type ShoppingListServiceInterface interface {
 	CreateUserShoppingList(dbTransaction *gorm.DB, userGUID string, createData CreateShoppingList) (*ShoppingList, *systems.ErrorData)
-	UpdateUserShoppingList(dbTransaction *gorm.DB, userGUID string, shoppingListGUID string, updateData UpdateShoppingList) (*ShoppingList, *systems.ErrorData)
+	UpdateUserShoppingList(dbTransaction *gorm.DB, userGUID string, shoppingListGUID string, updateData UpdateShoppingList) *systems.ErrorData
 	DeleteUserShoppingListIncludingItemsAndImages(dbTransaction *gorm.DB, userGUID string, shoppingListGUID string) *systems.ErrorData
 	GetUserShoppingLists(userGUID string, relations string) ([]*ShoppingList, *systems.ErrorData)
 	ViewShoppingListByGUID(shoppingListGUID string, relations string) *ShoppingList

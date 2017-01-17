@@ -41,37 +41,35 @@ func (sls *ShoppingListService) CreateUserShoppingList(dbTransaction *gorm.DB, u
 
 // UpdateUserShoppingList function used to update user shopping lists in database.
 func (sls *ShoppingListService) UpdateUserShoppingList(dbTransaction *gorm.DB, userGUID string, shoppingListGUID string,
-	updateData UpdateShoppingList) (*ShoppingList, *systems.ErrorData) {
+	updateData UpdateShoppingList) *systems.ErrorData {
 
 	_, error := sls.CheckUserShoppingListExistOrNot(userGUID, shoppingListGUID)
 
 	if error != nil {
-		return nil, error
+		return error
 	}
 
 	_, error = sls.OccasionService.CheckOccassionExistOrNot(updateData.OccasionGUID)
 
 	if error != nil {
-		return nil, error
+		return error
 	}
 
 	if updateData.Name != "" {
 		error := sls.CheckUserShoppingListDuplicate(userGUID, updateData.Name, updateData.OccasionGUID)
 
 		if error != nil {
-			return nil, error
+			return error
 		}
 	}
 
 	error = sls.ShoppingListRepository.Update(dbTransaction, userGUID, shoppingListGUID, updateData)
 
 	if error != nil {
-		return nil, error
+		return error
 	}
 
-	updatedShoppingList := sls.ViewShoppingListByGUID(shoppingListGUID, "")
-
-	return updatedShoppingList, nil
+	return nil
 }
 
 // DeleteUserShoppingListIncludingItemsAndImages function used to soft delete user shopping list including user shopping list items and

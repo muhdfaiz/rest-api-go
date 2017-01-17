@@ -96,7 +96,7 @@ func (slh *ShoppingListHandler) Update(context *gin.Context) {
 
 	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
 
-	updatedShoppingList, error := slh.ShoppingListService.UpdateUserShoppingList(dbTransaction, userGUID, shoppingListGUID, updateData)
+	error := slh.ShoppingListService.UpdateUserShoppingList(dbTransaction, userGUID, shoppingListGUID, updateData)
 
 	if error != nil {
 		dbTransaction.Rollback()
@@ -106,6 +106,8 @@ func (slh *ShoppingListHandler) Update(context *gin.Context) {
 	}
 
 	dbTransaction.Commit()
+
+	updatedShoppingList := slh.ShoppingListService.ViewShoppingListByGUID(shoppingListGUID, "")
 
 	context.JSON(http.StatusOK, gin.H{"data": updatedShoppingList})
 

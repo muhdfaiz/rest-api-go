@@ -1,6 +1,7 @@
 package v1_1
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -106,34 +107,27 @@ func (sh *SmsHandler) Verify(context *gin.Context) {
 		return
 	}
 
-	// Retrieve user by phone no
-	user := sh.UserRepository.GetByPhoneNo(smsData.PhoneNo, "")
-
-	// If user phone_no empty return error message
-	if user.PhoneNo == "" {
-		context.JSON(http.StatusNotFound, Error.ResourceNotFoundError("User", "phone_no", smsData.PhoneNo))
-		return
-	}
-
-	// Retrieve device by uuid
 	device := sh.DeviceService.ViewDeviceByUUIDIncludingSoftDelete(smsData.DeviceUUID)
+
+	if device.UserGUID == nil {
+		context.JSON(http.StatusNotFound, Error.ResourceNotFoundError("Device", "device_uuid", smsData.DeviceUUID))
+	}
+	fmt.Println("User GUID")
+	fmt.Println(*device.UserGUID)
+	user := sh.UserRepository.GetByGUID(*device.UserGUID, "")
 
 	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
 
-	if user.GUID != "" {
-		_, error := sh.DeviceService.UpdateDevice(dbTransaction, smsData.DeviceUUID, UpdateDevice{UserGUID: user.GUID})
-
-		if error != nil {
-			dbTransaction.Rollback()
-			context.JSON(http.StatusInternalServerError, error)
-			return
-		}
-	}
-
 	debug := context.Query("debug")
 
+	event := "login"
+
+	if user.PhoneNo != smsData.PhoneNo {
+		event = "update"
+	}
+
 	if debug != "1" {
-		error := sh.SmsHistoryService.VerifyVerificationCode(smsData.PhoneNo, strings.ToLower(smsData.VerificationCode), "login")
+		error := sh.SmsHistoryService.VerifyVerificationCode(smsData.PhoneNo, strings.ToLower(smsData.VerificationCode), event)
 
 		if error != nil {
 			dbTransaction.Rollback()

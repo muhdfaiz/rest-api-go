@@ -14,4 +14,5 @@ type CashoutTransactionServiceInterface interface {
 // needed for Cashout Transaction Repository.
 type CashoutTransactionRepositoryInterface interface {
 	Create(dbTransaction *gorm.DB, userGUID, transactionGUID string, cashoutTransactionData *CreateCashoutTransaction) (*CashoutTransaction, *systems.ErrorData)
+	CountByUserGUID(userGUID string) int
 }

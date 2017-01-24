@@ -5,6 +5,7 @@ import (
 
 	"bitbucket.org/cliqers/shoppermate-api/application/v1_1"
 	"bitbucket.org/cliqers/shoppermate-api/middlewares"
+	"bitbucket.org/cliqers/shoppermate-api/services/email"
 	"bitbucket.org/cliqers/shoppermate-api/services/facebook"
 	"bitbucket.org/cliqers/shoppermate-api/services/filesystem"
 	"bitbucket.org/cliqers/shoppermate-api/services/location"
@@ -12,7 +13,7 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-// InitializeObjectAndSetRoutes will initialize object and set all routes across the API
+// InitializeObjectAndSetRoutesV1_1 will initialize object and set all routes across the API version 1.1
 func InitializeObjectAndSetRoutesV1_1(router *gin.Engine, DB *gorm.DB) *gin.Engine {
 	router.Use(func(context *gin.Context) {
 		context.Set("DB", DB)
@@ -46,6 +47,9 @@ func InitializeObjectAndSetRoutesV1_1(router *gin.Engine, DB *gorm.DB) *gin.Engi
 
 	// Facebook Service
 	facebookService := &facebook.FacebookService{}
+
+	// Email Service
+	emailService := &email.EmailService{}
 
 	// Occasion Objects
 	occasionRepository := &v1_1.OccasionRepository{DB: DB}
@@ -155,7 +159,7 @@ func InitializeObjectAndSetRoutesV1_1(router *gin.Engine, DB *gorm.DB) *gin.Engi
 	userRepository := &v1_1.UserRepository{DB: DB}
 	userService := &v1_1.UserService{UserRepository: userRepository, TransactionService: transactionService, DealCashbackService: dealCashbackService,
 		FacebookService: facebookService, SmsService: smsService, DeviceService: deviceService, ReferralCashbackTransactionService: referralCashbackTransactionService,
-		AmazonS3FileSystem: amazonS3FileSystem, SmsHistoryService: smsHistoryService}
+		AmazonS3FileSystem: amazonS3FileSystem, SmsHistoryService: smsHistoryService, EmailService: emailService}
 
 	//Deal Cashback Transaction
 	dealCashbackTransactionRepository := &v1_1.DealCashbackTransactionRepository{DB: DB}
@@ -170,7 +174,7 @@ func InitializeObjectAndSetRoutesV1_1(router *gin.Engine, DB *gorm.DB) *gin.Engi
 	//Cashout Transaction Object
 	cashoutTransactionRepository := &v1_1.CashoutTransactionRepository{DB: DB}
 	cashoutTransactionService := &v1_1.CashoutTransactionService{CashoutTransactionRepository: cashoutTransactionRepository,
-		TransactionService: transactionService, UserRepository: userRepository}
+		TransactionService: transactionService, UserRepository: userRepository, EmailService: emailService}
 
 	// Setting Objects
 	settingRepository := &v1_1.SettingRepository{DB: DB}

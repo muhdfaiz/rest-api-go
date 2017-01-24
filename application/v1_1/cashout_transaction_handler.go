@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"bitbucket.org/cliqers/shoppermate-api/services/email"
+
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 )
@@ -11,6 +13,7 @@ import (
 type CashoutTransactionHandler struct {
 	CashoutTransactionService CashoutTransactionServiceInterface
 	TransactionService        TransactionServiceInterface
+	EmailService              email.EmailServiceInterface
 }
 
 func (cth CashoutTransactionHandler) Create(context *gin.Context) {
@@ -43,13 +46,10 @@ func (cth CashoutTransactionHandler) Create(context *gin.Context) {
 	transaction, error := cth.CashoutTransactionService.CreateCashoutTransaction(dbTransaction, userGUID, createCashoutTransaction)
 
 	if error != nil {
-		dbTransaction.Rollback()
 		errorCode, _ := strconv.Atoi(error.Error.Status)
 		context.JSON(errorCode, error)
 		return
 	}
-
-	dbTransaction.Commit()
 
 	relations := "transactiontypes,transactionstatuses,cashouttransactions,users"
 

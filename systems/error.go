@@ -45,6 +45,7 @@ const (
 	ReachLimitSmsSentForToday          = "1031"
 	DealAlreadyExpiredOrNotValid       = "1032"
 	GrocerNotPublish                   = "1033"
+	ErrorRequestShoppermateEmailAPI    = "1034"
 
 	TitleValidationError                    = "Validation failed."
 	TitleInternalServerError                = "Internal server error."

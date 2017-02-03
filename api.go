@@ -3,15 +3,12 @@ package main
 import (
 	"log"
 	"os"
-	"reflect"
-	"sync"
 
 	"bitbucket.org/cliqers/shoppermate-api/application"
 	"bitbucket.org/cliqers/shoppermate-api/systems"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/joho/godotenv"
-	validator "gopkg.in/go-playground/validator.v8"
 )
 
 func main() {
@@ -27,7 +24,7 @@ func main() {
 		gin.SetMode(gin.DebugMode)
 	}
 
-	binding.Validator = new(defaultValidator)
+	binding.Validator = new(systems.DefaultValidator)
 
 	Database := &systems.Database{}
 	DB := Database.Connect("production")
@@ -45,35 +42,4 @@ func main() {
 	router = application.InitializeObjectAndSetRoutesV1(router, DB)
 	router = application.InitializeObjectAndSetRoutesV1_1(router, DB)
 	router.Run(":8080")
-}
-
-type defaultValidator struct {
-	once     sync.Once
-	validate *validator.Validate
-}
-
-func (v *defaultValidator) ValidateStruct(obj interface{}) error {
-	if kindOfData(obj) == reflect.Struct {
-		v.lazyinit()
-		if err := v.validate.Struct(obj); err != nil {
-			return error(err)
-		}
-	}
-	return nil
-}
-
-func (v *defaultValidator) lazyinit() {
-	v.once.Do(func() {
-		config := &validator.Config{TagName: "binding", FieldNameTag: "json"}
-		v.validate = validator.New(config)
-	})
-}
-
-func kindOfData(data interface{}) reflect.Kind {
-	value := reflect.ValueOf(data)
-	valueType := value.Kind()
-	if valueType == reflect.Ptr {
-		valueType = value.Elem().Kind()
-	}
-	return valueType
 }

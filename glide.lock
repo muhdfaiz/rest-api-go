@@ -1,10 +1,10 @@
-hash: 9266fcf3234fdae3dfac8b70c2d71c81fdd57a2946fdf8e87a9c6d36774807f0
-updated: 2017-01-17T16:09:13.023435806+08:00
+hash: e312c6c031001916e90983faef82ff7d1c7713161ac3eeeb3b5f7ef3ce1d93db
+updated: 2017-01-25T12:48:57.636129858+08:00
 imports:
 - name: github.com/agtorre/gocolorize
   version: f42b554bf7f006936130c9bb4f971afd2d87f671
 - name: github.com/aws/aws-sdk-go
-  version: b6b1636522e0b5267ce4fc90fcdb13d55faf9724
+  version: d19ab4db0d0710880bef4634767f1a9382aee67c
   subpackages:
   - aws
   - aws/awserr
@@ -81,7 +81,7 @@ imports:
 - name: github.com/revel/revel
   version: 8d01a054f6bca9430b3e497fe7b4f20ec8f054ce
 - name: github.com/RichardKnop/machinery
-  version: f1174d9e74e009f580999f9106c3c6bcee780e38
+  version: c3c63751e2fc158adc5257457670496324176645
   subpackages:
   - v1
 - name: github.com/robfig/pathtree
@@ -94,6 +94,10 @@ imports:
   version: f8280fef35a3fd1d4cf13c5a9fa638398eebb6ad
 - name: github.com/streadway/amqp
   version: 63795daa9a446c920826655f26ba31c81c860fd6
+- name: github.com/stretchr/testify
+  version: 69483b4bd14f5845b5a1e55bca19e954e827f1d0
+  subpackages:
+  - assert
 - name: github.com/ventu-io/go-shortid
   version: 6c56cef5189ca1b3d5ef01dc07f4d611dfc0bb33
 - name: golang.org/x/net
@@ -118,4 +122,12 @@ imports:
   - types
 - name: gopkg.in/yaml.v2
   version: a5b47d31c556af34a302ce5d659e6fea44d90de0
-testImports: []
+testImports:
+- name: github.com/davecgh/go-spew
+  version: 5215b55f46b2b919f50a1df0eaa5886afe4e3b3d
+  subpackages:
+  - spew
+- name: github.com/pmezard/go-difflib
+  version: 792786c7400a136282c1664665ae0a8db921c6c2
+  subpackages:
+  - difflib

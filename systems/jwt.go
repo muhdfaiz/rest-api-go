@@ -35,7 +35,7 @@ func (j *Jwt) GenerateToken(userGUID string, phoneNo string, deviceUUID string, 
 	if debugToken != "" {
 		debugTokenInInt, _ := strconv.Atoi(debugToken)
 		minutes := time.Minute * time.Duration(debugTokenInInt)
-		expired = time.Now().Add(minutes).Unix()
+		expired = time.Now().UTC().Add(minutes).Unix()
 	}
 
 	// Create the Claims

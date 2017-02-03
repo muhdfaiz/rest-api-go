@@ -101,7 +101,13 @@ func (us *UserService) CreateUser(dbTransaction *gorm.DB, userData CreateUser, p
 		return nil, error
 	}
 
-	_, error = us.DeviceService.UpdateByDeviceUUID(dbTransaction, userData.DeviceUUID, UpdateDevice{UserGUID: newUser.GUID})
+	device, error := us.DeviceService.UpdateByDeviceUUID(dbTransaction, userData.DeviceUUID, UpdateDevice{UserGUID: newUser.GUID})
+
+	if error != nil {
+		return nil, error
+	}
+
+	error = us.DeviceService.ReactivateDevice(dbTransaction, device.GUID)
 
 	if error != nil {
 		return nil, error

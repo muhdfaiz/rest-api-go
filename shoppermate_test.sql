@@ -17,26 +17,8 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `shoppermate_test1`
+-- Database: `shoppermate_test`
 --
-
-DELIMITER $$
---
--- Procedures
---
-CREATE DEFINER=`root`@`localhost` PROCEDURE `AssignSubcategoryIDInAdsTable` ()  NO SQL
-    DETERMINISTIC
-BEGIN
-    DECLARE totalAds INT DEFAULT 0;
-    DECLARE i INT DEFAULT 0;
-    SELECT COUNT(*) FROM ads INTO totalAds;
-    SET i=0;
-    WHILE i<totalAds DO
-     SET @subcategoryID = (SELECT item.subcategory_id FROM ads LEFT JOIN item ON item.id = ads.item_id LIMIT i, 1);
-	  UPDATE ads SET subcategory_id = (SELECT @subcategoryID)  WHERE ads.id = i+1;
-      SET i = i + 1;
-    END WHILE;
-END$$
 
 DELIMITER ;
 

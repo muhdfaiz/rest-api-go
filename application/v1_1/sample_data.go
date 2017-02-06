@@ -1,15 +1,8 @@
-package data
+package v1_1
 
 import (
-	"bitbucket.org/cliqers/shoppermate-api/application/v1"
-	"bitbucket.org/cliqers/shoppermate-api/application/v1_1"
 	"bitbucket.org/cliqers/shoppermate-api/systems"
 	"github.com/jinzhu/gorm"
-)
-
-var (
-	Helper = &systems.Helpers{}
-	Error  = &systems.Error{}
 )
 
 // SampleData will create all data needed during testing.
@@ -19,11 +12,11 @@ type SampleData struct {
 
 // DeviceWithoutUserGUID function used to create sample device without
 // user GUID.
-func (sd *SampleData) DeviceWithoutUserGUID() (*v1_1.Device, *systems.ErrorData) {
+func (sd *SampleData) DeviceWithoutUserGUID() (*Device, *systems.ErrorData) {
 
 	deviceGUID := Helper.GenerateUUID()
 
-	device := v1_1.Device{
+	device := Device{
 		GUID:       deviceGUID,
 		UUID:       "F4EE037F5340586BE625EE7678797DD0",
 		Os:         "Android",
@@ -38,13 +31,13 @@ func (sd *SampleData) DeviceWithoutUserGUID() (*v1_1.Device, *systems.ErrorData)
 		return nil, Error.InternalServerError(result.Error, systems.DatabaseError)
 	}
 
-	return result.Value.(*v1_1.Device), nil
+	return result.Value.(*Device), nil
 }
 
-func (sd *SampleData) DevicesWithoutUserGUID() ([]*v1_1.Device, *systems.ErrorData) {
-	deviceCollection := make([]*v1_1.Device, 6)
+func (sd *SampleData) DevicesWithoutUserGUID() ([]*Device, *systems.ErrorData) {
+	deviceCollection := make([]*Device, 6)
 
-	device1 := v1_1.Device{
+	device1 := Device{
 		GUID:       Helper.GenerateUUID(),
 		UUID:       "F4EE037F5340586BE625EE7678797DD0",
 		Os:         "Android",
@@ -59,9 +52,9 @@ func (sd *SampleData) DevicesWithoutUserGUID() ([]*v1_1.Device, *systems.ErrorDa
 		return nil, Error.InternalServerError(result1.Error, systems.DatabaseError)
 	}
 
-	deviceCollection[0] = result1.Value.(*v1_1.Device)
+	deviceCollection[0] = result1.Value.(*Device)
 
-	device2 := v1_1.Device{
+	device2 := Device{
 		GUID:       Helper.GenerateUUID(),
 		UUID:       "72529e8b36ef4fa6a58aedfeca821309",
 		Os:         "iOS",
@@ -76,9 +69,9 @@ func (sd *SampleData) DevicesWithoutUserGUID() ([]*v1_1.Device, *systems.ErrorDa
 		return nil, Error.InternalServerError(result2.Error, systems.DatabaseError)
 	}
 
-	deviceCollection[1] = result2.Value.(*v1_1.Device)
+	deviceCollection[1] = result2.Value.(*Device)
 
-	device3 := v1_1.Device{
+	device3 := Device{
 		GUID:       Helper.GenerateUUID(),
 		UUID:       "F50CADC812550C7FC6B3B0A49DBEA480",
 		Os:         "Android",
@@ -93,7 +86,7 @@ func (sd *SampleData) DevicesWithoutUserGUID() ([]*v1_1.Device, *systems.ErrorDa
 		return nil, Error.InternalServerError(result3.Error, systems.DatabaseError)
 	}
 
-	deviceCollection[2] = result3.Value.(*v1_1.Device)
+	deviceCollection[2] = result3.Value.(*Device)
 
 	return deviceCollection, nil
 }
@@ -104,7 +97,7 @@ func (sd *SampleData) DeviceWithUserGUID(userGUID string) interface{} {
 
 	deviceGUID := Helper.GenerateUUID()
 
-	device := v1.Device{
+	device := Device{
 		GUID:       deviceGUID,
 		UserGUID:   &userGUID,
 		UUID:       "F4EE037F5340586BE625EE7678797DD0",
@@ -120,8 +113,8 @@ func (sd *SampleData) DeviceWithUserGUID(userGUID string) interface{} {
 }
 
 // SmsHistory function used to create sample sms history.
-func (sd *SampleData) SmsHistory(event, verificationCode, recipientNo string) (*v1_1.SmsHistory, *systems.ErrorData) {
-	smsHistory := v1_1.SmsHistory{
+func (sd *SampleData) SmsHistory(event, verificationCode, recipientNo string) (*SmsHistory, *systems.ErrorData) {
+	smsHistory := SmsHistory{
 		GUID:             Helper.GenerateUUID(),
 		Provider:         "moceansms",
 		SmsID:            "shoppermate0106234949665476",
@@ -137,16 +130,16 @@ func (sd *SampleData) SmsHistory(event, verificationCode, recipientNo string) (*
 		return nil, Error.InternalServerError(result.Error, systems.DatabaseError)
 	}
 
-	return result.Value.(*v1_1.SmsHistory), nil
+	return result.Value.(*SmsHistory), nil
 }
 
 // Users function used to create sample user register using phone number and
 // facebook.
-func (sd *SampleData) Users() []*v1_1.User {
+func (sd *SampleData) Users() []*User {
 
 	facebookID := "100013413336774"
 
-	user1 := v1_1.User{
+	user1 := User{
 		GUID:         Helper.GenerateUUID(),
 		Name:         "User 1",
 		FacebookID:   &facebookID,
@@ -158,7 +151,7 @@ func (sd *SampleData) Users() []*v1_1.User {
 
 	result1 := sd.DB.Create(&user1)
 
-	user2 := v1_1.User{
+	user2 := User{
 		GUID:         Helper.GenerateUUID(),
 		Name:         "User 2",
 		Email:        "user2@mediacliq.my",
@@ -169,9 +162,9 @@ func (sd *SampleData) Users() []*v1_1.User {
 
 	result2 := sd.DB.Create(&user2)
 
-	data := make([]*v1_1.User, 2)
-	data[0] = result1.Value.(*v1_1.User)
-	data[1] = result2.Value.(*v1_1.User)
+	data := make([]*User, 2)
+	data[0] = result1.Value.(*User)
+	data[1] = result2.Value.(*User)
 
 	return data
 }

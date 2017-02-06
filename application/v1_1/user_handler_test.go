@@ -14,32 +14,27 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
 
-	"bitbucket.org/cliqers/shoppermate-api/application"
-	"bitbucket.org/cliqers/shoppermate-api/application/v1_1"
-	"bitbucket.org/cliqers/shoppermate-api/systems"
-	"bitbucket.org/cliqers/shoppermate-api/test/data"
 	"bitbucket.org/cliqers/shoppermate-api/test/helper"
 )
 
 var (
 	Router     = gin.Default()
-	Helper     = helper.Helper{}
-	Database   = &systems.Database{}
+	TestHelper = helper.Helper{}
 	TestServer *httptest.Server
 	DB         *gorm.DB
 )
 
 func TestMain(m *testing.M) {
-	Helper.Setup()
+	TestHelper.Setup()
 
 	DB = Database.Connect("test")
 
-	TestServer = httptest.NewServer(application.InitializeObjectAndSetRoutesV1_1(Router, DB))
+	TestServer = httptest.NewServer(InitializeObjectAndSetRoutesV1_1(Router, DB))
 
 	ret := m.Run()
 
 	if ret == 0 {
-		Helper.Teardown()
+		TestHelper.Teardown()
 		TestServer.Close()
 	}
 
@@ -59,7 +54,7 @@ func TestNumericFieldsDuringCreateUser(t *testing.T) {
 
 	jsonBytes, _ := json.Marshal(userData)
 
-	status, _, body := Helper.Request("POST", jsonBytes, requestURL, "")
+	status, _, body := TestHelper.Request("POST", jsonBytes, requestURL, "")
 
 	errorData := body.(map[string]interface{})["errors"].(map[string]interface{})
 	errorDetail := errorData["detail"].(map[string]interface{})
@@ -81,7 +76,7 @@ func TestRequiredFieldsDuringCreateUser(t *testing.T) {
 
 	jsonBytes, _ := json.Marshal(userData)
 
-	status, _, body := Helper.Request("POST", jsonBytes, requestURL, "")
+	status, _, body := TestHelper.Request("POST", jsonBytes, requestURL, "")
 
 	errorData := body.(map[string]interface{})["errors"].(map[string]interface{})
 	errorDetail := errorData["detail"].(map[string]interface{})
@@ -97,7 +92,7 @@ func TestRequiredFieldsDuringCreateUser(t *testing.T) {
 // TestPhoneNumberMustUnique function used to test if API return error or not when the input data
 // contain the same phone number that already exist in database.
 func TestPhoneNumberMustUnique(t *testing.T) {
-	sampleData := data.SampleData{DB: DB}
+	sampleData := SampleData{DB: DB}
 
 	users := sampleData.Users()
 	fmt.Println(users)
@@ -113,7 +108,7 @@ func TestPhoneNumberMustUnique(t *testing.T) {
 
 	jsonBytes, _ := json.Marshal(userData)
 
-	status, _, body := Helper.Request("POST", jsonBytes, requestURL, "")
+	status, _, body := TestHelper.Request("POST", jsonBytes, requestURL, "")
 
 	errorData := body.(map[string]interface{})["errors"].(map[string]interface{})
 
@@ -137,7 +132,7 @@ func TestFacebookIDMustValid(t *testing.T) {
 
 	jsonBytes, _ := json.Marshal(userData)
 
-	status, _, body := Helper.Request("POST", jsonBytes, requestURL, "")
+	status, _, body := TestHelper.Request("POST", jsonBytes, requestURL, "")
 
 	errorData := body.(map[string]interface{})["errors"].(map[string]interface{})
 
@@ -161,7 +156,7 @@ func TestFacebookIDMustUnique(t *testing.T) {
 
 	jsonBytes, _ := json.Marshal(userData)
 
-	status, _, body := Helper.Request("POST", jsonBytes, requestURL, "")
+	status, _, body := TestHelper.Request("POST", jsonBytes, requestURL, "")
 
 	errorData := body.(map[string]interface{})["errors"].(map[string]interface{})
 
@@ -170,9 +165,9 @@ func TestFacebookIDMustUnique(t *testing.T) {
 }
 
 func TestReferralCodeMustValid(t *testing.T) {
-	DB.Model(&v1_1.Setting{}).Where("slug = ?", "referral_active").Update("value", "true")
+	DB.Model(&Setting{}).Where("slug = ?", "referral_active").Update("value", "true")
 
-	sampleData := data.SampleData{DB: DB}
+	sampleData := SampleData{DB: DB}
 
 	device, _ := sampleData.DeviceWithoutUserGUID()
 
@@ -189,7 +184,7 @@ func TestReferralCodeMustValid(t *testing.T) {
 
 	jsonBytes, _ := json.Marshal(userData)
 
-	status, _, body := Helper.Request("POST", jsonBytes, requestURL, "")
+	status, _, body := TestHelper.Request("POST", jsonBytes, requestURL, "")
 
 	errorData := body.(map[string]interface{})["errors"].(map[string]interface{})
 
@@ -198,7 +193,7 @@ func TestReferralCodeMustValid(t *testing.T) {
 }
 
 func TestReferralCodeNotActiveAndDeviceUUIDMustValid(t *testing.T) {
-	DB.Model(&v1_1.Setting{}).Where("slug = ?", "referral_active").Update("value", "false")
+	DB.Model(&Setting{}).Where("slug = ?", "referral_active").Update("value", "false")
 
 	requestURL := fmt.Sprintf("%s/v1_1/users", TestServer.URL)
 
@@ -213,7 +208,7 @@ func TestReferralCodeNotActiveAndDeviceUUIDMustValid(t *testing.T) {
 
 	jsonBytes, _ := json.Marshal(userData)
 
-	status, _, body := Helper.Request("POST", jsonBytes, requestURL, "")
+	status, _, body := TestHelper.Request("POST", jsonBytes, requestURL, "")
 
 	errorData := body.(map[string]interface{})["errors"].(map[string]interface{})
 
@@ -225,7 +220,7 @@ func TestReferralCodeNotActiveAndDeviceUUIDMustValid(t *testing.T) {
 func TestDebug(t *testing.T) {
 	DB.Exec("TRUNCATE TABLE devices;")
 
-	sampleData := data.SampleData{DB: DB}
+	sampleData := SampleData{DB: DB}
 
 	device, _ := sampleData.DeviceWithoutUserGUID()
 
@@ -241,7 +236,7 @@ func TestDebug(t *testing.T) {
 
 	jsonBytes, _ := json.Marshal(userData)
 
-	status, _, body := Helper.Request("POST", jsonBytes, requestURL, "")
+	status, _, body := TestHelper.Request("POST", jsonBytes, requestURL, "")
 
 	data := body.(map[string]interface{})["data"].(map[string]interface{})
 
@@ -257,7 +252,7 @@ func TestDebugToken(t *testing.T) {
 	DB.Exec("TRUNCATE TABLE users;")
 	DB.Exec("TRUNCATE TABLE devices;")
 
-	sampleData := data.SampleData{DB: DB}
+	sampleData := SampleData{DB: DB}
 
 	device, _ := sampleData.DeviceWithoutUserGUID()
 
@@ -273,7 +268,7 @@ func TestDebugToken(t *testing.T) {
 
 	jsonBytes, _ := json.Marshal(userData)
 
-	status, _, body := Helper.Request("POST", jsonBytes, requestURL, "")
+	status, _, body := TestHelper.Request("POST", jsonBytes, requestURL, "")
 
 	data := body.(map[string]interface{})["data"].(map[string]interface{})
 
@@ -285,15 +280,15 @@ func TestDebugToken(t *testing.T) {
 }
 
 func TestCreateUserWithReferral(t *testing.T) {
-	DB.Model(&v1_1.Setting{}).Where("slug = ?", "referral_active").Update("value", "true")
+	DB.Model(&Setting{}).Where("slug = ?", "referral_active").Update("value", "true")
 
-	referralPriceSetting := &v1_1.Setting{}
-	DB.Model(&v1_1.Setting{}).Where("slug = ?", "referral_price").Find(&referralPriceSetting)
+	referralPriceSetting := &Setting{}
+	DB.Model(&Setting{}).Where("slug = ?", "referral_price").Find(&referralPriceSetting)
 
 	DB.Exec("TRUNCATE TABLE users;")
 	DB.Exec("TRUNCATE TABLE devices;")
 
-	sampleData := data.SampleData{DB: DB}
+	sampleData := SampleData{DB: DB}
 
 	device, _ := sampleData.DeviceWithoutUserGUID()
 
@@ -312,30 +307,30 @@ func TestCreateUserWithReferral(t *testing.T) {
 
 	jsonBytes, _ := json.Marshal(userData)
 
-	status, _, body := Helper.Request("POST", jsonBytes, requestURL, "")
+	status, _, body := TestHelper.Request("POST", jsonBytes, requestURL, "")
 
 	data := body.(map[string]interface{})["data"].(map[string]interface{})
 
 	newUser := data["user"].(map[string]interface{})
 
-	user1 := &v1_1.User{}
+	user1 := &User{}
 
-	DB.Model(&v1_1.User{}).Where("guid = ?", users[0].GUID).Find(&user1)
+	DB.Model(&User{}).Where("guid = ?", users[0].GUID).Find(&user1)
 
 	assert.Equal(t, referralPriceSetting.Value, strconv.FormatFloat(user1.Wallet, 'f', 0, 64))
 
-	referralCashbackTransaction := &v1_1.ReferralCashbackTransaction{}
+	referralCashbackTransaction := &ReferralCashbackTransaction{}
 
-	DB.Model(&v1_1.ReferralCashbackTransaction{}).Where("user_guid = ?", user1.GUID).Find(&referralCashbackTransaction)
+	DB.Model(&ReferralCashbackTransaction{}).Where("user_guid = ?", user1.GUID).Find(&referralCashbackTransaction)
 
 	assert.Equal(t, 200, status)
 	assert.Equal(t, user1.GUID, referralCashbackTransaction.UserGUID)
 	assert.Equal(t, newUser["guid"], referralCashbackTransaction.ReferrerGUID)
 	assert.NotEmpty(t, referralCashbackTransaction.TransactionGUID)
 
-	transaction := &v1_1.Transaction{}
+	transaction := &Transaction{}
 
-	DB.Model(&v1_1.Transaction{}).Where("guid = ?", referralCashbackTransaction.TransactionGUID).Find(&transaction)
+	DB.Model(&Transaction{}).Where("guid = ?", referralCashbackTransaction.TransactionGUID).Find(&transaction)
 
 	assert.NotEmpty(t, transaction.GUID)
 	assert.Equal(t, user1.GUID, transaction.UserGUID)
@@ -347,17 +342,17 @@ func TestCreateUserWithReferral(t *testing.T) {
 }
 
 func TestMaxReferralPerUser(t *testing.T) {
-	Helper.TruncateDatabase()
+	TestHelper.TruncateDatabase()
 
-	DB.Model(&v1_1.Setting{}).Where("slug = ?", "referral_active").Update("value", "true")
+	DB.Model(&Setting{}).Where("slug = ?", "referral_active").Update("value", "true")
 
-	DB.Model(&v1_1.Setting{}).Select("value").Where("slug = ?", "max_referral_user").Updates(map[string]interface{}{"value": "2"})
+	DB.Model(&Setting{}).Select("value").Where("slug = ?", "max_referral_user").Updates(map[string]interface{}{"value": "2"})
 
-	referralPriceSetting := &v1_1.Setting{}
+	referralPriceSetting := &Setting{}
 
-	DB.Model(&v1_1.Setting{}).Where("slug = ?", "referral_price").Find(&referralPriceSetting)
+	DB.Model(&Setting{}).Where("slug = ?", "referral_price").Find(&referralPriceSetting)
 
-	sampleData := data.SampleData{DB: DB}
+	sampleData := SampleData{DB: DB}
 
 	devices, _ := sampleData.DevicesWithoutUserGUID()
 
@@ -376,7 +371,7 @@ func TestMaxReferralPerUser(t *testing.T) {
 
 	jsonBytes1, _ := json.Marshal(userData1)
 
-	Helper.Request("POST", jsonBytes1, requestURL, "")
+	TestHelper.Request("POST", jsonBytes1, requestURL, "")
 
 	userData2 := map[string]string{
 		"referral_code":     users[0].ReferralCode,
@@ -389,7 +384,7 @@ func TestMaxReferralPerUser(t *testing.T) {
 
 	jsonBytes2, _ := json.Marshal(userData2)
 
-	Helper.Request("POST", jsonBytes2, requestURL, "")
+	TestHelper.Request("POST", jsonBytes2, requestURL, "")
 
 	userData3 := map[string]string{
 		"referral_code":     users[0].ReferralCode,
@@ -402,9 +397,9 @@ func TestMaxReferralPerUser(t *testing.T) {
 
 	jsonBytes3, _ := json.Marshal(userData3)
 
-	Helper.Request("POST", jsonBytes3, requestURL, "")
+	TestHelper.Request("POST", jsonBytes3, requestURL, "")
 
-	user1 := &v1_1.User{}
+	user1 := &User{}
 
 	DB.Table("users").Where("guid = ?", users[0].GUID).Find(&user1)
 
@@ -412,9 +407,9 @@ func TestMaxReferralPerUser(t *testing.T) {
 }
 
 func TestProfileImageSizeValidation(t *testing.T) {
-	Helper.TruncateDatabase()
+	TestHelper.TruncateDatabase()
 
-	sampleData := data.SampleData{DB: DB}
+	sampleData := SampleData{DB: DB}
 
 	device, _ := sampleData.DeviceWithoutUserGUID()
 
@@ -430,7 +425,7 @@ func TestProfileImageSizeValidation(t *testing.T) {
 
 	requestURL := fmt.Sprintf("%s/v1_1/users", TestServer.URL)
 
-	status, _, body := Helper.MultipartRequest(requestURL, params, "profile_picture", os.Getenv("GOPATH")+"src/bitbucket.org/cliqers/shoppermate-api/test/images/profile_image_larger.jpg", "")
+	status, _, body := TestHelper.MultipartRequest(requestURL, params, "profile_picture", os.Getenv("GOPATH")+"src/bitbucket.org/cliqers/shoppermate-api/test/images/profile_image_larger.jpg", "")
 
 	errorData := body.(map[string]interface{})["errors"].(map[string]interface{})
 
@@ -441,7 +436,7 @@ func TestProfileImageSizeValidation(t *testing.T) {
 func TestProfileImageTypeValidation(t *testing.T) {
 	DB.Exec("TRUNCATE TABLE devices;")
 
-	sampleData := data.SampleData{DB: DB}
+	sampleData := SampleData{DB: DB}
 
 	device, _ := sampleData.DeviceWithoutUserGUID()
 
@@ -457,7 +452,7 @@ func TestProfileImageTypeValidation(t *testing.T) {
 
 	requestURL := fmt.Sprintf("%s/v1_1/users", TestServer.URL)
 
-	status, _, body := Helper.MultipartRequest(requestURL, params, "profile_picture", os.Getenv("GOPATH")+"src/bitbucket.org/cliqers/shoppermate-api/test/files/test_pdf_file.pdf", "")
+	status, _, body := TestHelper.MultipartRequest(requestURL, params, "profile_picture", os.Getenv("GOPATH")+"src/bitbucket.org/cliqers/shoppermate-api/test/files/test_pdf_file.pdf", "")
 
 	errorData := body.(map[string]interface{})["errors"].(map[string]interface{})
 
@@ -466,9 +461,9 @@ func TestProfileImageTypeValidation(t *testing.T) {
 }
 
 func TestCreateUserViaPhoneNumber(t *testing.T) {
-	Helper.TruncateDatabase()
+	TestHelper.TruncateDatabase()
 
-	sampleData := data.SampleData{DB: DB}
+	sampleData := SampleData{DB: DB}
 
 	device, _ := sampleData.DeviceWithoutUserGUID()
 
@@ -484,7 +479,7 @@ func TestCreateUserViaPhoneNumber(t *testing.T) {
 
 	requestURL := fmt.Sprintf("%s/v1_1/users", TestServer.URL)
 
-	status, _, body := Helper.MultipartRequest(requestURL, params, "profile_picture", os.Getenv("GOPATH")+"src/bitbucket.org/cliqers/shoppermate-api/test/images/profile_image_smaller.png", "")
+	status, _, body := TestHelper.MultipartRequest(requestURL, params, "profile_picture", os.Getenv("GOPATH")+"src/bitbucket.org/cliqers/shoppermate-api/test/images/profile_image_smaller.png", "")
 
 	data := body.(map[string]interface{})["data"].(map[string]interface{})
 
@@ -513,9 +508,9 @@ func TestCreateUserViaPhoneNumber(t *testing.T) {
 }
 
 func TestCreateUserViaFacebook(t *testing.T) {
-	Helper.TruncateDatabase()
+	TestHelper.TruncateDatabase()
 
-	sampleData := data.SampleData{DB: DB}
+	sampleData := SampleData{DB: DB}
 
 	sampleDevice, _ := sampleData.DeviceWithoutUserGUID()
 
@@ -532,7 +527,7 @@ func TestCreateUserViaFacebook(t *testing.T) {
 
 	requestURL := fmt.Sprintf("%s/v1_1/users", TestServer.URL)
 
-	status, _, body := Helper.MultipartRequest(requestURL, params, "profile_picture", os.Getenv("GOPATH")+"src/bitbucket.org/cliqers/shoppermate-api/test/images/profile_image_smaller.png", "")
+	status, _, body := TestHelper.MultipartRequest(requestURL, params, "profile_picture", os.Getenv("GOPATH")+"src/bitbucket.org/cliqers/shoppermate-api/test/images/profile_image_smaller.png", "")
 
 	data := body.(map[string]interface{})["data"].(map[string]interface{})
 
@@ -540,9 +535,9 @@ func TestCreateUserViaFacebook(t *testing.T) {
 
 	user := data["user"].(map[string]interface{})
 
-	device := &v1_1.Device{}
+	device := &Device{}
 
-	DB.Model(&v1_1.Device{}).Where("guid = ?", sampleDevice.GUID).Find(&device)
+	DB.Model(&Device{}).Where("guid = ?", sampleDevice.GUID).Find(&device)
 
 	assert.Equal(t, user["guid"], *device.UserGUID)
 	assert.Equal(t, 200, status)

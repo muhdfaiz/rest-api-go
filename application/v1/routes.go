@@ -1,9 +1,8 @@
-package application
+package v1
 
 import (
 	"os"
 
-	"bitbucket.org/cliqers/shoppermate-api/application/v1"
 	"bitbucket.org/cliqers/shoppermate-api/middlewares"
 	"bitbucket.org/cliqers/shoppermate-api/services/facebook"
 	"bitbucket.org/cliqers/shoppermate-api/services/filesystem"
@@ -33,206 +32,206 @@ func InitializeObjectAndSetRoutesV1(router *gin.Engine, DB *gorm.DB) *gin.Engine
 	amazonS3FileSystem.BucketName = bucketName
 
 	// Device Objects
-	deviceRepository := &v1.DeviceRepository{DB: DB}
-	deviceService := &v1.DeviceService{DeviceRepository: deviceRepository}
+	deviceRepository := &DeviceRepository{DB: DB}
+	deviceService := &DeviceService{DeviceRepository: deviceRepository}
 
 	// Sms Objects
-	smsHistoryRepository := &v1.SmsHistoryRepository{DB: DB}
-	smsService := &v1.SmsService{DB: DB, SmsHistoryRepository: smsHistoryRepository}
+	smsHistoryRepository := &SmsHistoryRepository{DB: DB}
+	smsService := &SmsService{DB: DB, SmsHistoryRepository: smsHistoryRepository}
 
 	// Auth Service
-	authService := &v1.AuthService{SmsService: smsService, DeviceService: deviceService}
+	authService := &AuthService{SmsService: smsService, DeviceService: deviceService}
 
 	// Facebook Service
 	facebookService := &facebook.FacebookService{}
 
 	// Occasion Objects
-	occasionRepository := &v1.OccasionRepository{DB: DB}
-	occasionTransformer := &v1.OccasionTransformer{}
-	occasionService := &v1.OccasionService{OccasionRepository: occasionRepository, OccasionTransformer: occasionTransformer}
+	occasionRepository := &OccasionRepository{DB: DB}
+	occasionTransformer := &OccasionTransformer{}
+	occasionService := &OccasionService{OccasionRepository: occasionRepository, OccasionTransformer: occasionTransformer}
 
 	// Item Objects
-	itemRepository := &v1.ItemRepository{DB: DB}
-	itemTransformer := &v1.ItemTransformer{}
-	itemService := &v1.ItemService{ItemRepository: itemRepository}
+	itemRepository := &ItemRepository{DB: DB}
+	itemTransformer := &ItemTransformer{}
+	itemService := &ItemService{ItemRepository: itemRepository}
 
 	// Deal Cashback Repository
-	dealCashbackRepository := &v1.DealCashbackRepository{DB: DB}
+	dealCashbackRepository := &DealCashbackRepository{DB: DB}
 
 	// LocationService
 	locationService := &location.LocationService{}
 
 	// Grocer Location Repository
-	grocerLocationRepository := &v1.GrocerLocationRepository{DB: DB}
+	grocerLocationRepository := &GrocerLocationRepository{DB: DB}
 
 	// Grocer Location Service
-	grocerLocationService := &v1.GrocerLocationService{GrocerLocationRepository: grocerLocationRepository}
+	grocerLocationService := &GrocerLocationService{GrocerLocationRepository: grocerLocationRepository}
 
 	// Deal Repository
-	dealRepository := &v1.DealRepository{DB: DB, GrocerLocationService: grocerLocationService}
+	dealRepository := &DealRepository{DB: DB, GrocerLocationService: grocerLocationService}
 
 	// Item SubCategory Objects
-	itemSubCategoryRepository := &v1.ItemSubCategoryRepository{DB: DB}
-	itemSubCategoryService := &v1.ItemSubCategoryService{ItemSubCategoryRepository: itemSubCategoryRepository, DealRepository: dealRepository}
+	itemSubCategoryRepository := &ItemSubCategoryRepository{DB: DB}
+	itemSubCategoryService := &ItemSubCategoryService{ItemSubCategoryRepository: itemSubCategoryRepository, DealRepository: dealRepository}
 
 	// Grocer Objects
-	grocerRepository := &v1.GrocerRepository{DB: DB}
-	grocerService := &v1.GrocerService{GrocerRepository: grocerRepository, DealRepository: dealRepository}
+	grocerRepository := &GrocerRepository{DB: DB}
+	grocerService := &GrocerService{GrocerRepository: grocerRepository, DealRepository: dealRepository}
 
 	// Item Category Objects
-	itemCategoryRepository := &v1.ItemCategoryRepository{DB: DB}
-	itemCategoryTransformer := &v1.ItemCategoryTransformer{}
+	itemCategoryRepository := &ItemCategoryRepository{DB: DB}
+	itemCategoryTransformer := &ItemCategoryTransformer{}
 
-	shoppingListItemRepository := &v1.ShoppingListItemRepository{DB: DB}
+	shoppingListItemRepository := &ShoppingListItemRepository{DB: DB}
 
 	// Deal Transformer
-	dealTransformer := &v1.DealTransformer{}
+	dealTransformer := &DealTransformer{}
 
 	// Deal Service
-	dealService := &v1.DealService{DealRepository: dealRepository, DealTransformer: dealTransformer, LocationService: locationService,
+	dealService := &DealService{DealRepository: dealRepository, DealTransformer: dealTransformer, LocationService: locationService,
 		DealCashbackRepository: dealCashbackRepository, ItemRepository: itemRepository, ItemCategoryRepository: itemCategoryRepository,
 		ItemSubCategoryRepository: itemSubCategoryRepository, GrocerService: grocerService, ShoppingListItemRepository: shoppingListItemRepository}
 
-	itemCategoryService := &v1.ItemCategoryService{ItemCategoryRepository: itemCategoryRepository, DealService: dealService,
+	itemCategoryService := &ItemCategoryService{ItemCategoryRepository: itemCategoryRepository, DealService: dealService,
 		ItemCategoryTransformer: itemCategoryTransformer, GrocerRepository: grocerRepository, GrocerService: grocerService,
 		DealRepository: dealRepository}
 
 	// Default Shopping List Objects
-	defaultShoppingListRepository := &v1.DefaultShoppingListRepository{DB: DB}
-	defaultShoppingListService := &v1.DefaultShoppingListService{DefaultShoppingListRepository: defaultShoppingListRepository, DealService: dealService}
+	defaultShoppingListRepository := &DefaultShoppingListRepository{DB: DB}
+	defaultShoppingListService := &DefaultShoppingListService{DefaultShoppingListRepository: defaultShoppingListRepository, DealService: dealService}
 
-	defaultShoppingListItemRepository := &v1.DefaultShoppingListItemRepository{DB: DB}
-	defaultShoppingListItemService := &v1.DefaultShoppingListItemService{DefaultShoppingListItemRepository: defaultShoppingListItemRepository}
+	defaultShoppingListItemRepository := &DefaultShoppingListItemRepository{DB: DB}
+	defaultShoppingListItemService := &DefaultShoppingListItemService{DefaultShoppingListItemRepository: defaultShoppingListItemRepository}
 
 	// Generic Objects
-	genericRepository := &v1.GenericRepository{DB: DB}
-	genericService := &v1.GenericService{GenericRepository: genericRepository}
-	genericTransformer := &v1.GenericTransformer{}
+	genericRepository := &GenericRepository{DB: DB}
+	genericService := &GenericService{GenericRepository: genericRepository}
+	genericTransformer := &GenericTransformer{}
 
 	// Shopping List Item Repository
-	shoppingListItemService := &v1.ShoppingListItemService{ShoppingListItemRepository: shoppingListItemRepository, ItemService: itemService,
+	shoppingListItemService := &ShoppingListItemService{ShoppingListItemRepository: shoppingListItemRepository, ItemService: itemService,
 		ItemCategoryService: itemCategoryService, ItemSubCategoryService: itemSubCategoryService, DealService: dealService, GenericService: genericService,
 		DealRepository: dealRepository}
 
 	// Shopping List Item Image Objects
-	shoppingListItemImageRepository := &v1.ShoppingListItemImageRepository{DB: DB}
-	shoppingListItemImageService := &v1.ShoppingListItemImageService{DB: DB, AmazonS3FileSystem: amazonS3FileSystem,
+	shoppingListItemImageRepository := &ShoppingListItemImageRepository{DB: DB}
+	shoppingListItemImageService := &ShoppingListItemImageService{DB: DB, AmazonS3FileSystem: amazonS3FileSystem,
 		ShoppingListItemImageRepository: shoppingListItemImageRepository, ShoppingListItemService: shoppingListItemService}
 
 	// Shopping List Objects
-	shoppingListRepository := &v1.ShoppingListRepository{DB: DB}
-	shoppingListService := &v1.ShoppingListService{ShoppingListRepository: shoppingListRepository, OccasionService: occasionService,
+	shoppingListRepository := &ShoppingListRepository{DB: DB}
+	shoppingListService := &ShoppingListService{ShoppingListRepository: shoppingListRepository, OccasionService: occasionService,
 		DefaultShoppingListService: defaultShoppingListService, DefaultShoppingListItemService: defaultShoppingListItemService,
 		ShoppingListItemService: shoppingListItemService, ShoppingListItemImageService: shoppingListItemImageService}
 
 	// Deal Cashback Transformer
-	dealCashbackTransformer := &v1.DealCashbackTransformer{}
+	dealCashbackTransformer := &DealCashbackTransformer{}
 
 	// Deal Cashback Service
-	dealCashbackService := &v1.DealCashbackService{DealCashbackRepository: dealCashbackRepository,
+	dealCashbackService := &DealCashbackService{DealCashbackRepository: dealCashbackRepository,
 		ShoppingListItemService: shoppingListItemService, DealRepository: dealRepository}
 
 	// Transaction Status
-	transactionStatusRepository := &v1.TransactionStatusRepository{DB: DB}
-	transactionStatusService := &v1.TransactionStatusService{TransactionStatusRepository: transactionStatusRepository}
+	transactionStatusRepository := &TransactionStatusRepository{DB: DB}
+	transactionStatusService := &TransactionStatusService{TransactionStatusRepository: transactionStatusRepository}
 
 	// Transaction Type
-	transactionTypeRepository := &v1.TransactionTypeRepository{DB: DB}
-	transactionTypeService := &v1.TransactionTypeService{TransactionTypeRepository: transactionTypeRepository}
+	transactionTypeRepository := &TransactionTypeRepository{DB: DB}
+	transactionTypeService := &TransactionTypeService{TransactionTypeRepository: transactionTypeRepository}
 
 	// Transaction
-	transactionRepository := &v1.TransactionRepository{DB: DB, TransactionStatusRepository: transactionStatusRepository}
-	transactionTransformer := &v1.TransactionTransformer{}
-	transactionService := &v1.TransactionService{TransactionRepository: transactionRepository, TransactionTransformer: transactionTransformer,
+	transactionRepository := &TransactionRepository{DB: DB, TransactionStatusRepository: transactionStatusRepository}
+	transactionTransformer := &TransactionTransformer{}
+	transactionService := &TransactionService{TransactionRepository: transactionRepository, TransactionTransformer: transactionTransformer,
 		DealCashbackService: dealCashbackService, ShoppingListService: shoppingListService, DealService: dealService,
 		TransactionTypeService: transactionTypeService, TransactionStatusService: transactionStatusService}
 
 	// Referral Cashback Transaction Objects
-	referralCashbackTransactionRepository := &v1.ReferralCashbackTransactionRepository{DB: DB}
-	referralCashbackTransactionService := &v1.ReferralCashbackTransactionService{ReferralCashbackTransactionRepository: referralCashbackTransactionRepository}
+	referralCashbackTransactionRepository := &ReferralCashbackTransactionRepository{DB: DB}
+	referralCashbackTransactionService := &ReferralCashbackTransactionService{ReferralCashbackTransactionRepository: referralCashbackTransactionRepository}
 
 	// User Objects
-	userRepository := &v1.UserRepository{DB: DB}
-	userService := &v1.UserService{UserRepository: userRepository, TransactionService: transactionService, DealCashbackService: dealCashbackService,
+	userRepository := &UserRepository{DB: DB}
+	userService := &UserService{UserRepository: userRepository, TransactionService: transactionService, DealCashbackService: dealCashbackService,
 		FacebookService: facebookService, SmsService: smsService, DeviceService: deviceService, ReferralCashbackTransactionService: referralCashbackTransactionService,
 		AmazonS3FileSystem: amazonS3FileSystem}
 
 	//Deal Cashback Transaction
-	dealCashbackTransactionRepository := &v1.DealCashbackTransactionRepository{DB: DB}
-	dealCashbackTransactionService := &v1.DealCashbackTransactionService{AmazonS3FileSystem: amazonS3FileSystem,
+	dealCashbackTransactionRepository := &DealCashbackTransactionRepository{DB: DB}
+	dealCashbackTransactionService := &DealCashbackTransactionService{AmazonS3FileSystem: amazonS3FileSystem,
 		DealCashbackRepository: dealCashbackRepository, DealCashbackTransactionRepository: dealCashbackTransactionRepository,
 		DealRepository: dealRepository, TransactionRepository: transactionRepository, ShoppingListItemRepository: shoppingListItemRepository}
 
 	// Event Objects
-	eventRepository := &v1.EventRepository{DB: DB}
-	eventService := &v1.EventService{EventRepository: eventRepository, DealCashbackRepository: dealCashbackRepository, DealService: dealService}
+	eventRepository := &EventRepository{DB: DB}
+	eventService := &EventService{EventRepository: eventRepository, DealCashbackRepository: dealCashbackRepository, DealService: dealService}
 
 	//Cashout Transaction Object
-	cashoutTransactionRepository := &v1.CashoutTransactionRepository{DB: DB}
-	cashoutTransactionService := &v1.CashoutTransactionService{CashoutTransactionRepository: cashoutTransactionRepository,
+	cashoutTransactionRepository := &CashoutTransactionRepository{DB: DB}
+	cashoutTransactionService := &CashoutTransactionService{CashoutTransactionRepository: cashoutTransactionRepository,
 		TransactionService: transactionService, UserRepository: userRepository}
 
 	// Setting Objects
-	settingRepository := &v1.SettingRepository{DB: DB}
-	settingService := &v1.SettingService{SettingRepository: settingRepository}
+	settingRepository := &SettingRepository{DB: DB}
+	settingService := &SettingService{SettingRepository: settingRepository}
 
 	// Sms Handler
-	smsHandler := v1.SmsHandler{UserRepository: userRepository, SmsService: smsService,
+	smsHandler := SmsHandler{UserRepository: userRepository, SmsService: smsService,
 		SmsHistoryRepository: smsHistoryRepository, DeviceService: deviceService}
 
 	// User Handler
-	userHandler := v1.UserHandler{UserService: userService, SettingService: settingService}
+	userHandler := UserHandler{UserService: userService, SettingService: settingService}
 
 	// Device Handler
-	deviceHandler := v1.DeviceHandler{DeviceService: deviceService, UserService: userService}
+	deviceHandler := DeviceHandler{DeviceService: deviceService, UserService: userService}
 
 	// Shopping List Handler
-	shoppingListHandler := v1.ShoppingListHandler{ShoppingListService: shoppingListService, ShoppingListItemImageService: shoppingListItemImageService}
+	shoppingListHandler := ShoppingListHandler{ShoppingListService: shoppingListService, ShoppingListItemImageService: shoppingListItemImageService}
 
 	// Auth Handler
-	authHandler := v1.AuthHandler{AuthService: authService, UserService: userService}
+	authHandler := AuthHandler{AuthService: authService, UserService: userService}
 
 	// Occasion Handler
-	occasionHandler := v1.OccasionHandler{OccasionService: occasionService}
+	occasionHandler := OccasionHandler{OccasionService: occasionService}
 
 	// Item Handler
-	itemHandler := v1.ItemHandler{ItemRepository: itemRepository, ItemTransformer: itemTransformer}
+	itemHandler := ItemHandler{ItemRepository: itemRepository, ItemTransformer: itemTransformer}
 
 	// Item Category Handler
-	itemCategoryHandler := v1.ItemCategoryHandler{ItemCategoryService: itemCategoryService}
+	itemCategoryHandler := ItemCategoryHandler{ItemCategoryService: itemCategoryService}
 
 	// Shopping List Item Handler
-	shoppingListItemHandler := v1.ShoppingListItemHandler{ShoppingListService: shoppingListService, ShoppingListItemService: shoppingListItemService,
+	shoppingListItemHandler := ShoppingListItemHandler{ShoppingListService: shoppingListService, ShoppingListItemService: shoppingListItemService,
 		ShoppingListItemImageService: shoppingListItemImageService}
 
 	// Shopping List Item Image Handler
-	shoppingListItemImageHandler := v1.ShoppingListItemImageHandler{ShoppingListItemImageService: shoppingListItemImageService}
+	shoppingListItemImageHandler := ShoppingListItemImageHandler{ShoppingListItemImageService: shoppingListItemImageService}
 
 	// Deal Cashback Handler
-	dealCashbackHandler := v1.DealCashbackHandler{ShoppingListRepository: shoppingListRepository, DealService: dealService, DealCashbackService: dealCashbackService,
+	dealCashbackHandler := DealCashbackHandler{ShoppingListRepository: shoppingListRepository, DealService: dealService, DealCashbackService: dealCashbackService,
 		DealCashbackTransformer: dealCashbackTransformer}
 
 	// Deal Handler
-	dealHandler := v1.DealHandler{DealService: dealService, DealTransformer: dealTransformer, ItemCategoryService: itemCategoryService,
+	dealHandler := DealHandler{DealService: dealService, DealTransformer: dealTransformer, ItemCategoryService: itemCategoryService,
 		DealCashbackService: dealCashbackService, UserRepository: userRepository, ItemSubCategoryRepository: itemSubCategoryRepository}
 
 	// Event Handler
-	eventHandler := v1.EventHandler{EventService: eventService}
+	eventHandler := EventHandler{EventService: eventService}
 
 	// Deal Cashback Transaction Handler
-	dealCashbackTransactionHandler := v1.DealCashbackTransactionHandler{DealCashbackTransactionService: dealCashbackTransactionService, TransactionService: transactionService}
+	dealCashbackTransactionHandler := DealCashbackTransactionHandler{DealCashbackTransactionService: dealCashbackTransactionService, TransactionService: transactionService}
 
-	transactionHandler := v1.TransactionHandler{TransactionService: transactionService}
+	transactionHandler := TransactionHandler{TransactionService: transactionService}
 
-	cashoutTransactionHandler := v1.CashoutTransactionHandler{CashoutTransactionService: cashoutTransactionService, TransactionService: transactionService}
+	cashoutTransactionHandler := CashoutTransactionHandler{CashoutTransactionService: cashoutTransactionService, TransactionService: transactionService}
 
-	defaultShoppingListHandler := v1.DefaultShoppingListHandler{DefaultShoppingListService: defaultShoppingListService}
+	defaultShoppingListHandler := DefaultShoppingListHandler{DefaultShoppingListService: defaultShoppingListService}
 
-	grocerHandler := v1.GrocerHandler{GrocerService: grocerService}
+	grocerHandler := GrocerHandler{GrocerService: grocerService}
 
-	genericHandler := v1.GenericHandler{GenericService: genericService, GenericTransformer: genericTransformer}
+	genericHandler := GenericHandler{GenericService: genericService, GenericTransformer: genericTransformer}
 
-	settingHandler := v1.SettingHandler{SettingService: settingService}
+	settingHandler := SettingHandler{SettingService: settingService}
 
 	// V1 Routes
 	version1 := router.Group("/v1")

@@ -127,15 +127,17 @@ func (us *UserService) CreateUser(dbTransaction *gorm.DB, userData CreateUser, p
 		return nil, error
 	}
 
-	error = us.EmailService.SendTemplate(map[string]string{
-		"name":      userData.Name,
-		"email":     userData.Email,
-		"template":  "1-welcome-to-shoppermate",
-		"variables": `[{"name":"user_fullname","content":"` + userData.Name + `"}]`,
-	})
+	if os.Getenv("SEND_EMAIL_EVENT") == "true" {
+		error = us.EmailService.SendTemplate(map[string]string{
+			"name":      userData.Name,
+			"email":     userData.Email,
+			"template":  "1-welcome-to-shoppermate",
+			"variables": `[{"name":"user_fullname","content":"` + userData.Name + `"}]`,
+		})
 
-	if error != nil {
-		return nil, error
+		if error != nil {
+			return nil, error
+		}
 	}
 
 	return newUser, nil
@@ -289,7 +291,7 @@ func (us *UserService) CreateReferralCashbackTransaction(dbTransaction *gorm.DB,
 
 		maxReferralPerUserInInt, _ := strconv.ParseInt(referralSettings["max_referral_per_user"], 10, 64)
 
-		if referralSettings["referral_active"] == "true" && referrerUser.GUID != "" && totalNumberOfUserReferralCashbackTransactions <= maxReferralPerUserInInt {
+		if referralSettings["referral_active"] == "true" && referrerUser.GUID != "" && totalNumberOfUserReferralCashbackTransactions < maxReferralPerUserInInt {
 
 			pricePerReferralInFloat64, _ := strconv.ParseFloat(referralSettings["price_per_referral"], 64)
 

@@ -93,7 +93,7 @@ func (sd *SampleData) DevicesWithoutUserGUID() ([]*Device, *systems.ErrorData) {
 
 // DeviceWithUserGUID function used to create sample device including
 // user GUID.
-func (sd *SampleData) DeviceWithUserGUID(userGUID string) interface{} {
+func (sd *SampleData) DeviceWithUserGUID(userGUID string) *Device {
 
 	deviceGUID := Helper.GenerateUUID()
 
@@ -109,7 +109,7 @@ func (sd *SampleData) DeviceWithUserGUID(userGUID string) interface{} {
 
 	result := sd.DB.Create(&device)
 
-	return result.Value
+	return result.Value.(*Device)
 }
 
 // SmsHistory function used to create sample sms history.
@@ -145,7 +145,7 @@ func (sd *SampleData) Users() []*User {
 		FacebookID:   &facebookID,
 		Email:        "user1@mediacliq.my",
 		PhoneNo:      "60121234567",
-		RegisterBy:   "phone_no",
+		RegisterBy:   "facebook",
 		ReferralCode: "USE24853",
 	}
 

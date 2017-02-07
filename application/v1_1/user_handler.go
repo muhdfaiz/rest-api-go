@@ -21,7 +21,7 @@ func (uh *UserHandler) View(context *gin.Context) {
 	userToken := context.MustGet("Token").(map[string]string)
 
 	if userToken["user_guid"] != userGUID {
-		context.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("Update User"))
+		context.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("View User"))
 		return
 	}
 

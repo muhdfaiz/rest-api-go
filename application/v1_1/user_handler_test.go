@@ -14,6 +14,7 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
 
+	"bitbucket.org/cliqers/shoppermate-api/systems"
 	"bitbucket.org/cliqers/shoppermate-api/test/helper"
 )
 
@@ -34,7 +35,7 @@ func TestMain(m *testing.M) {
 	ret := m.Run()
 
 	if ret == 0 {
-		TestHelper.Teardown()
+		//TestHelper.Teardown()
 		TestServer.Close()
 	}
 
@@ -91,7 +92,7 @@ func TestRequiredFieldsDuringCreateUser(t *testing.T) {
 
 // TestPhoneNumberMustUnique function used to test if API return error or not when the input data
 // contain the same phone number that already exist in database.
-func TestPhoneNumberMustUnique(t *testing.T) {
+func TestPhoneNumberMustUniqueDuringCreateUser(t *testing.T) {
 	sampleData := SampleData{DB: DB}
 
 	users := sampleData.Users()
@@ -118,7 +119,7 @@ func TestPhoneNumberMustUnique(t *testing.T) {
 
 // TestFacebookIDMustValid function used to test if API will validate the facebook id
 // valid or not.
-func TestFacebookIDMustValid(t *testing.T) {
+func TestFacebookIDMustValidDuringCreateUser(t *testing.T) {
 	requestURL := fmt.Sprintf("%s/v1_1/users", TestServer.URL)
 
 	userData := map[string]string{
@@ -142,7 +143,7 @@ func TestFacebookIDMustValid(t *testing.T) {
 
 // TestFacebookIDMustUnique function used to check if API will return error or not
 // if the input data contain facebook id that already exist in database.
-func TestFacebookIDMustUnique(t *testing.T) {
+func TestFacebookIDMustUniqueDuringCreateUser(t *testing.T) {
 	requestURL := fmt.Sprintf("%s/v1_1/users", TestServer.URL)
 
 	userData := map[string]string{
@@ -164,7 +165,7 @@ func TestFacebookIDMustUnique(t *testing.T) {
 	assert.Equal(t, "Duplicate entry 'facebook_id' for key '100013413336774'.", errorData["detail"].(map[string]interface{})["message"])
 }
 
-func TestReferralCodeMustValid(t *testing.T) {
+func TestReferralCodeMustValidDuringCreateUser(t *testing.T) {
 	DB.Model(&Setting{}).Where("slug = ?", "referral_active").Update("value", "true")
 
 	sampleData := SampleData{DB: DB}
@@ -192,7 +193,7 @@ func TestReferralCodeMustValid(t *testing.T) {
 	assert.NotEmpty(t, errorData["detail"].(map[string]interface{})["referral_code"])
 }
 
-func TestReferralCodeNotActiveAndDeviceUUIDMustValid(t *testing.T) {
+func TestCreateUserWithReferralCodeNotActiveAndDeviceUUIDMustValid(t *testing.T) {
 	DB.Model(&Setting{}).Where("slug = ?", "referral_active").Update("value", "false")
 
 	requestURL := fmt.Sprintf("%s/v1_1/users", TestServer.URL)
@@ -217,7 +218,7 @@ func TestReferralCodeNotActiveAndDeviceUUIDMustValid(t *testing.T) {
 }
 
 // TestDebug function used to test if API can create new user and generate access token without valid verification code.
-func TestDebug(t *testing.T) {
+func TestCreateUserWithDebugMode(t *testing.T) {
 	DB.Exec("TRUNCATE TABLE devices;")
 
 	sampleData := SampleData{DB: DB}
@@ -248,7 +249,7 @@ func TestDebug(t *testing.T) {
 }
 
 // TestDebugToken function used to test if API will generate access token based on debug token value.
-func TestDebugToken(t *testing.T) {
+func TestCreateUserWithDebugToken(t *testing.T) {
 	DB.Exec("TRUNCATE TABLE users;")
 	DB.Exec("TRUNCATE TABLE devices;")
 
@@ -406,7 +407,7 @@ func TestMaxReferralPerUser(t *testing.T) {
 	assert.Equal(t, "4", strconv.FormatFloat(user1.Wallet, 'f', 0, 64))
 }
 
-func TestProfileImageSizeValidation(t *testing.T) {
+func TestProfileImageSizeValidationForCreateUser(t *testing.T) {
 	TestHelper.TruncateDatabase()
 
 	sampleData := SampleData{DB: DB}
@@ -425,7 +426,8 @@ func TestProfileImageSizeValidation(t *testing.T) {
 
 	requestURL := fmt.Sprintf("%s/v1_1/users", TestServer.URL)
 
-	status, _, body := TestHelper.MultipartRequest(requestURL, params, "profile_picture", os.Getenv("GOPATH")+"src/bitbucket.org/cliqers/shoppermate-api/test/images/profile_image_larger.jpg", "")
+	status, _, body := TestHelper.MultipartRequest(requestURL, "POST", params, "profile_picture",
+		os.Getenv("GOPATH")+"src/bitbucket.org/cliqers/shoppermate-api/test/images/profile_image_larger.jpg", "")
 
 	errorData := body.(map[string]interface{})["errors"].(map[string]interface{})
 
@@ -433,7 +435,7 @@ func TestProfileImageSizeValidation(t *testing.T) {
 	assert.Equal(t, "File size exceeded the limit.", errorData["title"])
 }
 
-func TestProfileImageTypeValidation(t *testing.T) {
+func TestProfileImageTypeValidationForCreateUser(t *testing.T) {
 	DB.Exec("TRUNCATE TABLE devices;")
 
 	sampleData := SampleData{DB: DB}
@@ -452,7 +454,8 @@ func TestProfileImageTypeValidation(t *testing.T) {
 
 	requestURL := fmt.Sprintf("%s/v1_1/users", TestServer.URL)
 
-	status, _, body := TestHelper.MultipartRequest(requestURL, params, "profile_picture", os.Getenv("GOPATH")+"src/bitbucket.org/cliqers/shoppermate-api/test/files/test_pdf_file.pdf", "")
+	status, _, body := TestHelper.MultipartRequest(requestURL, "POST", params, "profile_picture",
+		os.Getenv("GOPATH")+"src/bitbucket.org/cliqers/shoppermate-api/test/files/test_pdf_file.pdf", "")
 
 	errorData := body.(map[string]interface{})["errors"].(map[string]interface{})
 
@@ -479,7 +482,8 @@ func TestCreateUserViaPhoneNumber(t *testing.T) {
 
 	requestURL := fmt.Sprintf("%s/v1_1/users", TestServer.URL)
 
-	status, _, body := TestHelper.MultipartRequest(requestURL, params, "profile_picture", os.Getenv("GOPATH")+"src/bitbucket.org/cliqers/shoppermate-api/test/images/profile_image_smaller.png", "")
+	status, _, body := TestHelper.MultipartRequest(requestURL, "POST", params, "profile_picture",
+		os.Getenv("GOPATH")+"src/bitbucket.org/cliqers/shoppermate-api/test/images/profile_image_smaller.png", "")
 
 	data := body.(map[string]interface{})["data"].(map[string]interface{})
 
@@ -527,7 +531,8 @@ func TestCreateUserViaFacebook(t *testing.T) {
 
 	requestURL := fmt.Sprintf("%s/v1_1/users", TestServer.URL)
 
-	status, _, body := TestHelper.MultipartRequest(requestURL, params, "profile_picture", os.Getenv("GOPATH")+"src/bitbucket.org/cliqers/shoppermate-api/test/images/profile_image_smaller.png", "")
+	status, _, body := TestHelper.MultipartRequest(requestURL, "POST", params, "profile_picture",
+		os.Getenv("GOPATH")+"src/bitbucket.org/cliqers/shoppermate-api/test/images/profile_image_smaller.png", "")
 
 	data := body.(map[string]interface{})["data"].(map[string]interface{})
 
@@ -557,6 +562,185 @@ func TestCreateUserViaFacebook(t *testing.T) {
 	assert.Empty(t, user["bank_name"])
 
 	response, _ := http.Get(user["profile_picture"].(string))
+
+	assert.Equal(t, 200, response.StatusCode)
+}
+
+func TestAccessTokenRequireWhenToViewUser(t *testing.T) {
+	TestHelper.TruncateDatabase()
+
+	requestURL := fmt.Sprintf("%s/v1_1/users/8c2e6ea5-5c56-5050-ae37-a44b88e612a7", TestServer.URL)
+
+	status, _, body := TestHelper.Request("GET", []byte{}, requestURL, "")
+
+	errorData := body.(map[string]interface{})["errors"].(map[string]interface{})
+
+	assert.Equal(t, 401, status)
+	assert.Equal(t, "Access token error", errorData["title"])
+}
+
+func TestViewUserDetails(t *testing.T) {
+	TestHelper.TruncateDatabase()
+
+	sampleData := SampleData{DB: DB}
+
+	users := sampleData.Users()
+
+	device := sampleData.DeviceWithUserGUID(users[0].GUID)
+
+	jwt := &systems.Jwt{}
+
+	accessToken, _ := jwt.GenerateToken(users[0].GUID, users[0].PhoneNo, device.UUID, "")
+
+	requestURL := fmt.Sprintf("%s/v1_1/users/%s", TestServer.URL, users[0].GUID)
+
+	status, _, body := TestHelper.Request("GET", []byte{}, requestURL, accessToken.Token)
+
+	data := body.(map[string]interface{})["data"].(map[string]interface{})
+
+	fmt.Println(data)
+
+	assert.Equal(t, 200, status)
+	assert.Equal(t, users[0].GUID, data["guid"])
+	assert.Equal(t, users[0].Name, data["name"])
+	assert.Equal(t, users[0].Email, data["email"])
+	assert.Equal(t, users[0].PhoneNo, data["phone_no"])
+	assert.Equal(t, users[0].RegisterBy, data["register_by"])
+	assert.Equal(t, users[0].ReferralCode, data["referral_code"])
+}
+
+func TestAccessTokenRequireWhenToUpdateUser(t *testing.T) {
+	TestHelper.TruncateDatabase()
+
+	requestURL := fmt.Sprintf("%s/v1_1/users/8c2e6ea5-5c56-5050-ae37-a44b88e612a7", TestServer.URL)
+
+	status, _, body := TestHelper.Request("PATCH", []byte{}, requestURL, "")
+
+	errorData := body.(map[string]interface{})["errors"].(map[string]interface{})
+
+	assert.Equal(t, 401, status)
+	assert.Equal(t, "Access token error", errorData["title"])
+}
+
+func TestProfileImageSizeValidationForUpdateUser(t *testing.T) {
+	TestHelper.TruncateDatabase()
+
+	sampleData := SampleData{DB: DB}
+
+	users := sampleData.Users()
+
+	device := sampleData.DeviceWithUserGUID(users[0].GUID)
+
+	jwt := &systems.Jwt{}
+
+	accessToken, _ := jwt.GenerateToken(users[0].GUID, users[0].PhoneNo, device.UUID, "")
+
+	requestURL := fmt.Sprintf("%s/v1_1/users/%s", TestServer.URL, users[0].GUID)
+
+	params := map[string]string{
+		"name":              "Test User",
+		"email":             "testuser@mediacliq.my",
+		"phone_no":          "60111111111",
+		"device_uuid":       device.UUID,
+		"verification_code": "1111",
+	}
+
+	status, _, body := TestHelper.MultipartRequest(requestURL, "PATCH", params, "profile_picture",
+		os.Getenv("GOPATH")+"src/bitbucket.org/cliqers/shoppermate-api/test/images/profile_image_larger.jpg", accessToken.Token)
+
+	errorData := body.(map[string]interface{})["errors"].(map[string]interface{})
+
+	fmt.Println(errorData)
+	assert.Equal(t, 413, status)
+	assert.Equal(t, "File size exceeded the limit.", errorData["title"])
+}
+
+func TestProfileImageTypeValidationForUpdateUser(t *testing.T) {
+	TestHelper.TruncateDatabase()
+
+	sampleData := SampleData{DB: DB}
+
+	users := sampleData.Users()
+
+	device := sampleData.DeviceWithUserGUID(users[0].GUID)
+
+	jwt := &systems.Jwt{}
+
+	accessToken, _ := jwt.GenerateToken(users[0].GUID, users[0].PhoneNo, device.UUID, "")
+
+	requestURL := fmt.Sprintf("%s/v1_1/users/%s", TestServer.URL, users[0].GUID)
+
+	params := map[string]string{
+		"name":              "Test User",
+		"email":             "testuser@mediacliq.my",
+		"phone_no":          "60111111111",
+		"device_uuid":       device.UUID,
+		"verification_code": "1111",
+	}
+
+	status, _, body := TestHelper.MultipartRequest(requestURL, "PATCH", params, "profile_picture",
+		os.Getenv("GOPATH")+"src/bitbucket.org/cliqers/shoppermate-api/test/files/test_pdf_file.pdf", accessToken.Token)
+
+	errorData := body.(map[string]interface{})["errors"].(map[string]interface{})
+
+	assert.Equal(t, 400, status)
+	assert.Equal(t, "Invalid file type.", errorData["title"])
+}
+
+func TestErrorAccessTokenBelongToOtherUserDuringUpdateUser(t *testing.T) {
+	TestHelper.TruncateDatabase()
+
+	sampleData := SampleData{DB: DB}
+
+	users := sampleData.Users()
+
+	device := sampleData.DeviceWithUserGUID(users[0].GUID)
+
+	jwt := &systems.Jwt{}
+
+	accessToken, _ := jwt.GenerateToken(users[0].GUID, users[0].PhoneNo, device.UUID, "")
+
+	requestURL := fmt.Sprintf("%s/v1_1/users/8c2e6ea5-5c56-5050-ae37-a44b88e612a7", TestServer.URL)
+
+	status, _, body := TestHelper.Request("GET", []byte{}, requestURL, accessToken.Token)
+
+	errorData := body.(map[string]interface{})["errors"].(map[string]interface{})
+
+	assert.Equal(t, 401, status)
+	assert.Equal(t, "Your access token belong to other user", errorData["title"])
+}
+
+func TestUpdateUser(t *testing.T) {
+	TestHelper.TruncateDatabase()
+
+	sampleData := SampleData{DB: DB}
+
+	users := sampleData.Users()
+
+	device := sampleData.DeviceWithUserGUID(users[0].GUID)
+
+	jwt := &systems.Jwt{}
+
+	accessToken, _ := jwt.GenerateToken(users[0].GUID, users[0].PhoneNo, device.UUID, "")
+
+	requestURL := fmt.Sprintf("%s/v1_1/users/%s", TestServer.URL, users[0].GUID)
+
+	params := map[string]string{
+		"name":     "Update Test User",
+		"email":    "updatetestuseremail@mediacliq.my",
+		"phone_no": "60199999999",
+	}
+
+	status, _, body := TestHelper.MultipartRequest(requestURL, "PATCH", params, "profile_picture",
+		os.Getenv("GOPATH")+"src/bitbucket.org/cliqers/shoppermate-api/test/images/profile_image_smaller.png", accessToken.Token)
+
+	data := body.(map[string]interface{})["data"].(map[string]interface{})
+
+	assert.Equal(t, 200, status)
+	assert.Equal(t, params["name"], data["name"])
+	assert.Equal(t, params["email"], data["email"])
+
+	response, _ := http.Get(data["profile_picture"].(string))
 
 	assert.Equal(t, 200, response.StatusCode)
 }

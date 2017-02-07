@@ -18,6 +18,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
+// Helper contain useful functions can be used during testing.
 type Helper struct{}
 
 // Setup function used to initialize testing.
@@ -29,10 +30,12 @@ func (h *Helper) Setup() {
 	h.TruncateDatabase()
 }
 
+// Teardown function is a task that will be used after finish the test.
 func (h *Helper) Teardown() {
 	h.TruncateDatabase()
 }
 
+// LoadEnv function used to load env before start testing.
 func (h *Helper) LoadEnv() {
 	err := godotenv.Load(os.Getenv("GOPATH") + "src/bitbucket.org/cliqers/shoppermate-api/.env")
 
@@ -41,6 +44,9 @@ func (h *Helper) LoadEnv() {
 	}
 }
 
+// TruncateDatabase function used to truncate all table inside test database.
+// Useful during testing. For example, you want to clean database before start testing
+// or after testing.
 func (h *Helper) TruncateDatabase() {
 	Database := &systems.Database{}
 
@@ -86,7 +92,7 @@ func (h *Helper) Request(method string, jsonString []byte, url string, token str
 
 }
 
-func (h *Helper) MultipartRequest(uri string, params map[string]string, fileParam, filePath string, token string) (int, http.Header, interface{}) {
+func (h *Helper) MultipartRequest(uri string, method string, params map[string]string, fileParam, filePath string, token string) (int, http.Header, interface{}) {
 	body := &bytes.Buffer{}
 
 	writer := multipart.NewWriter(body)
@@ -104,7 +110,7 @@ func (h *Helper) MultipartRequest(uri string, params map[string]string, filePara
 	}
 	writer.Close()
 
-	req, err := http.NewRequest("POST", uri, body)
+	req, err := http.NewRequest(method, uri, body)
 
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 

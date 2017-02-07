@@ -4,43 +4,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/http/httptest"
 	"os"
 	"strconv"
 	"testing"
 	"time"
 
-	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
 
 	"bitbucket.org/cliqers/shoppermate-api/systems"
-	"bitbucket.org/cliqers/shoppermate-api/test/helper"
 )
-
-var (
-	Router     = gin.Default()
-	TestHelper = helper.Helper{}
-	TestServer *httptest.Server
-	DB         *gorm.DB
-)
-
-func TestMain(m *testing.M) {
-	TestHelper.Setup()
-
-	DB = Database.Connect("test")
-
-	TestServer = httptest.NewServer(InitializeObjectAndSetRoutesV1_1(Router, DB))
-
-	ret := m.Run()
-
-	if ret == 0 {
-		//TestHelper.Teardown()
-		TestServer.Close()
-	}
-
-	os.Exit(ret)
-}
 
 // TestNumericFieldsDuringCreateUser function used to test if API will return error or not if the input
 // for numeric field like facebook_id not numeric.
@@ -166,6 +138,8 @@ func TestFacebookIDMustUniqueDuringCreateUser(t *testing.T) {
 }
 
 func TestReferralCodeMustValidDuringCreateUser(t *testing.T) {
+	TestHelper.TruncateDatabase()
+
 	DB.Model(&Setting{}).Where("slug = ?", "referral_active").Update("value", "true")
 
 	sampleData := SampleData{DB: DB}

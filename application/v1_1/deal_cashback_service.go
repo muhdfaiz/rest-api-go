@@ -152,7 +152,7 @@ func (dcs *DealCashbackService) GetUserDealCashbacksFilterByTransactionStatusGro
 	if len(dealCashbacksForOtherShoppingLists) > 0 {
 		otherShoppingListWithDealCashbacks := &ShoppingList{}
 
-		otherShoppingListWithDealCashbacks.Name = "Others"
+		otherShoppingListWithDealCashbacks.Name = "Deleted Shopping List"
 
 		otherShoppingListWithDealCashbacks.Dealcashbacks = dealCashbacksForOtherShoppingLists
 

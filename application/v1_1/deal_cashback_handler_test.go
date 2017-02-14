@@ -533,7 +533,7 @@ func TestViewUserDealCashbacksShouldSuccess(t *testing.T) {
 	assert.Nil(t, shoppingListResponse[0].(map[string]interface{})["deleted_at"])
 	assert.Equal(t, users[0].GUID, shoppingListResponse[0].(map[string]interface{})["user_guid"])
 
-	assert.Equal(t, "Others", shoppingListResponse[1].(map[string]interface{})["name"])
+	assert.Equal(t, "Deleted Shopping List", shoppingListResponse[1].(map[string]interface{})["name"])
 
 	dealCashbacksResponse1 := shoppingListResponse[0].(map[string]interface{})["deal_cashbacks"].([]interface{})
 	dealCashbacksResponse2 := shoppingListResponse[1].(map[string]interface{})["deal_cashbacks"].([]interface{})

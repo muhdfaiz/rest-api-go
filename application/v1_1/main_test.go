@@ -2,7 +2,6 @@ package v1_1
 
 import (
 	"net/http/httptest"
-	"os"
 	"testing"
 
 	"bitbucket.org/cliqers/shoppermate-api/test/helper"
@@ -27,9 +26,7 @@ func TestMain(m *testing.M) {
 	ret := m.Run()
 
 	if ret == 0 {
-		TestHelper.Teardown()
+		//TestHelper.Teardown()
 		TestServer.Close()
 	}
-
-	os.Exit(ret)
 }

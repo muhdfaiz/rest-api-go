@@ -115,6 +115,34 @@ func (dch *DealCashbackHandler) ViewByShoppingList(context *gin.Context) {
 	context.JSON(http.StatusOK, gin.H{"data": dealCashbackResponse})
 }
 
+func (dch *DealCashbackHandler) ViewByUserAndGroupByShoppingList(context *gin.Context) {
+	tokenData := context.MustGet("Token").(map[string]string)
+
+	userGUID := context.Param("guid")
+
+	if tokenData["user_guid"] != userGUID {
+		context.JSON(http.StatusUnauthorized, Error.TokenIdentityNotMatchError("view deal cashbacks"))
+		return
+	}
+
+	relations := context.Query("include")
+
+	transactionStatus := context.Query("transaction_status")
+
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
+
+	userDealCashbacks, error := dch.DealCashbackService.GetUserDealCashbacksFilterByTransactionStatusGroupByShoppingList(dbTransaction, userGUID,
+		transactionStatus, relations)
+
+	if error != nil {
+		errorCode, _ := strconv.Atoi(error.Error.Status)
+		context.JSON(errorCode, error)
+		return
+	}
+
+	context.JSON(http.StatusOK, gin.H{"data": userDealCashbacks})
+}
+
 // ViewByUserAndDealGroupByShoppingList function used to retrieve all deal cashbacks by user GUID and deal GUID
 // including shopping list and group the result by Shopping List.
 func (dch *DealCashbackHandler) ViewByUserAndDealGroupByShoppingList(context *gin.Context) {

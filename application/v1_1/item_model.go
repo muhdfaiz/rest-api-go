@@ -9,7 +9,7 @@ type Item struct {
 	GenericID     *int       `json:"generic_id"`
 	Name          string     `json:"name"`
 	CategoryID    int        `json:"category_id"`
-	Category      string     `json:"category"`
+	Category      string     `sql:"-" json:"category"`
 	SubcategoryID int        `json:"subcategory_id"`
 	Remarks       string     `json:"remarks"`
 	CreatedAt     time.Time  `json:"created_at"`

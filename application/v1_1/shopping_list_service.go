@@ -114,6 +114,14 @@ func (sls *ShoppingListService) ViewShoppingListByGUID(shoppingListGUID string, 
 	return shoppingList
 }
 
+// ViewShoppingListByGUIDIncludingSoftDelete function used to retrieve shopping list using shopping list GUID including recoords those already
+// soft deleted.
+func (sls *ShoppingListService) ViewShoppingListByGUIDIncludingSoftDelete(shoppingListGUID string, relations string) *ShoppingList {
+	shoppingList := sls.ShoppingListRepository.GetUnscopedByGUID(shoppingListGUID, relations)
+
+	return shoppingList
+}
+
 // CheckUserShoppingListDuplicate function used to check if user already has shopping list with the same name and occasion type.
 func (sls *ShoppingListService) CheckUserShoppingListDuplicate(userGUID string, shoppingListName string,
 	occasionGUID string) *systems.ErrorData {

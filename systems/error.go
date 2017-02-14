@@ -68,7 +68,7 @@ const (
 	TitleTokenIdentityNotMatch              = "Your access token belong to other user"
 	TitleReachLimitSmsSentForToday          = "Phone number %s have reached limit SMS sent for today"
 	TitleDealAlreadyExpiredOrNotValid       = "Deal already expired or not valid."
-	TitleUserAlreadyAddDealIntoShoppingList = "Failed to added deal into the shopping list."
+	TitleUserAlreadyAddDealIntoShoppingList = "Failed to add deal into the shopping list."
 	TitleGrocerNotPublish                   = "Grocer GUID %s not available."
 
 	ErrorValidationRequired  = "The %s parameter is required."

@@ -1,5 +1,7 @@
 ## Shoppermate API
 
+[![Build Status](http://188.166.227.158:8080/buildStatus/icon?job=Shoppermate API)](http://188.166.227.158:8080/job/Shoppermate%20API/)
+
 ### Development Enviroment
 
 ### Prerequisite

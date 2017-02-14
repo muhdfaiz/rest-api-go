@@ -1,10 +1,10 @@
-hash: e312c6c031001916e90983faef82ff7d1c7713161ac3eeeb3b5f7ef3ce1d93db
-updated: 2017-01-25T12:48:57.636129858+08:00
+hash: f72c7ce38d0599b8d8c621283b3d8ce7b5cfd667ffc17966f5d7eef5bffec973
+updated: 2017-02-13T14:46:50.630156+08:00
 imports:
 - name: github.com/agtorre/gocolorize
   version: f42b554bf7f006936130c9bb4f971afd2d87f671
 - name: github.com/aws/aws-sdk-go
-  version: d19ab4db0d0710880bef4634767f1a9382aee67c
+  version: f615b0905b52177eb0efa0fe59340c05c0ea0ed9
   subpackages:
   - aws
   - aws/awserr
@@ -45,7 +45,7 @@ imports:
 - name: github.com/go-ini/ini
   version: 2ba15ac2dc9cdf88c110ec2dc0ced7fa45f5678c
 - name: github.com/go-playground/universal-translator
-  version: fc73d0c4bd37070e0d34e3647253565ff7847264
+  version: a29831bde2603d919f793d6e133f50e26a55c6c9
 - name: github.com/go-sql-driver/mysql
   version: a0583e0143b1624142adab07e0e97fe106d99561
 - name: github.com/golang/protobuf
@@ -55,7 +55,7 @@ imports:
 - name: github.com/huandu/facebook
   version: 24ce8d1913aaad265ff4cb4af6a1d1b1801d3021
 - name: github.com/jinzhu/gorm
-  version: 7fb9b62c17d90320e0582a4720db025c1652fd6a
+  version: 5050a58b457286dbda1844991866a86a434636ab
 - name: github.com/jinzhu/inflection
   version: 74387dc39a75e970e7a3ae6a3386b5bd2e5c5cff
 - name: github.com/jmespath/go-jmespath
@@ -72,6 +72,8 @@ imports:
   version: 09cded8978dc9e80714c4d85b0322337b0a1e5e0
 - name: github.com/klauspost/crc32
   version: cb6bfca970f6908083f26f39a79009d608efd5cd
+- name: github.com/kr/pretty
+  version: cfb55aafdaf3ec08f0db22699ab822c50091b1c4
 - name: github.com/manucorporat/sse
   version: ee05b128a739a0fb76c7ebd3ae4810c1de808d6d
 - name: github.com/mattn/go-isatty
@@ -127,6 +129,8 @@ testImports:
   version: 5215b55f46b2b919f50a1df0eaa5886afe4e3b3d
   subpackages:
   - spew
+- name: github.com/kr/text
+  version: 7cafcd837844e784b526369c9bce262804aebc60
 - name: github.com/pmezard/go-difflib
   version: 792786c7400a136282c1664665ae0a8db921c6c2
   subpackages:

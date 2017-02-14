@@ -133,7 +133,7 @@ func InitializeObjectAndSetRoutesV1_1(router *gin.Engine, DB *gorm.DB) *gin.Engi
 
 	// Deal Cashback Service
 	dealCashbackService := &DealCashbackService{DealCashbackRepository: dealCashbackRepository,
-		ShoppingListItemService: shoppingListItemService, DealRepository: dealRepository}
+		ShoppingListService: shoppingListService, ShoppingListItemService: shoppingListItemService, DealRepository: dealRepository}
 
 	// Transaction Status
 	transactionStatusRepository := &TransactionStatusRepository{DB: DB}
@@ -328,6 +328,7 @@ func InitializeObjectAndSetRoutesV1_1(router *gin.Engine, DB *gorm.DB) *gin.Engi
 			// Deal Cashback Handler
 			version1_1.POST("users/:guid/deal_cashbacks", dealCashbackHandler.Create)
 			version1_1.GET("users/:guid/deal_cashbacks/shopping_lists/:shopping_list_guid", dealCashbackHandler.ViewByShoppingList)
+			version1_1.GET("users/:guid/deal_cashbacks", dealCashbackHandler.ViewByUserAndGroupByShoppingList)
 			version1_1.GET("users/:guid/deal_cashbacks/deals/:deal_guid", dealCashbackHandler.ViewByUserAndDealGroupByShoppingList)
 
 			// Deal Cashback Transaction

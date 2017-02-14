@@ -27,7 +27,7 @@ func TestMain(m *testing.M) {
 	ret := m.Run()
 
 	if ret == 0 {
-		TestHelper.Teardown()
+		//TestHelper.Teardown()
 		TestServer.Close()
 	}
 

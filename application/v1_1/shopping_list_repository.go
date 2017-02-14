@@ -90,11 +90,27 @@ func (slr *ShoppingListRepository) GetByGUIDAndUserGUID(GUID string, userGUID st
 	return shoppingLists
 }
 
-// GetByGUID function used to retrieve user shopping list by and Shopping List GUID.
+// GetByGUID function used to retrieve user shopping list by Shopping List GUID.
 func (slr *ShoppingListRepository) GetByGUID(GUID string, relations string) *ShoppingList {
 	shoppingLists := &ShoppingList{}
 
 	DB := slr.DB.Model(&ShoppingList{})
+
+	if relations != "" {
+		DB = LoadRelations(DB, relations)
+	}
+
+	DB.Where(&ShoppingList{GUID: GUID}).First(&shoppingLists)
+
+	return shoppingLists
+}
+
+// GetUnscopedByGUID function used to retrieve user shopping list by Shopping List GUID including
+// soft deleted records
+func (slr *ShoppingListRepository) GetUnscopedByGUID(GUID string, relations string) *ShoppingList {
+	shoppingLists := &ShoppingList{}
+
+	DB := slr.DB.Unscoped()
 
 	if relations != "" {
 		DB = LoadRelations(DB, relations)

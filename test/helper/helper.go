@@ -53,10 +53,26 @@ func (h *Helper) TruncateDatabase() {
 	DB := Database.Connect("test")
 
 	DB.Exec("TRUNCATE TABLE users;")
+	DB.Exec("TRUNCATE TABLE shopping_lists;")
+	DB.Exec("TRUNCATE TABLE shopping_list_items;")
+	DB.Exec("TRUNCATE TABLE shopping_list_item_images;")
+	DB.Exec("TRUNCATE TABLE occasions;")
 	DB.Exec("TRUNCATE TABLE devices;")
 	DB.Exec("TRUNCATE TABLE sms_histories;")
 	DB.Exec("TRUNCATE TABLE transactions;")
 	DB.Exec("TRUNCATE TABLE referral_cashback_transactions;")
+	DB.Exec("TRUNCATE TABLE ads;")
+	DB.Exec("TRUNCATE TABLE category;")
+	DB.Exec("TRUNCATE TABLE subcategory;")
+	DB.Exec("TRUNCATE TABLE generic;")
+	DB.Exec("TRUNCATE TABLE deal_cashbacks;")
+	DB.Exec("TRUNCATE TABLE deal_cashback_status;")
+	DB.Exec("TRUNCATE TABLE deal_cashback_transactions;")
+	DB.Exec("TRUNCATE TABLE ads_grocer")
+	DB.Exec("TRUNCATE TABLE grocer;")
+	DB.Exec("TRUNCATE TABLE grocer_location;")
+	DB.Exec("TRUNCATE TABLE event;")
+	DB.Exec("TRUNCATE TABLE event_deal;")
 }
 
 func (h *Helper) Request(method string, jsonString []byte, url string, token string) (int, http.Header, interface{}) {

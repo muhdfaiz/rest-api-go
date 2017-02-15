@@ -136,6 +136,24 @@ func (sd *SampleData) SmsHistory(event, verificationCode, recipientNo string) (*
 	return result.Value.(*SmsHistory), nil
 }
 
+func (sd *SampleData) User(phoneNo, email string) *User {
+	facebookID := "100013413336774"
+
+	user := User{
+		GUID:         Helper.GenerateUUID(),
+		Name:         "User 1",
+		FacebookID:   &facebookID,
+		Email:        email,
+		PhoneNo:      phoneNo,
+		RegisterBy:   "facebook",
+		ReferralCode: "USE24853",
+	}
+
+	result := sd.DB.Create(&user)
+
+	return result.Value.(*User)
+}
+
 // Users function used to create sample user register using phone number and
 // facebook.
 func (sd *SampleData) Users() []*User {

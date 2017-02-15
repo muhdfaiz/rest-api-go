@@ -27,6 +27,10 @@ func (as *AuthService) AuthenticateUserViaPhoneNumber(dbTransaction *gorm.DB, ph
 func (as *AuthService) AuthenticateUserViaFacebook(dbTransaction *gorm.DB, userGUID, userPhoneNo, facebookID, deviceUUID string) (*systems.JwtToken, *systems.ErrorData) {
 	device := as.DeviceService.ViewDeviceByUUIDIncludingSoftDelete(deviceUUID)
 
+	if device.UUID == "" {
+		return nil, Error.ResourceNotFoundError("Device", "uuid", deviceUUID)
+	}
+
 	if device.UserGUID == nil {
 		_, error := as.DeviceService.UpdateByDeviceUUID(dbTransaction, deviceUUID, UpdateDevice{UserGUID: userGUID})
 

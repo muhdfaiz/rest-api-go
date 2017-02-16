@@ -3,7 +3,6 @@ package helper
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -12,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"bitbucket.org/cliqers/shoppermate-api/services/filesystem"
 	"bitbucket.org/cliqers/shoppermate-api/systems"
 
 	"github.com/gin-gonic/gin/binding"
@@ -73,6 +73,28 @@ func (h *Helper) TruncateDatabase() {
 	DB.Exec("TRUNCATE TABLE grocer_location;")
 	DB.Exec("TRUNCATE TABLE event;")
 	DB.Exec("TRUNCATE TABLE event_deal;")
+}
+
+// UploadToAmazonS3 is a function to upload test file into amazon S3.
+func (h *Helper) UploadToAmazonS3(uploadPath string, file multipart.File) (map[string]string, *systems.ErrorData) {
+	// Amazon S3 Config
+	accessKey := os.Getenv("AWS_ACCESS_KEY_ID")
+	secretKey := os.Getenv("AWS_SECRET_ACCESS_KEY")
+	region := os.Getenv("AWS_S3_REGION_NAME")
+	bucketName := os.Getenv("AWS_S3_BUCKET_NAME")
+
+	fileSystem := &filesystem.FileSystem{}
+	amazonS3FileSystem := fileSystem.Driver("amazonS3").(*filesystem.AmazonS3Upload)
+	amazonS3FileSystem.AccessKey = accessKey
+	amazonS3FileSystem.SecretKey = secretKey
+	amazonS3FileSystem.Region = region
+	amazonS3FileSystem.BucketName = bucketName
+
+	localUploadPath := os.Getenv("GOPATH") + os.Getenv("STORAGE_PATH")
+
+	uploadedFile, error := amazonS3FileSystem.Upload(file, localUploadPath, uploadPath)
+
+	return uploadedFile, error
 }
 
 func (h *Helper) Request(method string, jsonString []byte, url string, token string) (int, http.Header, interface{}) {
@@ -150,10 +172,6 @@ func (h *Helper) MultipartRequest(uri string, method string, params map[string]s
 		log.Fatal(err)
 	}
 	resp.Body.Close()
-
-	fmt.Println(resp.StatusCode)
-	fmt.Println(resp.Header)
-	fmt.Println(body)
 
 	var data interface{}
 

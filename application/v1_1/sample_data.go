@@ -241,6 +241,20 @@ func (sd *SampleData) Occasions() []*Occasion {
 	return data
 }
 
+// ShoppingList function used to create sample shopping list for test database.
+func (sd *SampleData) ShoppingList(userGUID, occasionGUID, name string) *ShoppingList {
+	shoppingList := ShoppingList{
+		GUID:         Helper.GenerateUUID(),
+		UserGUID:     userGUID,
+		OccasionGUID: occasionGUID,
+		Name:         name,
+	}
+
+	result := sd.DB.Create(&shoppingList)
+
+	return result.Value.(*ShoppingList)
+}
+
 // ShoppingLists function used to create sample shopping lists for test database.
 func (sd *SampleData) ShoppingLists(userGUID, occasionGUID string) []*ShoppingList {
 	shoppingList1 := ShoppingList{
@@ -278,73 +292,101 @@ func (sd *SampleData) ShoppingLists(userGUID, occasionGUID string) []*ShoppingLi
 	return data
 }
 
+// ShoppingListItem function used to create one sample shopping list item for test database.
+func (sd *SampleData) ShoppingListItem(userGUID, shoppingListGUID, name string, addedToCart int) *ShoppingListItem {
+	shoppingListItem := ShoppingListItem{
+		GUID:             Helper.GenerateUUID(),
+		UserGUID:         userGUID,
+		ShoppingListGUID: shoppingListGUID,
+		Name:             name,
+		Quantity:         2,
+		Category:         "Others",
+		SubCategory:      "Others",
+		Remark:           "Buy at Tesco",
+		AddedToCart:      addedToCart,
+	}
+
+	result := sd.DB.Create(&shoppingListItem)
+
+	return result.Value.(*ShoppingListItem)
+}
+
 // // ShoppingListItems function used to create sample shopping list item for test database.
-// func (sd *SampleData) ShoppingListItems(userGUID, shoppingListGUID string, addedToCart int) []*ShoppingListItem {
-// 	shoppingListItem1 := v1.ShoppingListItem{
-// 		GUID:             Helper.GenerateUUID(),
-// 		UserGUID:         userGUID,
-// 		ShoppingListGUID: shoppingListGUID,
-// 		Name:             "Carrot",
-// 		Quantity:         2,
-// 		Category:         "",
-// 		SubCategory:      "",
-// 		Remark:           "Buy carrot at Tesco",
-// 		AddedToCart:      addedToCart,
-// 	}
+func (sd *SampleData) ShoppingListItems(userGUID, shoppingListGUID string, addedToCart int) []*ShoppingListItem {
+	shoppingListItem1 := ShoppingListItem{
+		GUID:             Helper.GenerateUUID(),
+		UserGUID:         userGUID,
+		ShoppingListGUID: shoppingListGUID,
+		Name:             "Carrot",
+		Quantity:         2,
+		Category:         "Others",
+		SubCategory:      "Others",
+		Remark:           "Buy carrot at Tesco",
+		AddedToCart:      addedToCart,
+	}
 
-// 	result1 := sd.DB.Create(&shoppingListItem1)
+	result1 := sd.DB.Create(&shoppingListItem1)
 
-// 	shoppingListItem1 := v1.ShoppingListItem{
-// 		GUID:             Helper.GenerateUUID(),
-// 		UserGUID:         userGUID,
-// 		ShoppingListGUID: shoppingListGUID,
-// 		Name:             "Carrot",
-// 		Quantity:         2,
-// 		Category:         "",
-// 		SubCategory:      "",
-// 		Remark:           "Buy carrot at Tesco",
-// 		AddedToCart:      addedToCart,
-// 	}
+	shoppingListItem2 := ShoppingListItem{
+		GUID:             Helper.GenerateUUID(),
+		UserGUID:         userGUID,
+		ShoppingListGUID: shoppingListGUID,
+		Name:             "Carrot",
+		Quantity:         2,
+		Category:         "Others",
+		SubCategory:      "Others",
+		Remark:           "Buy carrot at Tesco",
+		AddedToCart:      addedToCart,
+	}
 
-// 	result1 := sd.DB.Create(&shoppingListItem1)
+	result2 := sd.DB.Create(&shoppingListItem2)
 
-// 	shoppingListItem1 := v1.ShoppingListItem{
-// 		GUID:             Helper.GenerateUUID(),
-// 		UserGUID:         userGUID,
-// 		ShoppingListGUID: shoppingListGUID,
-// 		Name:             "Carrot",
-// 		Quantity:         2,
-// 		Category:         "",
-// 		SubCategory:      "",
-// 		Remark:           "Buy carrot at Tesco",
-// 		AddedToCart:      addedToCart,
-// 	}
+	shoppingListItem3 := ShoppingListItem{
+		GUID:             Helper.GenerateUUID(),
+		UserGUID:         userGUID,
+		ShoppingListGUID: shoppingListGUID,
+		Name:             "Carrot",
+		Quantity:         2,
+		Category:         "Others",
+		SubCategory:      "Others",
+		Remark:           "Buy carrot at Tesco",
+		AddedToCart:      addedToCart,
+	}
 
-// 	result1 := sd.DB.Create(&shoppingListItem1)
+	result3 := sd.DB.Create(&shoppingListItem3)
 
-// 	shoppingListItem1 := v1.ShoppingListItem{
-// 		GUID:             Helper.GenerateUUID(),
-// 		UserGUID:         userGUID,
-// 		ShoppingListGUID: shoppingListGUID,
-// 		Name:             "Carrot",
-// 		Quantity:         2,
-// 		Category:         "",
-// 		SubCategory:      "",
-// 		Remark:           "Buy carrot at Tesco",
-// 		AddedToCart:      addedToCart,
-// 	}
+	shoppingListItem4 := ShoppingListItem{
+		GUID:             Helper.GenerateUUID(),
+		UserGUID:         userGUID,
+		ShoppingListGUID: shoppingListGUID,
+		Name:             "Carrot",
+		Quantity:         2,
+		Category:         "Others",
+		SubCategory:      "Others",
+		Remark:           "Buy carrot at Tesco",
+		AddedToCart:      addedToCart,
+	}
 
-// 	result1 := sd.DB.Create(&shoppingListItem1)
+	result4 := sd.DB.Create(&shoppingListItem4)
 
-// }
+	data := make([]*ShoppingListItem, 4)
+	data[0] = result1.Value.(*ShoppingListItem)
+	data[1] = result2.Value.(*ShoppingListItem)
+	data[2] = result3.Value.(*ShoppingListItem)
+	data[3] = result4.Value.(*ShoppingListItem)
 
-func (sd *SampleData) ShoppingListItemImage(userGUID, shoppingListGUID, shoppingListItemGUID string) *ShoppingListItemImage {
+	return data
+
+}
+
+// ShoppingListItemImage function used to create sample shopping list item image for test database.
+func (sd *SampleData) ShoppingListItemImage(userGUID, shoppingListGUID, shoppingListItemGUID, imageURL string) *ShoppingListItemImage {
 	shoppingListItemImage := ShoppingListItemImage{
 		GUID:                 Helper.GenerateUUID(),
 		UserGUID:             userGUID,
 		ShoppingListGUID:     shoppingListGUID,
 		ShoppingListItemGUID: shoppingListItemGUID,
-		URL:                  "https://s3-ap-southeast-1.amazonaws.com/shoppermate-test/item_images/a4d34eab-b177-303d-a1b3-7ba93ffb02f8.png",
+		URL:                  imageURL,
 	}
 
 	result := sd.DB.Create(&shoppingListItemImage)

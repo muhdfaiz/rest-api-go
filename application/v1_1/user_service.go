@@ -178,10 +178,10 @@ func (us *UserService) UpdateUser(dbTransaction *gorm.DB, userGUID, deviceUUID s
 	}
 
 	error = us.EmailService.SendTemplate(map[string]string{
-		"name":      userData.Name,
-		"email":     userData.Email,
+		"name":      user.Name,
+		"email":     user.Email,
 		"template":  "15-shoppermate-user-information-change",
-		"variables": `[{"name":"user_fullname","content":"` + userData.Name + `"}]`,
+		"variables": `[{"name":"user_fullname","content":"` + user.Name + `"}]`,
 	})
 
 	return user, nil

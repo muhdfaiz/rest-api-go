@@ -143,6 +143,14 @@ func (sh *SmsHandler) Verify(context *gin.Context) {
 		return
 	}
 
+	_, error = sh.DeviceService.UpdateByDeviceUUID(dbTransaction, smsData.DeviceUUID, UpdateDevice{UserGUID: user.GUID})
+
+	if error != nil {
+		dbTransaction.Rollback()
+		context.JSON(http.StatusInternalServerError, error)
+		return
+	}
+
 	debugToken := context.Query("debug_token")
 
 	jwtToken, error := JWT.GenerateToken(user.GUID, smsData.PhoneNo, smsData.DeviceUUID, debugToken)

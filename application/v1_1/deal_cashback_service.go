@@ -1,6 +1,7 @@
 package v1_1
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/jinzhu/gorm"
@@ -125,10 +126,10 @@ func (dcs *DealCashbackService) GetUserDealCashbacksFilterByTransactionStatusGro
 	dealCashbacksForOtherShoppingLists := []*DealCashback{}
 
 	for _, userDealCashbackGroupbyShoppingList := range userDealCashbacksGroupbyShoppingList {
-		relations = "deals"
-
 		if relations != "" {
 			relations = relations + ",deals"
+		} else {
+			relations = "deals"
 		}
 
 		dealCashbacks, _ := dcs.DealCashbackRepository.GetByUserGUIDShoppingListGUIDAndTransactionStatus(userGUID,
@@ -172,7 +173,7 @@ func (dcs *DealCashbackService) GetUserDealCashbacksByDealGUID(userGUID, dealGUI
 // GetUserDealCashbacksByShoppingList function used to retrieve all deal cashbacks for specific shopping list.
 func (dcs *DealCashbackService) GetUserDealCashbacksByShoppingList(dbTransaction *gorm.DB, userGUID, shoppingListGUID, transactionStatus, pageNumber,
 	pageLimit, relations string) ([]*DealCashback, int, *systems.ErrorData) {
-
+	fmt.Println(relations)
 	userDealCashbacks, totalUserDealCashbacks := dcs.DealCashbackRepository.GetByUserGUIDShoppingListGUIDAndTransactionStatus(userGUID, shoppingListGUID,
 		transactionStatus, pageNumber, pageLimit, "deals")
 
@@ -191,10 +192,10 @@ func (dcs *DealCashbackService) GetUserDealCashbacksByShoppingList(dbTransaction
 
 	dbTransaction.Commit()
 
-	relations = "deals"
-
 	if relations != "" {
 		relations = relations + ",deals"
+	} else {
+		relations = "deals"
 	}
 
 	userDealCashbacks, totalUserDealCashbacks = dcs.DealCashbackRepository.GetByUserGUIDShoppingListGUIDAndTransactionStatus(userGUID, shoppingListGUID,

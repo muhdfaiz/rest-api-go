@@ -1,7 +1,6 @@
 package v1_1
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -112,9 +111,8 @@ func (sh *SmsHandler) Verify(context *gin.Context) {
 	if device.UserGUID == nil {
 		context.JSON(http.StatusNotFound, Error.ResourceNotFoundError("Device", "device_uuid", smsData.DeviceUUID))
 	}
-	fmt.Println("User GUID")
-	fmt.Println(*device.UserGUID)
-	user := sh.UserRepository.GetByGUID(*device.UserGUID, "")
+
+	user := sh.UserRepository.GetByPhoneNo(smsData.PhoneNo, "")
 
 	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
 

@@ -2,17 +2,26 @@ package v1_1
 
 import "github.com/jinzhu/gorm"
 
-type EventRepository struct {
+// FeaturedDealRepository will handle all CRUD function related to resource featured deal.
+type FeaturedDealRepository struct {
 	DB *gorm.DB
 }
 
-// GetAllIncludingRelations function used to retrieve all event including other relations.
-func (er *EventRepository) GetAllIncludingRelations(todayDateInGMT8 string) []*Event {
+// GetActiveFeaturedDeals function used to retrieve all featured deals that still active.
+func (fdr *FeaturedDealRepository) GetActiveFeaturedDeals(pageNumber, pageLimit, relations string) []*Deal {
+	featuredDeals := []*Deal{}
+
 	events := []*Event{}
 
-	er.DB.Model(&Event{}).Preload("Deals", func(db *gorm.DB) *gorm.DB {
-		return db.Where("ads.start_date <= ? AND ads.end_date > ? AND ads.status = ?", todayDateInGMT8, todayDateInGMT8, "publish")
-	}).Preload("Deals.Items").Preload("Deals.Category").Preload("Deals.Items.Categories").Preload("Deals.Items.Subcategories").Preload("Deals.Grocerexclusives").Where(&Event{Status: "publish"}).Find(&events)
+	offset := SetOffsetValue(pageNumber, pageLimit)
 
-	return events
+	if pageLimit != "" && pageNumber != "" {
+		fdr.DB.Model(Event{}).Where(&Event{Status: "publish"}).Find(&events).Offset(offset).Limit(pageLimit).Related(&featuredDeals, "Deals")
+
+		return featuredDeals
+	}
+
+	fdr.DB.Model(Event{}).Where(&Event{Status: "publish"}).Find(&events).Related(&featuredDeals, "Deals")
+
+	return featuredDeals
 }

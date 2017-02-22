@@ -45,7 +45,9 @@ const (
 	ReachLimitSmsSentForToday          = "1031"
 	DealAlreadyExpiredOrNotValid       = "1032"
 	GrocerNotPublish                   = "1033"
-	ErrorRequestShoppermateEmailAPI    = "1034"
+	ErrorSendingEDMThroughEmailAPI     = "1034"
+	ErrorAddSubscriberToMailchimp      = "1035"
+	JSONNotValid                       = "1036"
 
 	TitleValidationError                    = "Validation failed."
 	TitleInternalServerError                = "Internal server error."
@@ -70,6 +72,7 @@ const (
 	TitleDealAlreadyExpiredOrNotValid       = "Deal already expired or not valid."
 	TitleUserAlreadyAddDealIntoShoppingList = "Failed to add deal into the shopping list."
 	TitleGrocerNotPublish                   = "Grocer GUID %s not available."
+	TitleJSONNotValid                       = "Your JSON string is not valid."
 
 	ErrorValidationRequired  = "The %s parameter is required."
 	ErrorValidationUUID5     = "The %s parameter is not valid uuid v5."
@@ -107,6 +110,7 @@ const (
 	ErrorDealAlreadyExpiredOrNotValid       = "Please try add another deal."
 	ErrorUserAlreadyAddDealIntoShoppingList = "User already add the deal into the shopping list."
 	ErrorGrocerNotPublish                   = "You are not allowed to view grocer with draft status."
+	ErrorJSONNotValid                       = `The JSON string '%s' is not valid JSON.`
 )
 
 type ErrorMessage struct{}
@@ -217,6 +221,18 @@ func (e Error) DBError(errors interface{}) *ErrorData {
 
 	return &ErrorData{
 		Error: errorFormat,
+	}
+}
+
+// JSONError will return 422 UnprocessableEntity
+func (e Error) JSONError(attribute string, value string) *ErrorData {
+	return &ErrorData{
+		Error: &ErrorFormat{
+			Status: strconv.Itoa(http.StatusNotFound),
+			Code:   JSONNotValid,
+			Title:  TitleJSONNotValid,
+			Detail: map[string]interface{}{attribute: fmt.Sprintf(ErrorJSONNotValid, value)},
+		},
 	}
 }
 

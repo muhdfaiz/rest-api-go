@@ -8,10 +8,18 @@ import (
 	"os"
 	"strings"
 
+	"encoding/json"
+
 	"bitbucket.org/cliqers/shoppermate-api/systems"
 )
 
 type EmailService struct{}
+
+type EmailResponse struct {
+	SuccessCode      string              `json:"success_code"`
+	ValidationErrors []map[string]string `json:"validation_errors"`
+	Error            interface{}         `json:"error"`
+}
 
 // AddSubscriber function used to add user into mailchimp list.
 // Can view list of subscribers here at link below.
@@ -21,36 +29,51 @@ func (e EmailService) AddSubscriber(email, name string) *systems.ErrorData {
 	values.Set("email", email)
 	values.Add("name", name)
 
-	req, err := http.NewRequest(
+	req, error := http.NewRequest(
 		"POST",
 		os.Getenv("SHOPPERMATE_EMAIL_API_URL")+"email/add-subscriber",
 		strings.NewReader(values.Encode()),
 	)
 
-	if err != nil {
-		return Error.InternalServerError(err, systems.ErrorRequestShoppermateEmailAPI)
+	if error != nil {
+		return Error.InternalServerError(error, systems.ErrorAddSubscriberToMailchimp)
 	}
 
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	client := &http.Client{}
 
-	resp, err := client.Do(req)
+	resp, error := client.Do(req)
 
-	if err != nil {
-		return Error.InternalServerError(err, systems.ErrorRequestShoppermateEmailAPI)
+	if error != nil {
+		return Error.InternalServerError(error, systems.ErrorAddSubscriberToMailchimp)
+	}
+
+	if resp.StatusCode != 200 {
+		return Error.InternalServerError(error, systems.ErrorAddSubscriberToMailchimp)
 	}
 
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, error := ioutil.ReadAll(resp.Body)
 
-	if err != nil {
-		return Error.InternalServerError(err, systems.ErrorRequestShoppermateEmailAPI)
-	}
+	fmt.Println(error)
+	fmt.Println(body)
+	// if error != nil {
+	// 	return Error.InternalServerError(error, systems.ErrorAddSubscriberToMailchimp)
+	// }
 
-	fmt.Println("body")
-	fmt.Println(string(body))
+	// emailResponse := EmailResponse{}
+
+	// error = json.Unmarshal(body, &emailResponse)
+
+	// if error != nil {
+	// 	return Error.InternalServerError(error, systems.ErrorAddSubscriberToMailchimp)
+	// }
+
+	// if emailResponse.SuccessCode != "200" || emailResponse.ValidationErrors != nil || emailResponse.Error != nil {
+	// 	return Error.InternalServerError(error, systems.ErrorAddSubscriberToMailchimp)
+	// }
 
 	return nil
 }
@@ -78,39 +101,49 @@ func (e EmailService) SendTemplate(inputs map[string]string) *systems.ErrorData 
 		values.Add("env", "sandbox")
 	}
 
-	fmt.Println("Data")
-	fmt.Println(values)
-
-	req, err := http.NewRequest(
+	req, error := http.NewRequest(
 		"POST",
 		os.Getenv("SHOPPERMATE_EMAIL_API_URL")+"email/send-template",
 		strings.NewReader(values.Encode()),
 	)
 
-	if err != nil {
-		return Error.InternalServerError(err, systems.ErrorRequestShoppermateEmailAPI)
+	if error != nil {
+		return Error.InternalServerError(error, systems.ErrorSendingEDMThroughEmailAPI)
 	}
 
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	client := &http.Client{}
 
-	resp, err := client.Do(req)
+	resp, error := client.Do(req)
 
-	if err != nil {
-		return Error.InternalServerError(err, systems.ErrorRequestShoppermateEmailAPI)
+	if error != nil {
+		return Error.InternalServerError(error, systems.ErrorSendingEDMThroughEmailAPI)
+	}
+
+	if resp.StatusCode != 200 {
+		return Error.InternalServerError(error, systems.ErrorSendingEDMThroughEmailAPI)
 	}
 
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, error := ioutil.ReadAll(resp.Body)
 
-	if err != nil {
-		return Error.InternalServerError(err, systems.ErrorRequestShoppermateEmailAPI)
+	if error != nil {
+		return Error.InternalServerError(error, systems.ErrorSendingEDMThroughEmailAPI)
 	}
 
-	fmt.Println("body")
-	fmt.Println(string(body))
+	emailResponse := EmailResponse{}
+
+	error = json.Unmarshal(body, &emailResponse)
+
+	if error != nil {
+		return Error.InternalServerError(error, systems.ErrorSendingEDMThroughEmailAPI)
+	}
+
+	if emailResponse.SuccessCode != "200" || emailResponse.ValidationErrors != nil || emailResponse.Error != nil {
+		return Error.InternalServerError(error, systems.ErrorSendingEDMThroughEmailAPI)
+	}
 
 	return nil
 }

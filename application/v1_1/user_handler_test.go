@@ -168,6 +168,8 @@ func TestReferralCodeMustValidDuringCreateUser(t *testing.T) {
 }
 
 func TestCreateUserWithReferralCodeNotActiveAndDeviceUUIDMustValid(t *testing.T) {
+	TestHelper.TruncateDatabase()
+
 	DB.Model(&Setting{}).Where("slug = ?", "referral_active").Update("value", "false")
 
 	requestURL := fmt.Sprintf("%s/v1_1/users", TestServer.URL)
@@ -193,7 +195,7 @@ func TestCreateUserWithReferralCodeNotActiveAndDeviceUUIDMustValid(t *testing.T)
 
 // TestDebug function used to test if API can create new user and generate access token without valid verification code.
 func TestCreateUserWithDebugMode(t *testing.T) {
-	DB.Exec("TRUNCATE TABLE devices;")
+	TestHelper.TruncateDatabase()
 
 	sampleData := SampleData{DB: DB}
 
@@ -212,7 +214,7 @@ func TestCreateUserWithDebugMode(t *testing.T) {
 	jsonBytes, _ := json.Marshal(userData)
 
 	status, _, body := TestHelper.Request("POST", jsonBytes, requestURL, "")
-
+	fmt.Println(body)
 	data := body.(map[string]interface{})["data"].(map[string]interface{})
 
 	fmt.Println(data)
@@ -224,8 +226,7 @@ func TestCreateUserWithDebugMode(t *testing.T) {
 
 // TestDebugToken function used to test if API will generate access token based on debug token value.
 func TestCreateUserWithDebugToken(t *testing.T) {
-	DB.Exec("TRUNCATE TABLE users;")
-	DB.Exec("TRUNCATE TABLE devices;")
+	TestHelper.TruncateDatabase()
 
 	sampleData := SampleData{DB: DB}
 
@@ -255,13 +256,11 @@ func TestCreateUserWithDebugToken(t *testing.T) {
 }
 
 func TestCreateUserWithReferral(t *testing.T) {
+	TestHelper.TruncateDatabase()
 	DB.Model(&Setting{}).Where("slug = ?", "referral_active").Update("value", "true")
 
 	referralPriceSetting := &Setting{}
 	DB.Model(&Setting{}).Where("slug = ?", "referral_price").Find(&referralPriceSetting)
-
-	DB.Exec("TRUNCATE TABLE users;")
-	DB.Exec("TRUNCATE TABLE devices;")
 
 	sampleData := SampleData{DB: DB}
 

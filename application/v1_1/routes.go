@@ -179,6 +179,12 @@ func InitializeObjectAndSetRoutesV1_1(router *gin.Engine, DB *gorm.DB) *gin.Engi
 	settingRepository := &SettingRepository{DB: DB}
 	settingService := &SettingService{SettingRepository: settingRepository}
 
+	// Featured Deal Objects
+	featuredDealRepository := &FeaturedDealRepository{DB: DB}
+
+	// EDM Objects
+	edmService := &EdmService{EmailService: emailService, DealService: dealService, FeaturedDealRepository: featuredDealRepository}
+
 	// Sms Handler
 	smsHandler := &SmsHandler{UserRepository: userRepository, SmsService: smsService,
 		SmsHistoryService: smsHistoryService, DeviceService: deviceService, UserService: userService}
@@ -236,6 +242,8 @@ func InitializeObjectAndSetRoutesV1_1(router *gin.Engine, DB *gorm.DB) *gin.Engi
 	genericHandler := &GenericHandler{GenericService: genericService, GenericTransformer: genericTransformer}
 
 	settingHandler := &SettingHandler{SettingService: settingService}
+
+	edmHandler := &EdmHandler{EdmService: edmService}
 
 	//  Routes
 	version1_1 := router.Group("/v1_1")
@@ -343,6 +351,8 @@ func InitializeObjectAndSetRoutesV1_1(router *gin.Engine, DB *gorm.DB) *gin.Engi
 			// Cashout Transaction
 			version1_1.POST("users/:guid/transactions/cashout_transactions", cashoutTransactionHandler.Create)
 
+			// EDM  Route
+			version1_1.POST("/users/:guid/edm/insufficient_funds", edmHandler.InsufficientFunds)
 		}
 	}
 

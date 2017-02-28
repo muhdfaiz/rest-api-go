@@ -24,7 +24,7 @@ func InitializeObjectAndSetRoutesV1_1(router *gin.Engine, DB *gorm.DB) *gin.Engi
 	region := os.Getenv("AWS_S3_REGION_NAME")
 	bucketName := os.Getenv("AWS_S3_BUCKET_NAME")
 
-	// Amazon S3 filesystem
+	// Amazon S3 filesystem Objects
 	fileSystem := &filesystem.FileSystem{}
 	amazonS3FileSystem := fileSystem.Driver("amazonS3").(*filesystem.AmazonS3Upload)
 	amazonS3FileSystem.AccessKey = accessKey
@@ -41,13 +41,13 @@ func InitializeObjectAndSetRoutesV1_1(router *gin.Engine, DB *gorm.DB) *gin.Engi
 	smsHistoryService := &SmsHistoryService{SmsHistoryRepository: smsHistoryRepository}
 	smsService := &SmsService{DB: DB, SmsHistoryRepository: smsHistoryRepository}
 
-	// Auth Service
+	// Auth Service Objects
 	authService := &AuthService{SmsService: smsService, DeviceService: deviceService}
 
-	// Facebook Service
+	// Facebook Service Objects
 	facebookService := &facebook.FacebookService{}
 
-	// Email Service
+	// Email Service Objects
 	emailService := &email.EmailService{}
 
 	// Occasion Objects
@@ -60,19 +60,19 @@ func InitializeObjectAndSetRoutesV1_1(router *gin.Engine, DB *gorm.DB) *gin.Engi
 	itemTransformer := &ItemTransformer{}
 	itemService := &ItemService{ItemRepository: itemRepository}
 
-	// Deal Cashback Repository
+	// Deal Cashback Repository Objects
 	dealCashbackRepository := &DealCashbackRepository{DB: DB}
 
-	// LocationService
+	// LocationService Objects
 	locationService := &location.LocationService{}
 
-	// Grocer Location Repository
+	// Grocer Location Repository Objects
 	grocerLocationRepository := &GrocerLocationRepository{DB: DB}
 
-	// Grocer Location Service
+	// Grocer Location Service Objects
 	grocerLocationService := &GrocerLocationService{GrocerLocationRepository: grocerLocationRepository}
 
-	// Deal Repository
+	// Deal Repository Objects
 	dealRepository := &DealRepository{DB: DB, GrocerLocationService: grocerLocationService}
 
 	// Item SubCategory Objects
@@ -105,6 +105,7 @@ func InitializeObjectAndSetRoutesV1_1(router *gin.Engine, DB *gorm.DB) *gin.Engi
 	defaultShoppingListRepository := &DefaultShoppingListRepository{DB: DB}
 	defaultShoppingListService := &DefaultShoppingListService{DefaultShoppingListRepository: defaultShoppingListRepository, DealService: dealService}
 
+	// Default Shopping List Item Objects
 	defaultShoppingListItemRepository := &DefaultShoppingListItemRepository{DB: DB}
 	defaultShoppingListItemService := &DefaultShoppingListItemService{DefaultShoppingListItemRepository: defaultShoppingListItemRepository}
 
@@ -113,7 +114,7 @@ func InitializeObjectAndSetRoutesV1_1(router *gin.Engine, DB *gorm.DB) *gin.Engi
 	genericService := &GenericService{GenericRepository: genericRepository}
 	genericTransformer := &GenericTransformer{}
 
-	// Shopping List Item Repository
+	// Shopping List Item Service Object
 	shoppingListItemService := &ShoppingListItemService{ShoppingListItemRepository: shoppingListItemRepository, ItemService: itemService,
 		ItemCategoryService: itemCategoryService, ItemSubCategoryService: itemSubCategoryService, DealService: dealService, GenericService: genericService}
 
@@ -128,22 +129,22 @@ func InitializeObjectAndSetRoutesV1_1(router *gin.Engine, DB *gorm.DB) *gin.Engi
 		DefaultShoppingListService: defaultShoppingListService, DefaultShoppingListItemService: defaultShoppingListItemService,
 		ShoppingListItemService: shoppingListItemService, ShoppingListItemImageService: shoppingListItemImageService}
 
-	// Deal Cashback Transformer
+	// Deal Cashback Transformer Objects
 	dealCashbackTransformer := &DealCashbackTransformer{}
 
-	// Deal Cashback Service
+	// Deal Cashback Service Objects
 	dealCashbackService := &DealCashbackService{DealCashbackRepository: dealCashbackRepository,
 		ShoppingListService: shoppingListService, ShoppingListItemService: shoppingListItemService, DealRepository: dealRepository}
 
-	// Transaction Status
+	// Transaction Status Objects
 	transactionStatusRepository := &TransactionStatusRepository{DB: DB}
 	transactionStatusService := &TransactionStatusService{TransactionStatusRepository: transactionStatusRepository}
 
-	// Transaction Type
+	// Transaction Type Objects
 	transactionTypeRepository := &TransactionTypeRepository{DB: DB}
 	transactionTypeService := &TransactionTypeService{TransactionTypeRepository: transactionTypeRepository}
 
-	// Transaction
+	// Transaction Objects
 	transactionRepository := &TransactionRepository{DB: DB, TransactionStatusRepository: transactionStatusRepository}
 	transactionTransformer := &TransactionTransformer{}
 	transactionService := &TransactionService{TransactionRepository: transactionRepository, TransactionTransformer: transactionTransformer,
@@ -154,7 +155,7 @@ func InitializeObjectAndSetRoutesV1_1(router *gin.Engine, DB *gorm.DB) *gin.Engi
 	referralCashbackTransactionRepository := &ReferralCashbackTransactionRepository{DB: DB}
 	referralCashbackTransactionService := &ReferralCashbackTransactionService{ReferralCashbackTransactionRepository: referralCashbackTransactionRepository}
 
-	// User Objects
+	// User Objects Objects
 	userRepository := &UserRepository{DB: DB}
 	userService := &UserService{UserRepository: userRepository, TransactionService: transactionService, DealCashbackService: dealCashbackService,
 		FacebookService: facebookService, SmsService: smsService, DeviceService: deviceService, ReferralCashbackTransactionService: referralCashbackTransactionService,
@@ -188,6 +189,10 @@ func InitializeObjectAndSetRoutesV1_1(router *gin.Engine, DB *gorm.DB) *gin.Engi
 	// EDM Objects
 	edmService := &EdmService{EmailService: emailService, DealService: dealService, FeaturedDealRepository: featuredDealRepository,
 		EdmHistoryRepository: edmHistoryRepository}
+
+	// Notification Objects
+	notificationRepository := &NotificationRepository{DB: DB}
+	notificationService := &NotificationService{NotificationRepository: notificationRepository}
 
 	// Sms Handler
 	smsHandler := &SmsHandler{UserRepository: userRepository, SmsService: smsService,
@@ -235,19 +240,29 @@ func InitializeObjectAndSetRoutesV1_1(router *gin.Engine, DB *gorm.DB) *gin.Engi
 	// Deal Cashback Transaction Handler
 	dealCashbackTransactionHandler := &DealCashbackTransactionHandler{DealCashbackTransactionService: dealCashbackTransactionService, TransactionService: transactionService}
 
+	// Transaction Handler
 	transactionHandler := &TransactionHandler{TransactionService: transactionService}
 
+	// Cashout Transaction Handler
 	cashoutTransactionHandler := &CashoutTransactionHandler{CashoutTransactionService: cashoutTransactionService, TransactionService: transactionService}
 
+	// Default Shopping List Handler
 	defaultShoppingListHandler := &DefaultShoppingListHandler{DefaultShoppingListService: defaultShoppingListService}
 
+	// Grocer Handler
 	grocerHandler := &GrocerHandler{GrocerService: grocerService}
 
+	// Generic Handler
 	genericHandler := &GenericHandler{GenericService: genericService, GenericTransformer: genericTransformer}
 
+	// Setting Handler
 	settingHandler := &SettingHandler{SettingService: settingService}
 
+	// EDM Handler
 	edmHandler := &EdmHandler{EdmService: edmService}
+
+	// Notification Handler
+	notificationHandler := &NotificationHandler{NotificationService: notificationService, DeviceService: deviceService}
 
 	//  Routes
 	version1_1 := router.Group("/v1_1")
@@ -289,6 +304,9 @@ func InitializeObjectAndSetRoutesV1_1(router *gin.Engine, DB *gorm.DB) *gin.Engi
 		// Setting  Route
 		version1_1.GET("/settings", settingHandler.ViewAll)
 
+		// Notification Routes
+		version1_1.GET("/device/:device_uuid/notifications", notificationHandler.ViewByDevice)
+
 		// Protected Routes
 		version1_1.Use(middlewares.Auth(DB))
 		{
@@ -323,7 +341,7 @@ func InitializeObjectAndSetRoutesV1_1(router *gin.Engine, DB *gorm.DB) *gin.Engi
 			version1_1.POST("users/:guid/shopping_lists/:shopping_list_guid/items/:item_guid/images", shoppingListItemImageHandler.Create)
 			version1_1.DELETE("users/:guid/shopping_lists/:shopping_list_guid/items/:item_guid/images/:image_guids", shoppingListItemImageHandler.Delete)
 
-			// Deal Handler
+			// Deal Routes
 			version1_1.GET("users/:guid/deals", dealHandler.ViewAllForRegisteredUser)
 			version1_1.GET("deals/:deal_guid", dealHandler.View)
 			version1_1.GET("users/:guid/deals/categories", dealHandler.ViewAndGroupByCategory)
@@ -334,29 +352,32 @@ func InitializeObjectAndSetRoutesV1_1(router *gin.Engine, DB *gorm.DB) *gin.Engi
 			version1_1.GET("users/:guid/deals/grocers/:grocer_guid/categories", itemCategoryHandler.ViewGrocerCategoriesThoseHaveDealsIncludingDeals)
 			version1_1.GET("users/:guid/deals/grocers/:grocer_guid/categories/:category_guid", dealHandler.ViewByGrocerAndCategory)
 
-			// Feature Deal (In Carousel) Handler
+			// Feature Deal Routes
 			version1_1.GET("users/:guid/featured_deals", eventHandler.ViewAll)
 
-			// Deal Cashback Handler
+			// Deal Cashback Routes
 			version1_1.POST("users/:guid/deal_cashbacks", dealCashbackHandler.Create)
 			version1_1.GET("users/:guid/deal_cashbacks/shopping_lists/:shopping_list_guid", dealCashbackHandler.ViewByShoppingList)
 			version1_1.GET("users/:guid/deal_cashbacks", dealCashbackHandler.ViewByUserAndGroupByShoppingList)
 			version1_1.GET("users/:guid/deal_cashbacks/deals/:deal_guid", dealCashbackHandler.ViewByUserAndDealGroupByShoppingList)
 
-			// Deal Cashback Transaction
+			// Deal Cashback Transaction Routes
 			version1_1.POST("users/:guid/transactions/deal_cashback_transactions", dealCashbackTransactionHandler.Create)
 
-			// Transaction Routes
+			// Transaction Routes Routes
 			version1_1.GET("users/:guid/transactions", transactionHandler.ViewUserTransactions)
 			version1_1.GET("users/:guid/transactions/:transaction_guid/deal_cashback_transactions", transactionHandler.ViewDealCashbackTransaction)
 			version1_1.GET("users/:guid/transactions/:transaction_guid/cashout_transactions", transactionHandler.ViewCashoutTransaction)
 			version1_1.GET("users/:guid/transactions/:transaction_guid/referral_cashback_transactions", transactionHandler.ViewReferralCashbackTransaction)
 
-			// Cashout Transaction
+			// Cashout Transaction Routes
 			version1_1.POST("users/:guid/transactions/cashout_transactions", cashoutTransactionHandler.Create)
 
-			// EDM  Route
+			// EDM  Routes
 			version1_1.POST("/users/:guid/edm/insufficient_funds", edmHandler.InsufficientFunds)
+
+			// Notification Routes
+			version1_1.GET("/device/:device_uuid/users/:user_guid/notifications", notificationHandler.ViewByDeviceAndUser)
 		}
 	}
 

@@ -1,10 +1,10 @@
-hash: 3152b24ea19c4b7f15d341e17c1977b9ddad7e517d44cbe1faa8247e1979ece5
-updated: 2016-12-17T11:25:53.142169338+08:00
+hash: f72c7ce38d0599b8d8c621283b3d8ce7b5cfd667ffc17966f5d7eef5bffec973
+updated: 2017-02-13T14:46:50.630156+08:00
 imports:
 - name: github.com/agtorre/gocolorize
   version: f42b554bf7f006936130c9bb4f971afd2d87f671
 - name: github.com/aws/aws-sdk-go
-  version: 0df2a7ae7e82d2643e4a8fed1b2e36a1cf0580bc
+  version: f615b0905b52177eb0efa0fe59340c05c0ea0ed9
   subpackages:
   - aws
   - aws/awserr
@@ -45,7 +45,7 @@ imports:
 - name: github.com/go-ini/ini
   version: 2ba15ac2dc9cdf88c110ec2dc0ced7fa45f5678c
 - name: github.com/go-playground/universal-translator
-  version: fc73d0c4bd37070e0d34e3647253565ff7847264
+  version: a29831bde2603d919f793d6e133f50e26a55c6c9
 - name: github.com/go-sql-driver/mysql
   version: a0583e0143b1624142adab07e0e97fe106d99561
 - name: github.com/golang/protobuf
@@ -55,7 +55,7 @@ imports:
 - name: github.com/huandu/facebook
   version: 24ce8d1913aaad265ff4cb4af6a1d1b1801d3021
 - name: github.com/jinzhu/gorm
-  version: 0f2ceb5a775714a46bc344976324e3e439f8cdcc
+  version: 5050a58b457286dbda1844991866a86a434636ab
 - name: github.com/jinzhu/inflection
   version: 74387dc39a75e970e7a3ae6a3386b5bd2e5c5cff
 - name: github.com/jmespath/go-jmespath
@@ -72,6 +72,8 @@ imports:
   version: 09cded8978dc9e80714c4d85b0322337b0a1e5e0
 - name: github.com/klauspost/crc32
   version: cb6bfca970f6908083f26f39a79009d608efd5cd
+- name: github.com/kr/pretty
+  version: cfb55aafdaf3ec08f0db22699ab822c50091b1c4
 - name: github.com/manucorporat/sse
   version: ee05b128a739a0fb76c7ebd3ae4810c1de808d6d
 - name: github.com/mattn/go-isatty
@@ -80,6 +82,10 @@ imports:
   version: 75f5ee659b5338d1ce823536fe9b9e50b4de01b4
 - name: github.com/revel/revel
   version: 8d01a054f6bca9430b3e497fe7b4f20ec8f054ce
+- name: github.com/RichardKnop/machinery
+  version: c3c63751e2fc158adc5257457670496324176645
+  subpackages:
+  - v1
 - name: github.com/robfig/pathtree
   version: 41257a1839e945fce74afd070e02bab2ea2c776a
 - name: github.com/satori/go.uuid
@@ -88,6 +94,12 @@ imports:
   version: 543781d2b79bd95c51ffe70e70a55c946ca211ff
 - name: github.com/smallfish/simpleyaml
   version: f8280fef35a3fd1d4cf13c5a9fa638398eebb6ad
+- name: github.com/streadway/amqp
+  version: 63795daa9a446c920826655f26ba31c81c860fd6
+- name: github.com/stretchr/testify
+  version: 69483b4bd14f5845b5a1e55bca19e954e827f1d0
+  subpackages:
+  - assert
 - name: github.com/ventu-io/go-shortid
   version: 6c56cef5189ca1b3d5ef01dc07f4d611dfc0bb33
 - name: golang.org/x/net
@@ -112,4 +124,14 @@ imports:
   - types
 - name: gopkg.in/yaml.v2
   version: a5b47d31c556af34a302ce5d659e6fea44d90de0
-testImports: []
+testImports:
+- name: github.com/davecgh/go-spew
+  version: 5215b55f46b2b919f50a1df0eaa5886afe4e3b3d
+  subpackages:
+  - spew
+- name: github.com/kr/text
+  version: 7cafcd837844e784b526369c9bce262804aebc60
+- name: github.com/pmezard/go-difflib
+  version: 792786c7400a136282c1664665ae0a8db921c6c2
+  subpackages:
+  - difflib

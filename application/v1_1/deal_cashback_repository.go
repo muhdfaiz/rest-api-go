@@ -71,6 +71,39 @@ func (dcr *DealCashbackRepository) GetByGUID(GUID string) *DealCashback {
 	return dealCashback
 }
 
+// GetByUserGUIDGroupByShoppingList function used to retrieve deal cashbacks by user GUID.
+func (dcr *DealCashbackRepository) GetByUserGUIDGroupByShoppingList(userGUID, pageNumber, pageLimit, relations string) ([]*DealCashback, int) {
+	dealCashbacks := []*DealCashback{}
+
+	DB := dcr.DB.Model(&DealCashback{})
+
+	offset := SetOffsetValue(pageNumber, pageLimit)
+
+	if relations != "" {
+		DB = LoadRelations(DB, relations)
+	}
+
+	if pageLimit != "" {
+		totalDealCashbacks := []*DealCashback{}
+
+		DB.Joins("left join shopping_lists on shopping_lists.guid = deal_cashbacks.shopping_list_guid").
+			Where(&DealCashback{UserGUID: userGUID}).Group("shopping_lists.guid").
+			Find(&totalDealCashbacks)
+
+		DB.Joins("left join shopping_lists on shopping_lists.guid = deal_cashbacks.shopping_list_guid").
+			Where(&DealCashback{UserGUID: userGUID}).Group("shopping_lists.guid").
+			Offset(offset).Limit(pageLimit).Find(&dealCashbacks)
+
+		return dealCashbacks, len(totalDealCashbacks)
+	}
+
+	DB.Joins("left join shopping_lists on shopping_lists.guid = deal_cashbacks.shopping_list_guid").
+		Where(&DealCashback{UserGUID: userGUID}).Group("shopping_lists.guid").
+		Find(&dealCashbacks)
+
+	return dealCashbacks, len(dealCashbacks)
+}
+
 // GetByUserGUIDAndDealGUIDGroupByShoppingList function used to retrieve deal cashbacks by user GUID.
 func (dcr *DealCashbackRepository) GetByUserGUIDAndDealGUIDGroupByShoppingList(userGUID, dealGUID, pageNumber, pageLimit, relations string) ([]*DealCashback, int) {
 	dealCashbacks := []*DealCashback{}
@@ -110,6 +143,29 @@ func (dcr *DealCashbackRepository) GetByDealCashbackTransactionGUIDAndGroupBySho
 	dealCashbacks := []*DealCashback{}
 
 	dcr.DB.Model(&DealCashback{}).Where(DealCashback{DealCashbackTransactionGUID: dealCashbackTransactionGUID}).Group("shopping_list_guid").Find(&dealCashbacks)
+
+	return dealCashbacks
+}
+
+// GetByUserGUIDAndTransactionStatusGroupByShoppingListGUID function used to retrieve deal cashback by
+// user GUID and tranasaction status and group the result by shopping list.
+func (dcr *DealCashbackRepository) GetByUserGUIDAndTransactionStatusGroupByShoppingListGUID(userGUID, transactionStatus string) []*DealCashback {
+	dealCashbacks := []*DealCashback{}
+
+	DB := dcr.DB.Model(&DealCashback{}).Where(&DealCashback{UserGUID: userGUID})
+
+	if transactionStatus == "pending" || transactionStatus == "approved" || transactionStatus == "reject" || transactionStatus == "partial_success" {
+		DB = DB.Joins("LEFT JOIN deal_cashback_transactions ON deal_cashback_transactions.guid = deal_cashback_transaction_guid").
+			Joins("LEFT JOIN transactions ON transactions.GUID = deal_cashback_transactions.transaction_guid").
+			Joins("LEFT JOIN transaction_statuses ON transaction_statuses.guid = transactions.transaction_status_guid").
+			Where("transaction_statuses.slug = ?", transactionStatus)
+	} else if transactionStatus == "notempty" {
+		DB = DB.Where("deal_cashback_transaction_guid IS NOT NULL")
+	} else if transactionStatus == "empty" {
+		DB = DB.Where("deal_cashback_transaction_guid IS NULL")
+	}
+
+	DB.Group("shopping_list_guid").Find(&dealCashbacks)
 
 	return dealCashbacks
 }
@@ -172,14 +228,48 @@ func (dcr *DealCashbackRepository) CalculateTotalCashbackAmountFromDealCashbackA
 	return dealCashback.TotalAmountOfCashback
 }
 
+// GetByUserGUIDAndTransactionStatus function used to retrieve deal cashback by user GUID and transaction status slug.
+func (dcr *DealCashbackRepository) GetByUserGUIDAndTransactionStatus(userGUID, transactionStatus, pageNumber, pageLimit,
+	relations string) ([]*DealCashback, int) {
+
+	dealCashbacks := []*DealCashback{}
+
+	offset := SetOffsetValue(pageNumber, pageLimit)
+
+	DB := dcr.DB.Model(&DealCashback{})
+
+	if relations != "" {
+		DB = LoadRelations(DB, relations)
+	}
+
+	DB = DB.Where(DealCashback{UserGUID: userGUID})
+
+	if transactionStatus == "pending" || transactionStatus == "approved" || transactionStatus == "reject" || transactionStatus == "partial_success" {
+		DB = DB.Joins("LEFT JOIN deal_cashback_transactions ON deal_cashback_transactions.guid = deal_cashback_transaction_guid").
+			Joins("LEFT JOIN transactions ON transactions.GUID = deal_cashback_transactions.transaction_guid").
+			Joins("LEFT JOIN transaction_statuses ON transaction_statuses.guid = transactions.transaction_status_guid").
+			Where("transaction_statuses.slug = ?", transactionStatus)
+	} else if transactionStatus == "notempty" {
+		DB = DB.Where("deal_cashback_transaction_guid IS NOT NULL")
+	} else if transactionStatus == "empty" {
+		DB = DB.Where("deal_cashback_transaction_guid IS NULL")
+	}
+
+	var totalDealCashback *int
+
+	DB.Offset(offset).Limit(pageLimit).Find(&dealCashbacks)
+
+	DB.Count(&totalDealCashback)
+
+	return dealCashbacks, *totalDealCashback
+}
+
 // GetByUserGUIDShoppingListGUIDAndTransactionStatus function used to retrieve deal cashback by user GUID, shopping list GUID
 // and transaction status slug.
 func (dcr *DealCashbackRepository) GetByUserGUIDShoppingListGUIDAndTransactionStatus(userGUID, shoppingListGUID, transactionStatus,
 	pageNumber, pageLimit, relations string) ([]*DealCashback, int) {
 
 	dealCashbacks := []*DealCashback{}
-
-	offset := SetOffsetValue(pageNumber, pageLimit)
 
 	DB := dcr.DB.Model(&DealCashback{})
 
@@ -202,9 +292,17 @@ func (dcr *DealCashbackRepository) GetByUserGUIDShoppingListGUIDAndTransactionSt
 
 	var totalDealCashback *int
 
-	DB.Offset(offset).Limit(pageLimit).Find(&dealCashbacks)
+	if pageNumber != "" && pageLimit != "" {
+		offset := SetOffsetValue(pageNumber, pageLimit)
 
-	DB.Count(&totalDealCashback)
+		DB.Offset(offset).Limit(pageLimit).Find(&dealCashbacks)
 
-	return dealCashbacks, *totalDealCashback
+		DB.Count(&totalDealCashback)
+
+		return dealCashbacks, *totalDealCashback
+	}
+
+	DB.Find(&dealCashbacks)
+
+	return dealCashbacks, 0
 }

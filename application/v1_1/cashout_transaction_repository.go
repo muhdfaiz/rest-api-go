@@ -32,3 +32,12 @@ func (ctr *CashoutTransactionRepository) Create(dbTransaction *gorm.DB, userGUID
 
 	return result.Value.(*CashoutTransaction), nil
 }
+
+// CountByUserGUID function used to count total number of cashout transaction by User GUID.
+func (ctr *CashoutTransactionRepository) CountByUserGUID(userGUID string) int {
+	var numberOfCashoutTransaction int
+
+	ctr.DB.Model(&CashoutTransaction{}).Where(&CashoutTransaction{UserGUID: userGUID}).Count(&numberOfCashoutTransaction)
+
+	return numberOfCashoutTransaction
+}

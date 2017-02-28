@@ -12,6 +12,7 @@ type ShoppingListServiceInterface interface {
 	DeleteUserShoppingListIncludingItemsAndImages(dbTransaction *gorm.DB, userGUID string, shoppingListGUID string) *systems.ErrorData
 	GetUserShoppingLists(userGUID string, relations string) ([]*ShoppingList, *systems.ErrorData)
 	ViewShoppingListByGUID(shoppingListGUID string, relations string) *ShoppingList
+	ViewShoppingListByGUIDIncludingSoftDelete(shoppingListGUID string, relations string) *ShoppingList
 	CheckUserShoppingListDuplicate(userGUID string, shoppingListName string, occasionGUID string) *systems.ErrorData
 	CheckUserShoppingListExistOrNot(userGUID string, shoppingListGUID string) (*ShoppingList, *systems.ErrorData)
 	GetShoppingListIncludingDealCashbacks(shoppingListGUID string, dealCashbackTransactionGUID string) *ShoppingList
@@ -26,6 +27,7 @@ type ShoppingListRepositoryInterface interface {
 	Delete(dbTransaction *gorm.DB, attribute string, value string) *systems.ErrorData
 	GetByUserGUID(userGUID string, relations string) []*ShoppingList
 	GetByGUID(GUID string, relations string) *ShoppingList
+	GetUnscopedByGUID(GUID string, relations string) *ShoppingList
 	GetByGUIDPreloadWithDealCashbacks(GUID string, dealCashbackTransactionGUID string, relations string) *ShoppingList
 	GetByGUIDAndUserGUID(GUID string, userGUID string, relations string) *ShoppingList
 	GetByUserGUIDOccasionGUIDAndName(userGUID string, name string, occasionGUID string, relations string) *ShoppingList

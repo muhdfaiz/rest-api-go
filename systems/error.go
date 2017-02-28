@@ -11,40 +11,44 @@ import (
 )
 
 const (
-	ValidationFailed                   = "1001"
-	FacebookIDNotValid                 = "1002"
-	DatabaseError                      = "1003"
-	ValueAlreadyExist                  = "1004"
-	BadRequest                         = "1005"
-	InternalServerError                = "1006"
-	BindingError                       = "1007"
-	InvalidFileType                    = "1008"
-	FileSizeExceededLimit              = "1009"
-	CannotReadFile                     = "1010"
-	CannotDeleteFile                   = "1011"
-	CannotCopyFile                     = "1012"
-	ErrorAmazonService                 = "1013"
-	ErrorConvertStringToInt            = "1014"
-	ErrorConvertIntToString            = "1015"
-	CannotDetectFileType               = "1016"
-	FailedToSendSMS                    = "1017"
-	FailedToGenerateReferralCode       = "1018"
-	ReferralCodeNotExist               = "1019"
-	ReferralCodeExceedLimit            = "1020"
-	ResourceNotFound                   = "1021"
-	VerificationCodeInvalid            = "1022"
-	CannotCreateResource               = "1023"
-	FailedToGenerateToken              = "1024"
-	TokenNotValid                      = "1025"
-	TokenIdentityNotMatch              = "1026"
-	FailedToDeleteAmazonS3File         = "1027"
-	QueryStringValidationFailed        = "1028"
-	CashoutAmountExceededLimit         = "1029"
-	StillHasPendingCashoutTransaction  = "1030"
-	UserAlreadyAddDealIntoShoppingList = "1030"
-	ReachLimitSmsSentForToday          = "1031"
-	DealAlreadyExpiredOrNotValid       = "1032"
-	GrocerNotPublish                   = "1033"
+	ValidationFailed                          = "1001"
+	FacebookIDNotValid                        = "1002"
+	DatabaseError                             = "1003"
+	ValueAlreadyExist                         = "1004"
+	BadRequest                                = "1005"
+	InternalServerError                       = "1006"
+	BindingError                              = "1007"
+	InvalidFileType                           = "1008"
+	FileSizeExceededLimit                     = "1009"
+	CannotReadFile                            = "1010"
+	CannotDeleteFile                          = "1011"
+	CannotCopyFile                            = "1012"
+	ErrorAmazonService                        = "1013"
+	ErrorConvertStringToInt                   = "1014"
+	ErrorConvertIntToString                   = "1015"
+	CannotDetectFileType                      = "1016"
+	FailedToSendSMS                           = "1017"
+	FailedToGenerateReferralCode              = "1018"
+	ReferralCodeNotExist                      = "1019"
+	ReferralCodeExceedLimit                   = "1020"
+	ResourceNotFound                          = "1021"
+	VerificationCodeInvalid                   = "1022"
+	CannotCreateResource                      = "1023"
+	FailedToGenerateToken                     = "1024"
+	TokenNotValid                             = "1025"
+	TokenIdentityNotMatch                     = "1026"
+	FailedToDeleteAmazonS3File                = "1027"
+	QueryStringValidationFailed               = "1028"
+	CashoutAmountExceededLimit                = "1029"
+	StillHasPendingCashoutTransaction         = "1030"
+	UserAlreadyAddDealIntoShoppingList        = "1030"
+	ReachLimitSmsSentForToday                 = "1031"
+	DealAlreadyExpiredOrNotValid              = "1032"
+	GrocerNotPublish                          = "1033"
+	ErrorSendingEDMThroughEmailAPI            = "1034"
+	ErrorAddSubscriberToMailchimp             = "1035"
+	JSONNotValid                              = "1036"
+	ReachLimitSendEDMInsufficientFundForToday = "1037"
 
 	TitleValidationError                    = "Validation failed."
 	TitleInternalServerError                = "Internal server error."
@@ -67,8 +71,9 @@ const (
 	TitleTokenIdentityNotMatch              = "Your access token belong to other user"
 	TitleReachLimitSmsSentForToday          = "Phone number %s have reached limit SMS sent for today"
 	TitleDealAlreadyExpiredOrNotValid       = "Deal already expired or not valid."
-	TitleUserAlreadyAddDealIntoShoppingList = "Failed to added deal into the shopping list."
+	TitleUserAlreadyAddDealIntoShoppingList = "Failed to add deal into the shopping list."
 	TitleGrocerNotPublish                   = "Grocer GUID %s not available."
+	TitleJSONNotValid                       = "Your JSON string is not valid."
 
 	ErrorValidationRequired  = "The %s parameter is required."
 	ErrorValidationUUID5     = "The %s parameter is not valid uuid v5."
@@ -106,6 +111,7 @@ const (
 	ErrorDealAlreadyExpiredOrNotValid       = "Please try add another deal."
 	ErrorUserAlreadyAddDealIntoShoppingList = "User already add the deal into the shopping list."
 	ErrorGrocerNotPublish                   = "You are not allowed to view grocer with draft status."
+	ErrorJSONNotValid                       = `The JSON string '%s' is not valid JSON.`
 )
 
 type ErrorMessage struct{}
@@ -219,6 +225,18 @@ func (e Error) DBError(errors interface{}) *ErrorData {
 	}
 }
 
+// JSONError will return 422 UnprocessableEntity
+func (e Error) JSONError(attribute string, value string) *ErrorData {
+	return &ErrorData{
+		Error: &ErrorFormat{
+			Status: strconv.Itoa(http.StatusNotFound),
+			Code:   JSONNotValid,
+			Title:  TitleJSONNotValid,
+			Detail: map[string]interface{}{attribute: fmt.Sprintf(ErrorJSONNotValid, value)},
+		},
+	}
+}
+
 // BindingError will return 400 Bad Request Error
 func (e Error) BindingError(errors interface{}) *ErrorData {
 	errorFormat := &ErrorFormat{}
@@ -294,6 +312,10 @@ func (e Error) ValidationErrors(errors map[string]*validator.FieldError) *ErrorD
 			message = fmt.Sprintf(ErrorGreaterThanOrEqual, errMsg.Name, errMsg.Param)
 		case "lte":
 			message = fmt.Sprintf(ErrorLessThanOrEqual, errMsg.Name, errMsg.Param)
+		case "latitude":
+			message = fmt.Sprintf(ErrorValidationLatitude, errMsg.Name)
+		case "longitude":
+			message = fmt.Sprintf(ErrorValidationLongitude, errMsg.Name)
 		}
 		errorMessages[errMsg.Name] = message
 	}

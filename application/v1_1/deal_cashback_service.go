@@ -11,10 +11,10 @@ import (
 
 // DealCashbackService will handle all application logic related to Deal Cashback resources.
 type DealCashbackService struct {
-	ShoppingListItemService    ShoppingListItemServiceInterface
-	ShoppingListItemRepository ShoppingListItemRepositoryInterface
-	DealCashbackRepository     DealCashbackRepositoryInterface
-	DealRepository             DealRepositoryInterface
+	ShoppingListService     ShoppingListServiceInterface
+	ShoppingListItemService ShoppingListItemServiceInterface
+	DealCashbackRepository  DealCashbackRepositoryInterface
+	DealRepository          DealRepositoryInterface
 }
 
 // CheckDealAlreadyAddedToShoppingList function used to check if user already added the deal into the same shopping list.
@@ -94,6 +94,75 @@ func (dcs *DealCashbackService) GetDealCashbacksByTransactionGUIDAndGroupByShopp
 	return dealCashbacksGroupByShoppingList
 }
 
+// GetUserDealCashbacksFilterByTransactionStatusGroupByShoppingList function used to retrieve all deal cashback for user for
+// specific transaction status like `empty`, `notempty`, `pending`, `approved` and group by shopping list.
+func (dcs *DealCashbackService) GetUserDealCashbacksFilterByTransactionStatusGroupByShoppingList(dbTransaction *gorm.DB, userGUID,
+	transactionStatus, relations string) ([]*ShoppingList, *systems.ErrorData) {
+
+	userShoppingListsWithDealCashbacks := []*ShoppingList{}
+
+	userDealCashbacksGroupbyShoppingList := dcs.DealCashbackRepository.GetByUserGUIDAndTransactionStatusGroupByShoppingListGUID(userGUID, transactionStatus)
+
+	if transactionStatus == "empty" {
+		for _, userDealCashbackGroupbyShoppingList := range userDealCashbacksGroupbyShoppingList {
+			dealCashbacks, _ := dcs.DealCashbackRepository.GetByUserGUIDShoppingListGUIDAndTransactionStatus(userGUID,
+				userDealCashbackGroupbyShoppingList.ShoppingListGUID, transactionStatus, "1", "", "deals")
+
+			for _, dealCashback := range dealCashbacks {
+
+				error := dcs.RemoveDealCashbackIfDealExpiredMoreThan7Days(dbTransaction, userGUID, dealCashback.ShoppingListGUID,
+					dealCashback.Deals.GUID, dealCashback.Deals.EndDate)
+
+				if error != nil {
+					dbTransaction.Rollback()
+					return nil, error
+				}
+			}
+		}
+	}
+
+	dbTransaction.Commit()
+
+	dealCashbacksForOtherShoppingLists := []*DealCashback{}
+
+	for _, userDealCashbackGroupbyShoppingList := range userDealCashbacksGroupbyShoppingList {
+		if relations != "" {
+			relations = relations + ",deals"
+		} else {
+			relations = "deals"
+		}
+
+		dealCashbacks, _ := dcs.DealCashbackRepository.GetByUserGUIDShoppingListGUIDAndTransactionStatus(userGUID,
+			userDealCashbackGroupbyShoppingList.ShoppingListGUID, transactionStatus, "1", "", relations)
+
+		dealCashbacks = dcs.SetDealsExpiredInfo(dealCashbacks)
+
+		shoppingList := dcs.ShoppingListService.ViewShoppingListByGUIDIncludingSoftDelete(userDealCashbackGroupbyShoppingList.ShoppingListGUID, "")
+
+		if len(dealCashbacks) > 0 {
+			if shoppingList.DeletedAt != nil {
+				dealCashbacksForOtherShoppingLists = append(dealCashbacksForOtherShoppingLists, dealCashbacks...)
+			} else {
+				shoppingList.Dealcashbacks = dealCashbacks
+
+				userShoppingListsWithDealCashbacks = append(userShoppingListsWithDealCashbacks, shoppingList)
+			}
+		}
+	}
+
+	if len(dealCashbacksForOtherShoppingLists) > 0 {
+		otherShoppingListWithDealCashbacks := &ShoppingList{}
+
+		otherShoppingListWithDealCashbacks.Name = "Deleted Shopping List"
+
+		otherShoppingListWithDealCashbacks.Dealcashbacks = dealCashbacksForOtherShoppingLists
+
+		userShoppingListsWithDealCashbacks = append(userShoppingListsWithDealCashbacks, otherShoppingListWithDealCashbacks)
+	}
+
+	return userShoppingListsWithDealCashbacks, nil
+}
+
 // GetUserDealCashbacksByDealGUID function used to retrieve all deal cashback for user through Deal Cashback Repository.
 func (dcs *DealCashbackService) GetUserDealCashbacksByDealGUID(userGUID, dealGUID, pageNumber, pageLimit, relations string) ([]*DealCashback, int) {
 	dealCashbacks, totalDealCashbacks := dcs.DealCashbackRepository.GetByUserGUIDAndDealGUIDGroupByShoppingList(userGUID, dealGUID, pageNumber, pageLimit, relations)
@@ -102,12 +171,12 @@ func (dcs *DealCashbackService) GetUserDealCashbacksByDealGUID(userGUID, dealGUI
 }
 
 // GetUserDealCashbacksByShoppingList function used to retrieve all deal cashbacks for specific shopping list.
-func (dcs *DealCashbackService) GetUserDealCashbacksByShoppingList(dbTransaction *gorm.DB, userGUID string, shoppingListGUID string, transactionStatus string, pageNumber string,
-	pageLimit string, relations string) ([]*DealCashback, int, *systems.ErrorData) {
-
+func (dcs *DealCashbackService) GetUserDealCashbacksByShoppingList(dbTransaction *gorm.DB, userGUID, shoppingListGUID, transactionStatus, pageNumber,
+	pageLimit, relations string) ([]*DealCashback, int, *systems.ErrorData) {
+	fmt.Println(relations)
 	userDealCashbacks, totalUserDealCashbacks := dcs.DealCashbackRepository.GetByUserGUIDShoppingListGUIDAndTransactionStatus(userGUID, shoppingListGUID,
 		transactionStatus, pageNumber, pageLimit, "deals")
-	fmt.Println(transactionStatus)
+
 	if transactionStatus == "empty" {
 		for _, userDealCashback := range userDealCashbacks {
 
@@ -123,23 +192,16 @@ func (dcs *DealCashbackService) GetUserDealCashbacksByShoppingList(dbTransaction
 
 	dbTransaction.Commit()
 
-	relations = relations + ",deals"
+	if relations != "" {
+		relations = relations + ",deals"
+	} else {
+		relations = "deals"
+	}
 
 	userDealCashbacks, totalUserDealCashbacks = dcs.DealCashbackRepository.GetByUserGUIDShoppingListGUIDAndTransactionStatus(userGUID, shoppingListGUID,
 		transactionStatus, pageNumber, pageLimit, relations)
 
-	currentDateInGMT8 := time.Now().UTC().Add(time.Hour * 8)
-
-	for key, userDealCashback := range userDealCashbacks {
-
-		diffInDays := currentDateInGMT8.Sub(userDealCashback.Deals.EndDate).Hours() / 24
-
-		// When the deal already expired
-		if diffInDays > 0 {
-			userDealCashbacks[key].Expired = 1
-			userDealCashbacks[key].RemainingDaysToRemove = int(diffInDays)
-		}
-	}
+	userDealCashbacks = dcs.SetDealsExpiredInfo(userDealCashbacks)
 
 	return userDealCashbacks, totalUserDealCashbacks, nil
 }
@@ -161,4 +223,23 @@ func (dcs *DealCashbackService) RemoveDealCashbackIfDealExpiredMoreThan7Days(dbT
 	}
 
 	return nil
+}
+
+// SetDealsExpiredInfo function used to set expired to true and set remaining days the deal cashback
+// will be remove.
+func (dcs *DealCashbackService) SetDealsExpiredInfo(dealCashbacks []*DealCashback) []*DealCashback {
+	currentDateInGMT8 := time.Now().UTC().Add(time.Hour * 8)
+
+	for key, dealCashback := range dealCashbacks {
+
+		diffInDays := currentDateInGMT8.Sub(dealCashback.Deals.EndDate).Hours() / 24
+
+		// When the deal already expired
+		if diffInDays > 0 {
+			dealCashbacks[key].Expired = 1
+			dealCashbacks[key].RemainingDaysToRemove = int(diffInDays)
+		}
+	}
+
+	return dealCashbacks
 }

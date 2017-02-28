@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"os"
 
-	"bitbucket.org/cliqers/shoppermate-api/application/v1"
 	"bitbucket.org/cliqers/shoppermate-api/systems"
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
@@ -60,7 +60,24 @@ func Auth(DB *gorm.DB) gin.HandlerFunc {
 		})
 
 		if claims, ok := token.Claims.(*CustomClaims); ok && token.Valid {
-			result := DB.Where("uuid = ? AND user_guid = ?", claims.Id, claims.Subject).Find(&v1.Device{})
+			type Device struct {
+				ID           int        `json:"id"`
+				GUID         string     `json:"guid"`
+				UserGUID     *string    `json:"user_guid"`
+				UUID         string     `json:"uuid"`
+				Os           string     `json:"os"`
+				Model        string     `json:"model"`
+				PushToken    string     `json:"push_token"`
+				AppVersion   string     `json:"app_version"`
+				TokenExpired int        `json:"token_expired"`
+				CreatedAt    time.Time  `json:"created_at"`
+				UpdatedAt    time.Time  `json:"updated_at"`
+				DeletedAt    *time.Time `json:"deleted_at"`
+			}
+
+			device := &Device{}
+
+			result := DB.Where("uuid = ? AND user_guid = ?", claims.Id, claims.Subject).Find(&device)
 
 			if result.RowsAffected == 0 {
 				c.JSON(http.StatusUnauthorized, Error.GenericError(strconv.Itoa(http.StatusUnauthorized), systems.TokenNotValid,

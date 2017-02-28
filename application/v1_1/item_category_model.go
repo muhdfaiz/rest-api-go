@@ -13,7 +13,7 @@ type ItemCategory struct {
 	DeletedAt *time.Time `json:"deleted_at"`
 
 	// Virtual Column. Use to include the column in the response.
-	TotalDeals int `json:"total_deals,omitempty"`
+	TotalDeals int `sql:"-" json:"total_deals,omitempty"`
 
 	// Item Category Has Many Deals
 	Deals []*Deal `json:"deals"`

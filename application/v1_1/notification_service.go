@@ -5,13 +5,13 @@ type NotificationService struct {
 }
 
 func (ns *NotificationService) GetAllNotificationsForDevice(deviceUUID string) []*Notification {
-	notifications := ns.NotificationRepository.GetByDeviceUUID(deviceUUID, "Transactions")
+	notifications := ns.NotificationRepository.GetByDeviceUUID(deviceUUID, "Transactions,Transactions.Transactiontypes,Transactions.Transactionstatuses")
 
 	return notifications
 }
 
 func (ns *NotificationService) GetNewsAndDealNotificationsForDevice(deviceUUID string) []*Notification {
-	notifications := ns.NotificationRepository.GetByDeviceUUIDAndTypes(deviceUUID, "Transactions")
+	notifications := ns.NotificationRepository.GetByDeviceUUIDAndTypes(deviceUUID, "Transactions,Transactions.Transactiontypes,Transactions.Transactionstatuses")
 
 	return notifications
 }

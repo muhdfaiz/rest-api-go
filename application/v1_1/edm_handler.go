@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
 )
 
 // EdmHandler will handle all task to send EDM template for various event.
@@ -33,9 +34,12 @@ func (eh *EdmHandler) InsufficientFunds(context *gin.Context) {
 		return
 	}
 
-	error := eh.EdmService.SendEdmForInsufficientFunds(userGUID, edmData)
+	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
+
+	error := eh.EdmService.SendEdmForInsufficientFunds(dbTransaction, userGUID, edmData)
 
 	if error != nil {
+		dbTransaction.Rollback()
 		errorCode, _ := strconv.Atoi(error.Error.Status)
 		context.JSON(errorCode, error)
 		return
@@ -43,6 +47,8 @@ func (eh *EdmHandler) InsufficientFunds(context *gin.Context) {
 
 	result := make(map[string]string)
 	result["message"] = "Successfully send EDM insufficient funds to user with GUID " + userGUID
+
+	dbTransaction.Commit()
 
 	context.JSON(http.StatusOK, gin.H{"data": result})
 }

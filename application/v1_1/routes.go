@@ -182,8 +182,12 @@ func InitializeObjectAndSetRoutesV1_1(router *gin.Engine, DB *gorm.DB) *gin.Engi
 	// Featured Deal Objects
 	featuredDealRepository := &FeaturedDealRepository{DB: DB}
 
+	// EDM History Objects
+	edmHistoryRepository := &EdmHistoryRepository{DB: DB}
+
 	// EDM Objects
-	edmService := &EdmService{EmailService: emailService, DealService: dealService, FeaturedDealRepository: featuredDealRepository}
+	edmService := &EdmService{EmailService: emailService, DealService: dealService, FeaturedDealRepository: featuredDealRepository,
+		EdmHistoryRepository: edmHistoryRepository}
 
 	// Sms Handler
 	smsHandler := &SmsHandler{UserRepository: userRepository, SmsService: smsService,

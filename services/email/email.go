@@ -1,6 +1,7 @@
 package email
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -8,17 +9,15 @@ import (
 	"os"
 	"strings"
 
-	"encoding/json"
-
 	"bitbucket.org/cliqers/shoppermate-api/systems"
 )
 
 type EmailService struct{}
 
 type EmailResponse struct {
-	SuccessCode      string              `json:"success_code"`
-	ValidationErrors []map[string]string `json:"validation_errors"`
-	Error            interface{}         `json:"error"`
+	SuccessCode      int         `json:"success_code"`
+	ValidationErrors interface{} `json:"validation_errors"`
+	Error            interface{} `json:"error"`
 }
 
 // AddSubscriber function used to add user into mailchimp list.
@@ -108,7 +107,7 @@ func (e EmailService) SendTemplate(inputs map[string]string) *systems.ErrorData 
 	)
 
 	if error != nil {
-		return Error.InternalServerError(error, systems.ErrorSendingEDMThroughEmailAPI)
+		return Error.InternalServerError(error.Error(), systems.ErrorSendingEDMThroughEmailAPI)
 	}
 
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -118,11 +117,11 @@ func (e EmailService) SendTemplate(inputs map[string]string) *systems.ErrorData 
 	resp, error := client.Do(req)
 
 	if error != nil {
-		return Error.InternalServerError(error, systems.ErrorSendingEDMThroughEmailAPI)
+		return Error.InternalServerError(error.Error(), systems.ErrorSendingEDMThroughEmailAPI)
 	}
 
 	if resp.StatusCode != 200 {
-		return Error.InternalServerError(error, systems.ErrorSendingEDMThroughEmailAPI)
+		return Error.InternalServerError(error.Error(), systems.ErrorSendingEDMThroughEmailAPI)
 	}
 
 	defer resp.Body.Close()
@@ -130,18 +129,18 @@ func (e EmailService) SendTemplate(inputs map[string]string) *systems.ErrorData 
 	body, error := ioutil.ReadAll(resp.Body)
 
 	if error != nil {
-		return Error.InternalServerError(error, systems.ErrorSendingEDMThroughEmailAPI)
+		return Error.InternalServerError(error.Error(), systems.ErrorSendingEDMThroughEmailAPI)
 	}
 
-	emailResponse := EmailResponse{}
+	emailResponse := new(EmailResponse)
 
 	error = json.Unmarshal(body, &emailResponse)
 
 	if error != nil {
-		return Error.InternalServerError(error, systems.ErrorSendingEDMThroughEmailAPI)
+		return Error.InternalServerError(error.Error(), systems.ErrorSendingEDMThroughEmailAPI)
 	}
 
-	if emailResponse.SuccessCode != "200" || emailResponse.ValidationErrors != nil || emailResponse.Error != nil {
+	if emailResponse.SuccessCode != 200 || emailResponse.ValidationErrors != false || emailResponse.Error != nil {
 		return Error.InternalServerError(error, systems.ErrorSendingEDMThroughEmailAPI)
 	}
 

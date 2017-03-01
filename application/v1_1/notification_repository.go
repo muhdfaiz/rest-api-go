@@ -7,8 +7,9 @@ type NotificationRepository struct {
 	DB *gorm.DB
 }
 
-// GetByDeviceUUID function used to retrive notification filter by device UUID.
-func (nr *NotificationRepository) GetByDeviceUUID(deviceUUID, relations string) []*Notification {
+// GetByDeviceUUIDAndBlastTypeAndEmptyUserGUIDAndType function used to retrive notification filter by device UUID and blastType
+// type and empty user GUID and types.
+func (nr *NotificationRepository) GetByDeviceUUIDAndBlastTypeAndEmptyUserGUIDAndType(deviceUUID, blastType, relations string) []*Notification {
 	notifications := []*Notification{}
 
 	DB := nr.DB.Model(&Notification{})
@@ -17,13 +18,14 @@ func (nr *NotificationRepository) GetByDeviceUUID(deviceUUID, relations string) 
 		DB = LoadRelations(DB, relations)
 	}
 
-	DB.Where(&Notification{UUID: deviceUUID}).Find(&notifications)
+	DB.Where(&Notification{UUID: deviceUUID, Blast: blastType}).Where("type = ? OR type = ?", "news", "deals").
+		Where("user_guid IS NULL OR user_guid = ''").Find(&notifications)
 
 	return notifications
 }
 
-// GetByDeviceUUIDAndTypes function used to retrive notification filter by device UUID and notification types.
-func (nr *NotificationRepository) GetByDeviceUUIDAndTypes(deviceUUID, relations string) []*Notification {
+// GetByUserGUIDAndBlastType function used to retrive notification filter by user GUID and Blast Type.
+func (nr *NotificationRepository) GetByUserGUIDAndBlastType(userGUID, blastType, relations string) []*Notification {
 	notifications := []*Notification{}
 
 	DB := nr.DB.Model(&Notification{})
@@ -32,7 +34,7 @@ func (nr *NotificationRepository) GetByDeviceUUIDAndTypes(deviceUUID, relations 
 		DB = LoadRelations(DB, relations)
 	}
 
-	DB.Where(&Notification{UUID: deviceUUID}).Where("type = ? OR type = ?", "news", "deals").Find(&notifications)
+	DB.Where(&Notification{UserGUID: userGUID, Blast: blastType}).Find(&notifications)
 
 	return notifications
 }

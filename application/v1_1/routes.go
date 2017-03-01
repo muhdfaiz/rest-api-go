@@ -305,7 +305,7 @@ func InitializeObjectAndSetRoutesV1_1(router *gin.Engine, DB *gorm.DB) *gin.Engi
 		version1_1.GET("/settings", settingHandler.ViewAll)
 
 		// Notification Routes
-		version1_1.GET("/device/:device_uuid/notifications", notificationHandler.ViewByDevice)
+		version1_1.GET("/device/:device_uuid/notifications", notificationHandler.ViewNotificationForGuest)
 
 		// Protected Routes
 		version1_1.Use(middlewares.Auth(DB))
@@ -377,7 +377,7 @@ func InitializeObjectAndSetRoutesV1_1(router *gin.Engine, DB *gorm.DB) *gin.Engi
 			version1_1.POST("/users/:guid/edm/insufficient_funds", edmHandler.InsufficientFunds)
 
 			// Notification Routes
-			version1_1.GET("/device/:device_uuid/users/:user_guid/notifications", notificationHandler.ViewByDeviceAndUser)
+			version1_1.GET("/device/:device_uuid/users/:user_guid/notifications", notificationHandler.ViewNotificationForRegisteredUser)
 		}
 	}
 

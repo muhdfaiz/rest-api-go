@@ -1,11 +1,11 @@
 package v1_1
 
 type NotificationServiceInterface interface {
-	GetAllNotificationsForDevice(deviceUUID string) []*Notification
-	GetNewsAndDealNotificationsForDevice(deviceUUID string) []*Notification
+	GetNotificationsForGuest(deviceUUID string) []*Notification
+	GetNotificationsForLoggedInUser(deviceUUID, userGUID string) []*Notification
 }
 
 type NotificationRepositoryInterface interface {
-	GetByDeviceUUID(deviceUUID, relations string) []*Notification
-	GetByDeviceUUIDAndTypes(deviceUUID, relations string) []*Notification
+	GetByDeviceUUIDAndBlastTypeAndEmptyUserGUIDAndType(deviceUUID, blastType, relations string) []*Notification
+	GetByUserGUIDAndBlastType(userGUID, blastType, relations string) []*Notification
 }

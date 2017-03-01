@@ -12,7 +12,7 @@ type NotificationHandler struct {
 	DeviceService       DeviceServiceInterface
 }
 
-func (nh *NotificationHandler) ViewByDevice(context *gin.Context) {
+func (nh *NotificationHandler) ViewNotificationForGuest(context *gin.Context) {
 	deviceUUID := context.Param("device_uuid")
 
 	_, error := nh.DeviceService.CheckDeviceExistOrNot(deviceUUID)
@@ -23,12 +23,12 @@ func (nh *NotificationHandler) ViewByDevice(context *gin.Context) {
 		return
 	}
 
-	notifications := nh.NotificationService.GetNewsAndDealNotificationsForDevice(deviceUUID)
+	notifications := nh.NotificationService.GetNotificationsForGuest(deviceUUID)
 
 	context.JSON(http.StatusOK, gin.H{"data": notifications})
 }
 
-func (nh *NotificationHandler) ViewByDeviceAndUser(context *gin.Context) {
+func (nh *NotificationHandler) ViewNotificationForRegisteredUser(context *gin.Context) {
 	deviceUUID := context.Param("device_uuid")
 
 	userGUID := context.Param("user_guid")
@@ -40,7 +40,7 @@ func (nh *NotificationHandler) ViewByDeviceAndUser(context *gin.Context) {
 		return
 	}
 
-	notifications := nh.NotificationService.GetAllNotificationsForDevice(deviceUUID)
+	notifications := nh.NotificationService.GetNotificationsForLoggedInUser(deviceUUID, userGUID)
 
 	context.JSON(http.StatusOK, gin.H{"data": notifications})
 }

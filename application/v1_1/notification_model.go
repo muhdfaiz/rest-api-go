@@ -4,6 +4,7 @@ import "time"
 
 type Notification struct {
 	ID               int       `json:"id"`
+	UserGUID         string    `json:"user_guid"`
 	GUID             string    `json:"guid"`
 	Title            string    `json:"title"`
 	Body             string    `json:"body"`
@@ -13,6 +14,7 @@ type Notification struct {
 	TransactionGUID  string    `json:"transaction_guid"`
 	ReadNotification int       `json:"read_notification"`
 	UUID             string    `json:"uuid"`
+	Blast            string    `json:"blast"`
 	AdminID          int       `json:"admin_id"`
 	CreatedAt        time.Time `json:"created_at"`
 

@@ -11,7 +11,7 @@ func (ns *NotificationService) GetNotificationsForGuest(deviceUUID string) []*No
 }
 
 func (ns *NotificationService) GetNotificationsForLoggedInUser(deviceUUID, userGUID string) []*Notification {
-	notifications := ns.NotificationRepository.GetByUserGUIDAndBlastType(userGUID, "targeted", "Transactions,Transactions.Transactiontypes,Transactions.Transactionstatuses")
+	notifications := ns.NotificationRepository.GetByUserGUIDOrUserGUIDEmptyAndDeviceUUID(deviceUUID, userGUID, "targeted", "Transactions,Transactions.Transactiontypes,Transactions.Transactionstatuses")
 
 	return notifications
 }

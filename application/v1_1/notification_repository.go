@@ -19,13 +19,12 @@ func (nr *NotificationRepository) GetByDeviceUUIDAndBlastTypeAndEmptyUserGUIDAnd
 	}
 
 	DB.Where(&Notification{UUID: deviceUUID, Blast: blastType}).Where("type = ? OR type = ?", "news", "deals").
-		Where("user_guid IS NULL OR user_guid = ''").Find(&notifications)
+		Where("user_guid IS NULL OR user_guid = ''").Order("created_at DESC").Find(&notifications)
 
 	return notifications
 }
 
-// GetByUserGUIDAndBlastType function used to retrive notification filter by user GUID and Blast Type.
-func (nr *NotificationRepository) GetByUserGUIDAndBlastType(userGUID, blastType, relations string) []*Notification {
+func (nr *NotificationRepository) GetByUserGUIDOrUserGUIDEmptyAndDeviceUUID(deviceUUID, userGUID, blastType, relations string) []*Notification {
 	notifications := []*Notification{}
 
 	DB := nr.DB.Model(&Notification{})
@@ -34,7 +33,7 @@ func (nr *NotificationRepository) GetByUserGUIDAndBlastType(userGUID, blastType,
 		DB = LoadRelations(DB, relations)
 	}
 
-	DB.Where(&Notification{UserGUID: userGUID, Blast: blastType}).Find(&notifications)
+	DB.Where("user_guid = '"+userGUID+"' OR user_guid IS NULL OR user_guid = ''").Where("uuid = ?", deviceUUID).Order("created_at DESC").Find(&notifications)
 
 	return notifications
 }

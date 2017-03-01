@@ -19,7 +19,7 @@ func (nr *NotificationRepository) GetByDeviceUUIDAndBlastTypeAndEmptyUserGUIDAnd
 	}
 
 	DB.Where(&Notification{UUID: deviceUUID, Blast: blastType}).Where("type = ? OR type = ?", "news", "deals").
-		Where("user_guid IS NULL OR user_guid = ''").Find(&notifications)
+		Where("user_guid IS NULL OR user_guid = ''").Order("created_at DESC").Find(&notifications)
 
 	return notifications
 }
@@ -33,7 +33,7 @@ func (nr *NotificationRepository) GetByUserGUIDOrUserGUIDEmptyAndDeviceUUID(devi
 		DB = LoadRelations(DB, relations)
 	}
 
-	DB.Where("user_guid = '"+userGUID+"' OR user_guid IS NULL OR user_guid = ''").Where("uuid = ?", deviceUUID).Find(&notifications)
+	DB.Where("user_guid = '"+userGUID+"' OR user_guid IS NULL OR user_guid = ''").Where("uuid = ?", deviceUUID).Order("created_at DESC").Find(&notifications)
 
 	return notifications
 }

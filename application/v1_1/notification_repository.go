@@ -24,8 +24,7 @@ func (nr *NotificationRepository) GetByDeviceUUIDAndBlastTypeAndEmptyUserGUIDAnd
 	return notifications
 }
 
-// GetByUserGUIDAndBlastType function used to retrive notification filter by user GUID and Blast Type.
-func (nr *NotificationRepository) GetByUserGUIDAndBlastType(userGUID, blastType, relations string) []*Notification {
+func (nr *NotificationRepository) GetByUserGUIDOrUserGUIDEmptyAndDeviceUUID(deviceUUID, userGUID, blastType, relations string) []*Notification {
 	notifications := []*Notification{}
 
 	DB := nr.DB.Model(&Notification{})
@@ -34,7 +33,7 @@ func (nr *NotificationRepository) GetByUserGUIDAndBlastType(userGUID, blastType,
 		DB = LoadRelations(DB, relations)
 	}
 
-	DB.Where(&Notification{UserGUID: userGUID, Blast: blastType}).Find(&notifications)
+	DB.Where("user_guid = '"+userGUID+"' OR user_guid IS NULL OR user_guid = ''").Where("uuid = ?", deviceUUID).Find(&notifications)
 
 	return notifications
 }

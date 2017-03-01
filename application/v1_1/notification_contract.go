@@ -7,5 +7,5 @@ type NotificationServiceInterface interface {
 
 type NotificationRepositoryInterface interface {
 	GetByDeviceUUIDAndBlastTypeAndEmptyUserGUIDAndType(deviceUUID, blastType, relations string) []*Notification
-	GetByUserGUIDAndBlastType(userGUID, blastType, relations string) []*Notification
+	GetByUserGUIDOrUserGUIDEmptyAndDeviceUUID(deviceUUID, userGUID, blastType, relations string) []*Notification
 }

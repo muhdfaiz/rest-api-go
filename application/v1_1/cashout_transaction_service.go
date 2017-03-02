@@ -11,6 +11,8 @@ import (
 type CashoutTransactionService struct {
 	CashoutTransactionRepository CashoutTransactionRepositoryInterface
 	TransactionService           TransactionServiceInterface
+	TransactionStatusService     TransactionStatusServiceInterface
+	TransactionTypeService       TransactionTypeServiceInterface
 	UserRepository               UserRepositoryInterface
 	EmailService                 email.EmailServiceInterface
 }
@@ -30,7 +32,11 @@ func (cts *CashoutTransactionService) CreateCashoutTransaction(dbTransaction *go
 		return nil, Error.GenericError("422", systems.CashoutAmountExceededLimit, "Cashout Amount Exceeded Limit.", "amount", "Cashout amount more than current amount available.")
 	}
 
-	transaction, error := cts.TransactionService.CreateTransaction(dbTransaction, userGUID, "c96358c0-13ae-59ad-863f-f113ddb33c68", "0f9e1582-d618-590c-bd7c-6850555ef8bb", cashoutTransactionData.Amount)
+	pendingTransactionStatus := cts.TransactionStatusService.GetTransactionStatusBySlug("pending")
+
+	cashoutTransactionType := cts.TransactionTypeService.GetTransactionTypeBySlug("cashout")
+
+	transaction, error := cts.TransactionService.CreateTransaction(dbTransaction, userGUID, cashoutTransactionType.GUID, pendingTransactionStatus.GUID, cashoutTransactionData.Amount)
 
 	if error != nil {
 		dbTransaction.Rollback()

@@ -9,9 +9,10 @@ type DealCashbackTransaction struct {
 	UserGUID         string     `json:"user_guid"`
 	TransactionGUID  string     `json:"transaction_guid"`
 	ReceiptURL       string     `json:"receipt_url"`
-	VerificationDate *string    `json:"verification_date"`
+	VerificationDate *time.Time `json:"verification_date"`
 	RemarkTitle      *string    `json:"remark_title"`
 	RemarkBody       *string    `json:"remark_body"`
+	Status           string     `json:"status"`
 	TotalDeal        int        `sql:"-" json:"total_deal"`
 	CreatedAt        time.Time  `json:"created_at"`
 	UpdatedAt        time.Time  `json:"updated_at"`

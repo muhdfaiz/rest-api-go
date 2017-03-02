@@ -12,6 +12,43 @@ type SampleData struct {
 	DB *gorm.DB
 }
 
+// Settings function used to create sample settings for test database.
+func (sd *SampleData) Settings(referralActive, pricePerReferral, maxReferralPerUser string) []*Setting {
+	referralActiveSetting := &Setting{
+		GUID:  Helper.GenerateUUID(),
+		Name:  "Referral Active",
+		Slug:  "referral_active",
+		Value: referralActive,
+	}
+
+	result1 := sd.DB.Create(referralActiveSetting)
+
+	pricePerReferralSetting := &Setting{
+		GUID:  Helper.GenerateUUID(),
+		Name:  "Price Per Referral",
+		Slug:  "referral_price",
+		Value: pricePerReferral,
+	}
+
+	result2 := sd.DB.Create(pricePerReferralSetting)
+
+	maxReferralPerUserSetting := &Setting{
+		GUID:  Helper.GenerateUUID(),
+		Name:  "Referral Active",
+		Slug:  "max_referral_user",
+		Value: maxReferralPerUser,
+	}
+
+	result3 := sd.DB.Create(maxReferralPerUserSetting)
+
+	data := make([]*Setting, 3)
+	data[0] = result1.Value.(*Setting)
+	data[1] = result2.Value.(*Setting)
+	data[1] = result3.Value.(*Setting)
+
+	return data
+}
+
 // DeviceWithoutUserGUID function used to create sample device without
 // user GUID.
 func (sd *SampleData) DeviceWithoutUserGUID() (*Device, *systems.ErrorData) {
@@ -136,6 +173,7 @@ func (sd *SampleData) SmsHistory(event, verificationCode, recipientNo string) (*
 	return result.Value.(*SmsHistory), nil
 }
 
+// User function used to create sample user data for testing database.
 func (sd *SampleData) User(phoneNo, email string) *User {
 	facebookID := "100013413336774"
 
@@ -147,6 +185,25 @@ func (sd *SampleData) User(phoneNo, email string) *User {
 		PhoneNo:      phoneNo,
 		RegisterBy:   "facebook",
 		ReferralCode: "USE24853",
+	}
+
+	result := sd.DB.Create(&user)
+
+	return result.Value.(*User)
+}
+
+// UserWithCustomWalletAmount function used to create user with custom wallet amount for testing
+// database. This useful when you want to test cashout transaction.
+func (sd *SampleData) UserWithCustomWalletAmount(phoneNo, email string, walletAmount float64) *User {
+	user := User{
+		GUID:         Helper.GenerateUUID(),
+		Name:         "User 1",
+		FacebookID:   nil,
+		Email:        email,
+		PhoneNo:      phoneNo,
+		RegisterBy:   "phone_no",
+		ReferralCode: "USE24853",
+		Wallet:       walletAmount,
 	}
 
 	result := sd.DB.Create(&user)
@@ -1316,4 +1373,177 @@ func (sd *SampleData) Deals() []*Ads {
 	data[9] = result10.Value.(*Ads)
 
 	return data
+}
+
+// DealCashback function used to create sample Deal Cashback for test database.
+func (sd *SampleData) DealCashback(userGUID, shoppingListGUID, dealGUID string, dealCashbackTransactionGUID *string) *DealCashback {
+	dealCashback := &DealCashback{
+		GUID:                        Helper.GenerateUUID(),
+		UserGUID:                    userGUID,
+		ShoppingListGUID:            shoppingListGUID,
+		DealGUID:                    dealGUID,
+		DealCashbackTransactionGUID: dealCashbackTransactionGUID,
+	}
+
+	result := sd.DB.Create(dealCashback)
+
+	return result.Value.(*DealCashback)
+}
+
+// DealCashbackTransactionWithPendingCleaningStatus function used to create sample Deal Cashback Transaction
+// with pending status for test database. Pending status means the verification date, remark title and
+// remark body is nil and the status must be 'pending cleaning'
+func (sd *SampleData) DealCashbackTransactionWithPendingCleaningStatus(dealCashbackGUID, userGUID, transactionGUID string) *DealCashbackTransaction {
+	dealCashbackTransaction := &DealCashbackTransaction{
+		GUID:             Helper.GenerateUUID(),
+		UserGUID:         userGUID,
+		TransactionGUID:  transactionGUID,
+		ReceiptURL:       "https://s3-ap-southeast-1.amazonaws.com/shoppermate-test/deal_cashback_receipts/test_receipt.jpg",
+		VerificationDate: nil,
+		RemarkTitle:      nil,
+		RemarkBody:       nil,
+		Status:           "pending cleaning",
+	}
+
+	result := sd.DB.Create(dealCashbackTransaction)
+
+	return result.Value.(*DealCashbackTransaction)
+}
+
+// DealCashbackTransactionWithPendingApprovalStatus function used to create sample Deal Cashback Transaction
+// with completed status for test database. Completed status means the verification date can't be empty
+// and status value must be 'pending approval'
+func (sd *SampleData) DealCashbackTransactionWithPendingApprovalStatus(dealCashbackGUID, userGUID, transactionGUID string) *DealCashbackTransaction {
+	verificationDate := time.Now().UTC().Add(time.Hour * -8)
+
+	dealCashbackTransaction := &DealCashbackTransaction{
+		GUID:             Helper.GenerateUUID(),
+		UserGUID:         userGUID,
+		TransactionGUID:  transactionGUID,
+		ReceiptURL:       "https://s3-ap-southeast-1.amazonaws.com/shoppermate-test/deal_cashback_receipts/test_receipt.jpg",
+		VerificationDate: &verificationDate,
+		RemarkTitle:      nil,
+		RemarkBody:       nil,
+		Status:           "pending approval",
+	}
+
+	result := sd.DB.Create(dealCashbackTransaction)
+
+	return result.Value.(*DealCashbackTransaction)
+}
+
+// DealCashbackTransactionWithCompletedStatus function used to create sample Deal Cashback Transaction
+// with completed status for test database. Completed status means the verification date can't be empty
+// and status value must be 'completed'
+func (sd *SampleData) DealCashbackTransactionWithCompletedStatus(dealCashbackGUID, userGUID, transactionGUID string) *DealCashbackTransaction {
+	verificationDate := time.Now().UTC().Add(time.Hour * -8)
+
+	dealCashbackTransaction := &DealCashbackTransaction{
+		GUID:             Helper.GenerateUUID(),
+		UserGUID:         userGUID,
+		TransactionGUID:  transactionGUID,
+		ReceiptURL:       "https://s3-ap-southeast-1.amazonaws.com/shoppermate-test/deal_cashback_receipts/test_receipt.jpg",
+		VerificationDate: &verificationDate,
+		RemarkTitle:      nil,
+		RemarkBody:       nil,
+		Status:           "completed",
+	}
+
+	result := sd.DB.Create(dealCashbackTransaction)
+
+	return result.Value.(*DealCashbackTransaction)
+}
+
+// TransactionStatuses function used to create sample transaction statuses for test database.
+func (sd *SampleData) TransactionStatuses() []*TransactionStatus {
+	pendingStatus := &TransactionStatus{
+		GUID: Helper.GenerateUUID(),
+		Slug: "pending",
+		Name: "pending",
+	}
+
+	result1 := sd.DB.Create(pendingStatus)
+
+	partialSuccessStatus := &TransactionStatus{
+		GUID: Helper.GenerateUUID(),
+		Slug: "partial_success",
+		Name: "partial success",
+	}
+
+	result2 := sd.DB.Create(partialSuccessStatus)
+
+	approvedStatus := &TransactionStatus{
+		GUID: Helper.GenerateUUID(),
+		Slug: "approved",
+		Name: "approved",
+	}
+
+	result3 := sd.DB.Create(approvedStatus)
+
+	rejectStatus := &TransactionStatus{
+		GUID: Helper.GenerateUUID(),
+		Slug: "reject",
+		Name: "reject",
+	}
+
+	result4 := sd.DB.Create(rejectStatus)
+
+	data := make([]*TransactionStatus, 4)
+	data[0] = result1.Value.(*TransactionStatus)
+	data[1] = result2.Value.(*TransactionStatus)
+	data[2] = result3.Value.(*TransactionStatus)
+	data[3] = result4.Value.(*TransactionStatus)
+
+	return data
+}
+
+// TransactionTypes function used to create sample transaction types for test database.
+func (sd *SampleData) TransactionTypes() []*TransactionType {
+	referralCashbackType := &TransactionType{
+		GUID: Helper.GenerateUUID(),
+		Slug: "referral_cashback",
+		Name: "Referral Cashback",
+	}
+
+	result1 := sd.DB.Create(referralCashbackType)
+
+	dealRedemptionType := &TransactionType{
+		GUID: Helper.GenerateUUID(),
+		Slug: "approved",
+		Name: "approved",
+	}
+
+	result2 := sd.DB.Create(dealRedemptionType)
+
+	cashoutType := &TransactionType{
+		GUID: Helper.GenerateUUID(),
+		Slug: "cashout",
+		Name: "Cashout",
+	}
+
+	result3 := sd.DB.Create(cashoutType)
+
+	data := make([]*TransactionType, 3)
+	data[0] = result1.Value.(*TransactionType)
+	data[1] = result2.Value.(*TransactionType)
+	data[2] = result3.Value.(*TransactionType)
+
+	return data
+}
+
+// Transaction function used to create sample transaction for testing database.
+func (sd *SampleData) Transaction(userGUID, transactionTypeGUID, transactionStatusGUID string, readStatus int, totalAmount float64) *Transaction {
+	transaction := &Transaction{
+		GUID:                  Helper.GenerateUUID(),
+		UserGUID:              userGUID,
+		TransactionTypeGUID:   transactionTypeGUID,
+		TransactionStatusGUID: transactionStatusGUID,
+		ReadStatus:            0,
+		ReferenceID:           Helper.GenerateUniqueShortID(),
+		TotalAmount:           totalAmount,
+	}
+
+	result := sd.DB.Create(transaction)
+
+	return result.Value.(*Transaction)
 }

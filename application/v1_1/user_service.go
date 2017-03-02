@@ -22,6 +22,8 @@ import (
 type UserService struct {
 	UserRepository                     UserRepositoryInterface
 	TransactionService                 TransactionServiceInterface
+	TransactionTypeService             TransactionTypeServiceInterface
+	TransactionStatusService           TransactionStatusServiceInterface
 	DealCashbackService                DealCashbackServiceInterface
 	FacebookService                    facebook.FacebookServiceInterface
 	SmsService                         SmsServiceInterface
@@ -295,7 +297,12 @@ func (us *UserService) CreateReferralCashbackTransaction(dbTransaction *gorm.DB,
 
 			pricePerReferralInFloat64, _ := strconv.ParseFloat(referralSettings["price_per_referral"], 64)
 
-			transaction, error := us.TransactionService.CreateTransaction(dbTransaction, referentUser.GUID, "a606113b-fb22-59f3-876f-dd05da7befc7", "669e13c0-eaea-5aef-a25f-6ba54b529e33", pricePerReferralInFloat64)
+			approvedTransactionStatus := us.TransactionStatusService.GetTransactionStatusBySlug("approved")
+
+			referralCashbackTransactionType := us.TransactionTypeService.GetTransactionTypeBySlug("referral_cashback")
+
+			transaction, error := us.TransactionService.CreateTransaction(dbTransaction, referentUser.GUID, referralCashbackTransactionType.GUID,
+				approvedTransactionStatus.GUID, pricePerReferralInFloat64)
 
 			if error != nil {
 				return error

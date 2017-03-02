@@ -59,8 +59,6 @@ func (h *Helper) TruncateDatabase() {
 	DB.Exec("TRUNCATE TABLE occasions;")
 	DB.Exec("TRUNCATE TABLE devices;")
 	DB.Exec("TRUNCATE TABLE sms_histories;")
-	DB.Exec("TRUNCATE TABLE transactions;")
-	DB.Exec("TRUNCATE TABLE referral_cashback_transactions;")
 	DB.Exec("TRUNCATE TABLE ads;")
 	DB.Exec("TRUNCATE TABLE category;")
 	DB.Exec("TRUNCATE TABLE subcategory;")
@@ -73,6 +71,13 @@ func (h *Helper) TruncateDatabase() {
 	DB.Exec("TRUNCATE TABLE grocer_location;")
 	DB.Exec("TRUNCATE TABLE event;")
 	DB.Exec("TRUNCATE TABLE event_deal;")
+	DB.Exec("TRUNCATE TABLE settings;")
+	DB.Exec("TRUNCATE TABLE transactions;")
+	DB.Exec("TRUNCATE TABLE transaction_types;")
+	DB.Exec("TRUNCATE TABLE transaction_statuses;")
+	DB.Exec("TRUNCATE TABLE referral_cashback_transactions;")
+	DB.Exec("TRUNCATE TABLE cashout_transactions;")
+
 }
 
 // UploadToAmazonS3 is a function to upload test file into amazon S3.

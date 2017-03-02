@@ -14,9 +14,9 @@ import (
 	"bitbucket.org/cliqers/shoppermate-api/systems"
 )
 
-// TestNumericFieldsDuringCreateUser function used to test if API will return error or not if the input
+// TestCreateUserShouldReturnNumericValidationErrors function used to test if API will return error or not if the input
 // for numeric field like facebook_id not numeric.
-func TestNumericFieldsDuringCreateUser(t *testing.T) {
+func TestCreateUserShouldReturnNumericValidationErrors(t *testing.T) {
 	requestURL := fmt.Sprintf("%s/v1_1/users", TestServer.URL)
 
 	userData := map[string]string{
@@ -38,9 +38,9 @@ func TestNumericFieldsDuringCreateUser(t *testing.T) {
 	assert.NotEmpty(t, errorDetail["verification_code"])
 }
 
-// TestRequiredFieldsDuringCreateUser function used to test if API will return error if the input data not
+// TestCreateUserShouldReturnRequiredFieldValidationErrors function used to test if API will return error if the input data not
 // contain all the required fields.
-func TestRequiredFieldsDuringCreateUser(t *testing.T) {
+func TestCreateUserShouldReturnRequiredFieldValidationErrors(t *testing.T) {
 	requestURL := fmt.Sprintf("%s/v1_1/users", TestServer.URL)
 
 	userData := map[string]string{
@@ -62,9 +62,9 @@ func TestRequiredFieldsDuringCreateUser(t *testing.T) {
 	assert.NotEmpty(t, errorDetail["device_uuid"])
 }
 
-// TestPhoneNumberMustUnique function used to test if API return error or not when the input data
+// TestPhoneNumberShouldUniqueDuringCreateUser function used to test if API return error or not when the input data
 // contain the same phone number that already exist in database.
-func TestPhoneNumberMustUniqueDuringCreateUser(t *testing.T) {
+func TestPhoneNumberShouldUniqueDuringCreateUser(t *testing.T) {
 	sampleData := SampleData{DB: DB}
 
 	users := sampleData.Users()
@@ -170,7 +170,9 @@ func TestReferralCodeMustValidDuringCreateUser(t *testing.T) {
 func TestCreateUserWithReferralCodeNotActiveAndDeviceUUIDMustValid(t *testing.T) {
 	TestHelper.TruncateDatabase()
 
-	DB.Model(&Setting{}).Where("slug = ?", "referral_active").Update("value", "false")
+	sampleData := SampleData{DB: DB}
+
+	sampleData.Settings("false", "2", "5")
 
 	requestURL := fmt.Sprintf("%s/v1_1/users", TestServer.URL)
 
@@ -214,12 +216,10 @@ func TestCreateUserWithDebugMode(t *testing.T) {
 	jsonBytes, _ := json.Marshal(userData)
 
 	status, _, body := TestHelper.Request("POST", jsonBytes, requestURL, "")
-	fmt.Println(body)
+
 	data := body.(map[string]interface{})["data"].(map[string]interface{})
 
-	fmt.Println(data)
-	fmt.Println(status)
-
+	assert.Equal(t, 200, status)
 	assert.NotEmpty(t, data["access_token"])
 	assert.NotEmpty(t, data["user"])
 }
@@ -257,16 +257,32 @@ func TestCreateUserWithDebugToken(t *testing.T) {
 
 func TestCreateUserWithReferral(t *testing.T) {
 	TestHelper.TruncateDatabase()
-	DB.Model(&Setting{}).Where("slug = ?", "referral_active").Update("value", "true")
-
-	referralPriceSetting := &Setting{}
-	DB.Model(&Setting{}).Where("slug = ?", "referral_price").Find(&referralPriceSetting)
 
 	sampleData := SampleData{DB: DB}
+
+	sampleData.Settings("true", "2", "5")
+
+	sampleData.TransactionStatuses()
+
+	sampleData.TransactionTypes()
 
 	device, _ := sampleData.DeviceWithoutUserGUID()
 
 	users := sampleData.Users()
+
+	referralPriceSetting := &Setting{}
+
+	// Retrieve GUID for Approved Transaction Status
+	approvedTransactionStatus := &TransactionStatus{}
+
+	DB.Model(&TransactionStatus{}).Where("slug = ?", "approved").Find(&approvedTransactionStatus)
+
+	// Retrieve GUID for Referral Cashback Transaction Type
+	referralCashbackTransactionType := &TransactionType{}
+
+	DB.Model(&TransactionType{}).Where("slug = ?", "referral_cashback").Find(&referralCashbackTransactionType)
+
+	DB.Model(&Setting{}).Where("slug = ?", "referral_price").Find(&referralPriceSetting)
 
 	requestURL := fmt.Sprintf("%s/v1_1/users?debug=1", TestServer.URL)
 
@@ -306,29 +322,33 @@ func TestCreateUserWithReferral(t *testing.T) {
 
 	DB.Model(&Transaction{}).Where("guid = ?", referralCashbackTransaction.TransactionGUID).Find(&transaction)
 
+	referralPriceInFloat, _ := strconv.ParseFloat(referralPriceSetting.Value, 64)
+
 	assert.NotEmpty(t, transaction.GUID)
 	assert.Equal(t, user1.GUID, transaction.UserGUID)
-	assert.Equal(t, "a606113b-fb22-59f3-876f-dd05da7befc7", transaction.TransactionTypeGUID)
-	assert.Equal(t, "669e13c0-eaea-5aef-a25f-6ba54b529e33", transaction.TransactionStatusGUID)
+	assert.Equal(t, referralCashbackTransactionType.GUID, transaction.TransactionTypeGUID)
+	assert.Equal(t, approvedTransactionStatus.GUID, transaction.TransactionStatusGUID)
 	assert.NotEmpty(t, transaction.ReferenceID)
-	assert.Equal(t, referralPriceSetting.Value, strconv.FormatFloat(transaction.TotalAmount, 'f', 0, 64))
+	assert.Equal(t, referralPriceInFloat, transaction.TotalAmount)
 
 }
 
 func TestMaxReferralPerUser(t *testing.T) {
 	TestHelper.TruncateDatabase()
 
-	DB.Model(&Setting{}).Where("slug = ?", "referral_active").Update("value", "true")
+	sampleData := SampleData{DB: DB}
 
-	DB.Model(&Setting{}).Select("value").Where("slug = ?", "max_referral_user").Updates(map[string]interface{}{"value": "2"})
+	sampleData.Settings("true", "2", "2")
+
+	sampleData.TransactionStatuses()
+
+	sampleData.TransactionTypes()
+
+	devices, _ := sampleData.DevicesWithoutUserGUID()
 
 	referralPriceSetting := &Setting{}
 
 	DB.Model(&Setting{}).Where("slug = ?", "referral_price").Find(&referralPriceSetting)
-
-	sampleData := SampleData{DB: DB}
-
-	devices, _ := sampleData.DevicesWithoutUserGUID()
 
 	users := sampleData.Users()
 
@@ -377,7 +397,7 @@ func TestMaxReferralPerUser(t *testing.T) {
 
 	DB.Table("users").Where("guid = ?", users[0].GUID).Find(&user1)
 
-	assert.Equal(t, "4", strconv.FormatFloat(user1.Wallet, 'f', 0, 64))
+	assert.Equal(t, 4.00, user1.Wallet)
 }
 
 func TestProfileImageSizeValidationForCreateUser(t *testing.T) {

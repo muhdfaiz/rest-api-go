@@ -8,6 +8,12 @@ import (
 )
 
 func TestViewAllSettingShouldBeSuccess(t *testing.T) {
+	TestHelper.TruncateDatabase()
+
+	sampleData := SampleData{DB: DB}
+
+	sampleData.Settings("true", "2", "2")
+
 	requestURL := fmt.Sprintf("%s/v1_1/settings", TestServer.URL)
 
 	status, _, body := TestHelper.Request("GET", []byte{}, requestURL, "")

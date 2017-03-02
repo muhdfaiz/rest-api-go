@@ -157,9 +157,10 @@ func InitializeObjectAndSetRoutesV1_1(router *gin.Engine, DB *gorm.DB) *gin.Engi
 
 	// User Objects Objects
 	userRepository := &UserRepository{DB: DB}
-	userService := &UserService{UserRepository: userRepository, TransactionService: transactionService, DealCashbackService: dealCashbackService,
-		FacebookService: facebookService, SmsService: smsService, DeviceService: deviceService, ReferralCashbackTransactionService: referralCashbackTransactionService,
-		AmazonS3FileSystem: amazonS3FileSystem, SmsHistoryService: smsHistoryService, EmailService: emailService}
+	userService := &UserService{UserRepository: userRepository, TransactionService: transactionService, TransactionStatusService: transactionStatusService,
+		TransactionTypeService: transactionTypeService, DealCashbackService: dealCashbackService, FacebookService: facebookService, SmsService: smsService,
+		DeviceService: deviceService, ReferralCashbackTransactionService: referralCashbackTransactionService, AmazonS3FileSystem: amazonS3FileSystem,
+		SmsHistoryService: smsHistoryService, EmailService: emailService}
 
 	//Deal Cashback Transaction
 	dealCashbackTransactionRepository := &DealCashbackTransactionRepository{DB: DB}
@@ -174,7 +175,8 @@ func InitializeObjectAndSetRoutesV1_1(router *gin.Engine, DB *gorm.DB) *gin.Engi
 	//Cashout Transaction Object
 	cashoutTransactionRepository := &CashoutTransactionRepository{DB: DB}
 	cashoutTransactionService := &CashoutTransactionService{CashoutTransactionRepository: cashoutTransactionRepository,
-		TransactionService: transactionService, UserRepository: userRepository, EmailService: emailService}
+		TransactionService: transactionService, TransactionStatusService: transactionStatusService,
+		TransactionTypeService: transactionTypeService, UserRepository: userRepository, EmailService: emailService}
 
 	// Setting Objects
 	settingRepository := &SettingRepository{DB: DB}

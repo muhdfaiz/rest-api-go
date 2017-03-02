@@ -96,8 +96,12 @@ func (ts *TransactionService) ViewDealCashbackTransactionAndUpdateReadStatus(dbT
 // CheckIfUserHasPendingCashoutTransaction function used to check if user has any cashout transaction with status `pending`.
 // API only allow one time cashout transaction until the cashout transaction status become `approve` or `reject`.
 func (ts *TransactionService) CheckIfUserHasPendingCashoutTransaction(userGUID string) *systems.ErrorData {
-	transactions := ts.TransactionRepository.GetByUserGUIDAndTransactionTypeGUIDAndTransactionStatusGUID(userGUID, "c96358c0-13ae-59ad-863f-f113ddb33c68",
-		"0f9e1582-d618-590c-bd7c-6850555ef8bb", "")
+	pendingTransactionStatus := ts.TransactionStatusService.GetTransactionStatusBySlug("pending")
+
+	cashoutTransactionType := ts.TransactionTypeService.GetTransactionTypeBySlug("cashout")
+
+	transactions := ts.TransactionRepository.GetByUserGUIDAndTransactionTypeGUIDAndTransactionStatusGUID(userGUID, cashoutTransactionType.GUID,
+		pendingTransactionStatus.GUID, "")
 
 	if len(transactions) > 0 {
 		return Error.GenericError("422", systems.StillHasPendingCashoutTransaction, "Pending Cashout Transaction.", "message", "You still has cashout transaction with status pending.")

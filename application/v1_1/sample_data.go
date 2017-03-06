@@ -368,17 +368,42 @@ func (sd *SampleData) ShoppingListItem(userGUID, shoppingListGUID, name string, 
 	return result.Value.(*ShoppingListItem)
 }
 
+// ShoppingListItemForDeal function used to create one sample shopping list item when user add
+// the deal into cashback for test database.
+func (sd *SampleData) ShoppingListItemForDeal(userGUID, shoppingListGUID, name, category, subCategory, dealGUID string,
+	cashbackAmount float64, addedToCart int) *ShoppingListItem {
+
+	shoppingListItem := ShoppingListItem{
+		GUID:             Helper.GenerateUUID(),
+		UserGUID:         userGUID,
+		ShoppingListGUID: shoppingListGUID,
+		Name:             name,
+		Quantity:         1,
+		Category:         category,
+		SubCategory:      subCategory,
+		AddedFromDeal:    1,
+		DealGUID:         &dealGUID,
+		CashbackAmount:   &cashbackAmount,
+		Remark:           "",
+		AddedToCart:      addedToCart,
+	}
+
+	result := sd.DB.Create(&shoppingListItem)
+
+	return result.Value.(*ShoppingListItem)
+}
+
 // // ShoppingListItems function used to create sample shopping list item for test database.
 func (sd *SampleData) ShoppingListItems(userGUID, shoppingListGUID string, addedToCart int) []*ShoppingListItem {
 	shoppingListItem1 := ShoppingListItem{
 		GUID:             Helper.GenerateUUID(),
 		UserGUID:         userGUID,
 		ShoppingListGUID: shoppingListGUID,
-		Name:             "Carrot",
-		Quantity:         2,
+		Name:             "Test Shopping List Item 1",
+		Quantity:         1,
 		Category:         "Others",
 		SubCategory:      "Others",
-		Remark:           "Buy carrot at Tesco",
+		Remark:           "",
 		AddedToCart:      addedToCart,
 	}
 
@@ -388,11 +413,11 @@ func (sd *SampleData) ShoppingListItems(userGUID, shoppingListGUID string, added
 		GUID:             Helper.GenerateUUID(),
 		UserGUID:         userGUID,
 		ShoppingListGUID: shoppingListGUID,
-		Name:             "Carrot",
+		Name:             "Test Shopping List Item 2",
 		Quantity:         2,
-		Category:         "Others",
-		SubCategory:      "Others",
-		Remark:           "Buy carrot at Tesco",
+		Category:         "Fresh Food",
+		SubCategory:      "Fresh Fruits",
+		Remark:           "",
 		AddedToCart:      addedToCart,
 	}
 
@@ -402,11 +427,11 @@ func (sd *SampleData) ShoppingListItems(userGUID, shoppingListGUID string, added
 		GUID:             Helper.GenerateUUID(),
 		UserGUID:         userGUID,
 		ShoppingListGUID: shoppingListGUID,
-		Name:             "Carrot",
-		Quantity:         2,
+		Name:             "Test Shopping List Item 3",
+		Quantity:         4,
 		Category:         "Others",
 		SubCategory:      "Others",
-		Remark:           "Buy carrot at Tesco",
+		Remark:           "",
 		AddedToCart:      addedToCart,
 	}
 
@@ -416,11 +441,11 @@ func (sd *SampleData) ShoppingListItems(userGUID, shoppingListGUID string, added
 		GUID:             Helper.GenerateUUID(),
 		UserGUID:         userGUID,
 		ShoppingListGUID: shoppingListGUID,
-		Name:             "Carrot",
-		Quantity:         2,
+		Name:             "Test Shopping List Item 4",
+		Quantity:         3,
 		Category:         "Others",
 		SubCategory:      "Others",
-		Remark:           "Buy carrot at Tesco",
+		Remark:           "",
 		AddedToCart:      addedToCart,
 	}
 
@@ -1509,8 +1534,8 @@ func (sd *SampleData) TransactionTypes() []*TransactionType {
 
 	dealRedemptionType := &TransactionType{
 		GUID: Helper.GenerateUUID(),
-		Slug: "approved",
-		Name: "approved",
+		Slug: "deal_redemption",
+		Name: "Deal Redemption",
 	}
 
 	result2 := sd.DB.Create(dealRedemptionType)

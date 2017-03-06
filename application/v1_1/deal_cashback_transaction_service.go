@@ -19,6 +19,8 @@ type DealCashbackTransactionService struct {
 	DealRepository                    DealRepositoryInterface
 	TransactionRepository             TransactionRepositoryInterface
 	ShoppingListItemRepository        ShoppingListItemRepositoryInterface
+	TransactionStatusService          TransactionStatusServiceInterface
+	TransactionTypeService            TransactionTypeServiceInterface
 }
 
 // CreateTransaction function used to upload receipt image to Amazon S3 and create new transaction
@@ -49,10 +51,14 @@ func (dcts *DealCashbackTransactionService) CreateTransaction(dbTransaction *gor
 
 	totalCashbackAmount := dcts.DealRepository.SumCashbackAmount(dealGUIDs)
 
+	pendingTransactionStatus := dcts.TransactionStatusService.GetTransactionStatusBySlug("pending")
+
+	dealCashbackTransactionType := dcts.TransactionTypeService.GetTransactionTypeBySlug("deal_redemption")
+
 	transactionData := &CreateTransaction{
 		UserGUID:              userGUID,
-		TransactionTypeGUID:   "8def67d0-fe5a-5d5e-806c-5b395a45396c",
-		TransactionStatusGUID: "0f9e1582-d618-590c-bd7c-6850555ef8bb",
+		TransactionTypeGUID:   dealCashbackTransactionType.GUID,
+		TransactionStatusGUID: pendingTransactionStatus.GUID,
 		Amount:                totalCashbackAmount,
 		ReferenceID:           Helper.GenerateUniqueShortID(),
 	}

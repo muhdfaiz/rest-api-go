@@ -166,7 +166,8 @@ func InitializeObjectAndSetRoutesV1_1(router *gin.Engine, DB *gorm.DB) *gin.Engi
 	dealCashbackTransactionRepository := &DealCashbackTransactionRepository{DB: DB}
 	dealCashbackTransactionService := &DealCashbackTransactionService{AmazonS3FileSystem: amazonS3FileSystem,
 		DealCashbackRepository: dealCashbackRepository, DealCashbackTransactionRepository: dealCashbackTransactionRepository,
-		DealRepository: dealRepository, TransactionRepository: transactionRepository, ShoppingListItemRepository: shoppingListItemRepository}
+		DealRepository: dealRepository, TransactionRepository: transactionRepository, ShoppingListItemRepository: shoppingListItemRepository,
+		TransactionStatusService: transactionStatusService, TransactionTypeService: transactionTypeService}
 
 	// Event Objects
 	eventRepository := &EventRepository{DB: DB}

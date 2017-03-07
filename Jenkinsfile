@@ -3,19 +3,31 @@ node {
     def workspace
     
     stage('Build') {
+        // Clean Up Directory
         deleteDir()
         
+        // Set Go Environment Variables
         workspace = pwd()
         env.GOPATH="${workspace}/"
         env.GOROOT="/usr/local/go"
         env.PATH="${env.PATH}:/usr/local/go/bin:${workspace}/bin"
         
+        // Reload shell to take effect latest environment variables
         sh "source ~/.profile"
+
+        // Display all environment variables
         sh "printenv"
         
+        // Create directory src, bin and pkg
+        sh 'mkdir bin'
+        sh 'mkdir src'
+        sh 'mkdir pkg'
+
+        // Checkout shoppermate api repo in subfolder src/bitbucket.org/cliqers/shoppermate-api'
         checkout([$class: 'GitSCM', branches: [[name: '**']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'src/bitbucket.org/cliqers/shoppermate-api']], submoduleCfg: [], userRemoteConfigs: [[credentialsId: '26ce324d-eab2-4d6f-b59b-ffa8100c6920', url: 'https://muhdfaiz@bitbucket.org/cliqers/shoppermate-api.git']]])
         
         dir('src/bitbucket.org/cliqers/shoppermate-api') {
+            sh 'mkdir storages'
             sh 'glide install'
             sh 'touch .env'
             sh 'echo -e "ENVIRONMENT:local" >> .env'

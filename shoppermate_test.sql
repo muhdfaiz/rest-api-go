@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 07, 2017 at 08:34 AM
+-- Generation Time: Mar 07, 2017 at 08:42 AM
 -- Server version: 10.1.17-MariaDB
 -- PHP Version: 7.1.1
 
@@ -19,26 +19,6 @@ SET time_zone = "+00:00";
 --
 -- Database: `shoppermate_test`
 --
-
-DELIMITER $$
---
--- Procedures
---
-CREATE DEFINER=`root`@`localhost` PROCEDURE `AssignSubcategoryIDInAdsTable` ()  NO SQL
-    DETERMINISTIC
-BEGIN
-    DECLARE totalAds INT DEFAULT 0;
-    DECLARE i INT DEFAULT 0;
-    SELECT COUNT(*) FROM ads INTO totalAds;
-    SET i=0;
-    WHILE i<totalAds DO
-     SET @subcategoryID = (SELECT item.subcategory_id FROM ads LEFT JOIN item ON item.id = ads.item_id LIMIT i, 1);
-	  UPDATE ads SET subcategory_id = (SELECT @subcategoryID)  WHERE ads.id = i+1;
-      SET i = i + 1;
-    END WHILE;
-END$$
-
-DELIMITER ;
 
 -- --------------------------------------------------------
 

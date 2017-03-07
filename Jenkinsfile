@@ -1,17 +1,11 @@
 #!/bin/bash
 node {
-    // // Install the desired Go version
-    // def root = tool name: 'Go 1.8', type: 'go'
-
-    // // Export environment variables pointing to the directory where Go was installed
-    // withEnv(["GOROOT=${root}", "PATH+GO=${root}/bin"]) {
-    //     sh 'go version'
-    // }
     def workspace
     
     stage('Build') {
+        deleteDir()
+        
         workspace = pwd()
-
         env.GOPATH="${workspace}/"
         env.GOROOT="/usr/local/go"
         env.PATH="${env.PATH}:/usr/local/go/bin:${workspace}/bin"
@@ -19,10 +13,10 @@ node {
         sh "source ~/.profile"
         sh "printenv"
         
-                checkout([$class: 'GitSCM', branches: [[name: '**']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'src/bitbucket.org/cliqers/shoppermate-api']], submoduleCfg: [], userRemoteConfigs: [[credentialsId: '26ce324d-eab2-4d6f-b59b-ffa8100c6920', url: 'https://muhdfaiz@bitbucket.org/cliqers/shoppermate-api.git']]])
+        checkout([$class: 'GitSCM', branches: [[name: '**']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'src/bitbucket.org/cliqers/shoppermate-api']], submoduleCfg: [], userRemoteConfigs: [[credentialsId: '26ce324d-eab2-4d6f-b59b-ffa8100c6920', url: 'https://muhdfaiz@bitbucket.org/cliqers/shoppermate-api.git']]])
         
         dir('src/bitbucket.org/cliqers/shoppermate-api') {
-                        sh 'glide install'
+            sh 'glide install'
             sh 'touch .env'
             sh 'echo -e "ENVIRONMENT:local" >> .env'
             sh 'echo -e "DEBUG:true" >> .env'

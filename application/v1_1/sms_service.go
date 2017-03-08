@@ -24,20 +24,24 @@ func (sf *SmsService) SendVerificationCode(dbTransaction *gorm.DB, phoneNo, even
 
 	smsText := fmt.Sprintf("Your verification code is %s - Shoppermate", smsVerificationCode)
 
-	smsResponse, err := sf.send(smsText, phoneNo)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if smsResponse == nil || smsResponse["status"] == "failed" {
-		return nil, Error.InternalServerError(smsResponse["message"], systems.FailedToSendSMS)
-	}
-
 	smsHistory := make(map[string]string)
+
+	if os.Getenv("SEND_SMS") == "true" {
+		smsResponse, err := sf.send(smsText, phoneNo)
+
+		if err != nil {
+			return nil, err
+		}
+
+		if smsResponse == nil || smsResponse["status"] == "failed" {
+			return nil, Error.InternalServerError(smsResponse["message"], systems.FailedToSendSMS)
+		}
+
+		smsHistory["sms_id"] = smsResponse["sms_id"]
+	}
+
 	smsHistory["guid"] = Helper.GenerateUUID()
 	smsHistory["provider"] = "moceansms"
-	smsHistory["sms_id"] = smsResponse["sms_id"]
 	smsHistory["text"] = smsText
 	smsHistory["recipient_no"] = phoneNo
 	smsHistory["verification_code"] = smsVerificationCode

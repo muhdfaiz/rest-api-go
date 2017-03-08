@@ -40,6 +40,7 @@ node {
                 sh 'echo -e "ENABLE_HTTPS:false" >> .env'
                 sh 'echo -e "SHOPPERMATE_EMAIL_API_URL:http://api.shoppermate.com:5000/" >> .env'
                 sh 'echo -e "SEND_EMAIL_EVENT=false" >> .env'
+                sh 'echo -e "SEND_SMS=false" >> .env'
                 sh 'echo -e "FACEBOOK_APP_ID:1390260387947574" >> .env'
                 sh 'echo -e "FACEBOOK_APP_SECRET:6646a7a1057f9dd9c6a3e18f3615b081" >> .env'
                 sh 'echo -e "DEBUG_FACEBOOK_APP_ID:1572196483090312" >> .env'

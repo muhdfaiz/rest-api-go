@@ -1,7 +1,6 @@
 package v1_1
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/jinzhu/gorm"
@@ -173,7 +172,7 @@ func (dcs *DealCashbackService) GetUserDealCashbacksByDealGUID(userGUID, dealGUI
 // GetUserDealCashbacksByShoppingList function used to retrieve all deal cashbacks for specific shopping list.
 func (dcs *DealCashbackService) GetUserDealCashbacksByShoppingList(dbTransaction *gorm.DB, userGUID, shoppingListGUID, transactionStatus, pageNumber,
 	pageLimit, relations string) ([]*DealCashback, int, *systems.ErrorData) {
-	fmt.Println(relations)
+
 	userDealCashbacks, totalUserDealCashbacks := dcs.DealCashbackRepository.GetByUserGUIDShoppingListGUIDAndTransactionStatus(userGUID, shoppingListGUID,
 		transactionStatus, pageNumber, pageLimit, "deals")
 

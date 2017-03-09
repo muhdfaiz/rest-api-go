@@ -32,10 +32,10 @@ func TestCreateUserShouldReturnNumericValidationErrors(t *testing.T) {
 	errorData := body.(map[string]interface{})["errors"].(map[string]interface{})
 	errorDetail := errorData["detail"].(map[string]interface{})
 
-	require.Equal(testingT{t}, 422, status, "Status code must be 422")
-	require.NotEmpty(testingT{t}, errorDetail["facebook_id"])
-	require.NotEmpty(testingT{t}, errorDetail["phone_no"])
-	require.NotEmpty(testingT{t}, errorDetail["verification_code"])
+	require.Equal(t, 422, status, "Status code must be 422")
+	require.NotEmpty(t, errorDetail["facebook_id"])
+	require.NotEmpty(t, errorDetail["phone_no"])
+	require.NotEmpty(t, errorDetail["verification_code"])
 }
 
 // TestCreateUserShouldReturnRequiredFieldValidationErrors function used to test if API will return error if the input data not
@@ -54,12 +54,12 @@ func TestCreateUserShouldReturnRequiredFieldValidationErrors(t *testing.T) {
 	errorData := body.(map[string]interface{})["errors"].(map[string]interface{})
 	errorDetail := errorData["detail"].(map[string]interface{})
 
-	require.Equal(testingT{t}, 422, status, "Status code must be 422")
-	require.NotEmpty(testingT{t}, errorDetail["name"])
-	require.NotEmpty(testingT{t}, errorDetail["email"])
-	require.NotEmpty(testingT{t}, errorDetail["phone_no"])
-	require.NotEmpty(testingT{t}, errorDetail["verification_code"])
-	require.NotEmpty(testingT{t}, errorDetail["device_uuid"])
+	require.Equal(t, 422, status, "Status code must be 422")
+	require.NotEmpty(t, errorDetail["name"])
+	require.NotEmpty(t, errorDetail["email"])
+	require.NotEmpty(t, errorDetail["phone_no"])
+	require.NotEmpty(t, errorDetail["verification_code"])
+	require.NotEmpty(t, errorDetail["device_uuid"])
 }
 
 // TestPhoneNumberShouldUniqueDuringCreateUser function used to test if API return error or not when the input data
@@ -67,8 +67,8 @@ func TestCreateUserShouldReturnRequiredFieldValidationErrors(t *testing.T) {
 func TestPhoneNumberShouldUniqueDuringCreateUser(t *testing.T) {
 	sampleData := SampleData{DB: DB}
 
-	users := sampleData.Users()
-	fmt.Println(users)
+	sampleData.Users()
+
 	requestURL := fmt.Sprintf("%s/v1_1/users", TestServer.URL)
 
 	userData := map[string]string{
@@ -85,8 +85,8 @@ func TestPhoneNumberShouldUniqueDuringCreateUser(t *testing.T) {
 
 	errorData := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(testingT{t}, 409, status, "Status code must be 409")
-	require.Equal(testingT{t}, "Duplicate entry 'phone_no' for key '"+userData["phone_no"]+"'.", errorData["detail"].(map[string]interface{})["message"])
+	require.Equal(t, 409, status, "Status code must be 409")
+	require.Equal(t, "Duplicate entry 'phone_no' for key '"+userData["phone_no"]+"'.", errorData["detail"].(map[string]interface{})["message"])
 }
 
 // TestFacebookIDMustValid function used to test if API will validate the facebook id
@@ -109,8 +109,8 @@ func TestFacebookIDMustValidDuringCreateUser(t *testing.T) {
 
 	errorData := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(testingT{t}, 400, status, "Status code must be 409")
-	require.NotEmpty(testingT{t}, errorData["detail"].(map[string]interface{})["facebook_id"])
+	require.Equal(t, 400, status, "Status code must be 409")
+	require.NotEmpty(t, errorData["detail"].(map[string]interface{})["facebook_id"])
 }
 
 // TestFacebookIDMustUnique function used to check if API will return error or not
@@ -133,8 +133,8 @@ func TestFacebookIDMustUniqueDuringCreateUser(t *testing.T) {
 
 	errorData := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(testingT{t}, 409, status, "Status code must be 409")
-	require.Equal(testingT{t}, "Duplicate entry 'facebook_id' for key '100013413336774'.", errorData["detail"].(map[string]interface{})["message"])
+	require.Equal(t, 409, status, "Status code must be 409")
+	require.Equal(t, "Duplicate entry 'facebook_id' for key '100013413336774'.", errorData["detail"].(map[string]interface{})["message"])
 }
 
 func TestReferralCodeMustValidDuringCreateUser(t *testing.T) {
@@ -163,8 +163,8 @@ func TestReferralCodeMustValidDuringCreateUser(t *testing.T) {
 
 	errorData := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(testingT{t}, 404, status, "Status code must be 404")
-	require.NotEmpty(testingT{t}, errorData["detail"].(map[string]interface{})["referral_code"])
+	require.Equal(t, 404, status, "Status code must be 404")
+	require.NotEmpty(t, errorData["detail"].(map[string]interface{})["referral_code"])
 }
 
 func TestCreateUserWithReferralCodeNotActiveAndDeviceUUIDMustValid(t *testing.T) {
@@ -191,8 +191,8 @@ func TestCreateUserWithReferralCodeNotActiveAndDeviceUUIDMustValid(t *testing.T)
 
 	errorData := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(testingT{t}, 404, status, "Status code must be 404")
-	require.NotEmpty(testingT{t}, errorData["detail"].(map[string]interface{})["uuid"])
+	require.Equal(t, 404, status, "Status code must be 404")
+	require.NotEmpty(t, errorData["detail"].(map[string]interface{})["uuid"])
 }
 
 // TestDebug function used to test if API can create new user and generate access token without valid verification code.
@@ -219,9 +219,9 @@ func TestCreateUserWithDebugMode(t *testing.T) {
 
 	data := body.(map[string]interface{})["data"].(map[string]interface{})
 
-	require.Equal(testingT{t}, 200, status)
-	require.NotEmpty(testingT{t}, data["access_token"])
-	require.NotEmpty(testingT{t}, data["user"])
+	require.Equal(t, 200, status)
+	require.NotEmpty(t, data["access_token"])
+	require.NotEmpty(t, data["user"])
 }
 
 // TestDebugToken function used to test if API will generate access token based on debug token value.
@@ -250,9 +250,9 @@ func TestCreateUserWithDebugToken(t *testing.T) {
 
 	minutes := time.Minute * time.Duration(6)
 
-	require.Equal(testingT{t}, 200, status)
-	require.Equal(testingT{t}, time.Now().UTC().Add(minutes).Format(time.RFC3339), data["access_token"].(map[string]interface{})["expired"])
-	require.NotEmpty(testingT{t}, data["user"])
+	require.Equal(t, 200, status)
+	require.Equal(t, time.Now().UTC().Add(minutes).Format(time.RFC3339), data["access_token"].(map[string]interface{})["expired"])
+	require.NotEmpty(t, data["user"])
 }
 
 func TestCreateUserWithReferral(t *testing.T) {
@@ -307,16 +307,16 @@ func TestCreateUserWithReferral(t *testing.T) {
 
 	DB.Model(&User{}).Where("guid = ?", users[0].GUID).Find(&user1)
 
-	require.Equal(testingT{t}, referralPriceSetting.Value, strconv.FormatFloat(user1.Wallet, 'f', 0, 64))
+	require.Equal(t, referralPriceSetting.Value, strconv.FormatFloat(user1.Wallet, 'f', 0, 64))
 
 	referralCashbackTransaction := &ReferralCashbackTransaction{}
 
 	DB.Model(&ReferralCashbackTransaction{}).Where("user_guid = ?", user1.GUID).Find(&referralCashbackTransaction)
 
-	require.Equal(testingT{t}, 200, status)
-	require.Equal(testingT{t}, user1.GUID, referralCashbackTransaction.UserGUID)
-	require.Equal(testingT{t}, newUser["guid"], referralCashbackTransaction.ReferrerGUID)
-	require.NotEmpty(testingT{t}, referralCashbackTransaction.TransactionGUID)
+	require.Equal(t, 200, status)
+	require.Equal(t, user1.GUID, referralCashbackTransaction.UserGUID)
+	require.Equal(t, newUser["guid"], referralCashbackTransaction.ReferrerGUID)
+	require.NotEmpty(t, referralCashbackTransaction.TransactionGUID)
 
 	transaction := &Transaction{}
 
@@ -324,12 +324,12 @@ func TestCreateUserWithReferral(t *testing.T) {
 
 	referralPriceInFloat, _ := strconv.ParseFloat(referralPriceSetting.Value, 64)
 
-	require.NotEmpty(testingT{t}, transaction.GUID)
-	require.Equal(testingT{t}, user1.GUID, transaction.UserGUID)
-	require.Equal(testingT{t}, referralCashbackTransactionType.GUID, transaction.TransactionTypeGUID)
-	require.Equal(testingT{t}, approvedTransactionStatus.GUID, transaction.TransactionStatusGUID)
-	require.NotEmpty(testingT{t}, transaction.ReferenceID)
-	require.Equal(testingT{t}, referralPriceInFloat, transaction.TotalAmount)
+	require.NotEmpty(t, transaction.GUID)
+	require.Equal(t, user1.GUID, transaction.UserGUID)
+	require.Equal(t, referralCashbackTransactionType.GUID, transaction.TransactionTypeGUID)
+	require.Equal(t, approvedTransactionStatus.GUID, transaction.TransactionStatusGUID)
+	require.NotEmpty(t, transaction.ReferenceID)
+	require.Equal(t, referralPriceInFloat, transaction.TotalAmount)
 
 }
 
@@ -397,7 +397,7 @@ func TestMaxReferralPerUser(t *testing.T) {
 
 	DB.Table("users").Where("guid = ?", users[0].GUID).Find(&user1)
 
-	require.Equal(testingT{t}, 4.00, user1.Wallet)
+	require.Equal(t, 4.00, user1.Wallet)
 }
 
 func TestProfileImageSizeValidationForCreateUser(t *testing.T) {
@@ -424,8 +424,8 @@ func TestProfileImageSizeValidationForCreateUser(t *testing.T) {
 
 	errorData := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(testingT{t}, 413, status)
-	require.Equal(testingT{t}, "File size exceeded the limit.", errorData["title"])
+	require.Equal(t, 413, status)
+	require.Equal(t, "File size exceeded the limit.", errorData["title"])
 }
 
 func TestProfileImageTypeValidationForCreateUser(t *testing.T) {
@@ -452,8 +452,8 @@ func TestProfileImageTypeValidationForCreateUser(t *testing.T) {
 
 	errorData := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(testingT{t}, 400, status)
-	require.Equal(testingT{t}, "Invalid file type.", errorData["title"])
+	require.Equal(t, 400, status)
+	require.Equal(t, "Invalid file type.", errorData["title"])
 }
 
 func TestCreateUserViaPhoneNumber(t *testing.T) {
@@ -484,24 +484,24 @@ func TestCreateUserViaPhoneNumber(t *testing.T) {
 
 	user := data["user"].(map[string]interface{})
 
-	require.Equal(testingT{t}, 200, status)
-	require.Equal(testingT{t}, time.Now().UTC().AddDate(0, 0, 7).Format(time.RFC3339), accessToken["expired"])
-	require.NotEmpty(testingT{t}, accessToken["token"])
-	require.NotEmpty(testingT{t}, user["id"])
-	require.NotEmpty(testingT{t}, user["guid"])
-	require.Equal(testingT{t}, params["email"], user["email"])
-	require.Equal(testingT{t}, params["name"], user["name"])
-	require.Equal(testingT{t}, params["phone_no"], user["phone_no"])
-	require.Equal(testingT{t}, "phone_no", user["register_by"])
-	require.NotEmpty(testingT{t}, user["referral_code"])
-	require.Empty(testingT{t}, user["bank_account_name"])
-	require.Empty(testingT{t}, user["bank_account_number"])
-	require.Empty(testingT{t}, user["bank_country"])
-	require.Empty(testingT{t}, user["bank_name"])
+	require.Equal(t, 200, status)
+	require.Equal(t, time.Now().UTC().AddDate(0, 0, 7).Format(time.RFC3339), accessToken["expired"])
+	require.NotEmpty(t, accessToken["token"])
+	require.NotEmpty(t, user["id"])
+	require.NotEmpty(t, user["guid"])
+	require.Equal(t, params["email"], user["email"])
+	require.Equal(t, params["name"], user["name"])
+	require.Equal(t, params["phone_no"], user["phone_no"])
+	require.Equal(t, "phone_no", user["register_by"])
+	require.NotEmpty(t, user["referral_code"])
+	require.Empty(t, user["bank_account_name"])
+	require.Empty(t, user["bank_account_number"])
+	require.Empty(t, user["bank_country"])
+	require.Empty(t, user["bank_name"])
 
 	response, _ := http.Get(user["profile_picture"].(string))
 
-	require.Equal(testingT{t}, 200, response.StatusCode)
+	require.Equal(t, 200, response.StatusCode)
 }
 
 func TestCreateUserViaFacebook(t *testing.T) {
@@ -524,6 +524,8 @@ func TestCreateUserViaFacebook(t *testing.T) {
 
 	requestURL := fmt.Sprintf("%s/v1_1/users", TestServer.URL)
 
+	currentTime := time.Now().UTC().AddDate(0, 0, 7).Format(time.RFC3339)
+
 	status, _, body := TestHelper.MultipartRequest(requestURL, "POST", params, "profile_picture",
 		os.Getenv("GOPATH")+"src/bitbucket.org/cliqers/shoppermate-api/test/images/profile_image_smaller.png", "")
 
@@ -537,26 +539,26 @@ func TestCreateUserViaFacebook(t *testing.T) {
 
 	DB.Model(&Device{}).Where("guid = ?", sampleDevice.GUID).Find(&device)
 
-	require.Equal(testingT{t}, user["guid"], *device.UserGUID)
-	require.Equal(testingT{t}, 200, status)
-	require.Equal(testingT{t}, time.Now().UTC().AddDate(0, 0, 7).Format(time.RFC3339), accessToken["expired"])
-	require.NotEmpty(testingT{t}, accessToken["token"])
-	require.NotEmpty(testingT{t}, user["id"])
-	require.NotEmpty(testingT{t}, user["guid"])
-	require.Equal(testingT{t}, params["facebook_id"], user["facebook_id"])
-	require.Equal(testingT{t}, params["email"], user["email"])
-	require.Equal(testingT{t}, params["name"], user["name"])
-	require.Equal(testingT{t}, params["phone_no"], user["phone_no"])
-	require.Equal(testingT{t}, "facebook", user["register_by"])
-	require.NotEmpty(testingT{t}, user["referral_code"])
-	require.Empty(testingT{t}, user["bank_account_name"])
-	require.Empty(testingT{t}, user["bank_account_number"])
-	require.Empty(testingT{t}, user["bank_country"])
-	require.Empty(testingT{t}, user["bank_name"])
+	require.Equal(t, user["guid"], *device.UserGUID)
+	require.Equal(t, 200, status)
+	require.Equal(t, currentTime, accessToken["expired"])
+	require.NotEmpty(t, accessToken["token"])
+	require.NotEmpty(t, user["id"])
+	require.NotEmpty(t, user["guid"])
+	require.Equal(t, params["facebook_id"], user["facebook_id"])
+	require.Equal(t, params["email"], user["email"])
+	require.Equal(t, params["name"], user["name"])
+	require.Equal(t, params["phone_no"], user["phone_no"])
+	require.Equal(t, "facebook", user["register_by"])
+	require.NotEmpty(t, user["referral_code"])
+	require.Empty(t, user["bank_account_name"])
+	require.Empty(t, user["bank_account_number"])
+	require.Empty(t, user["bank_country"])
+	require.Empty(t, user["bank_name"])
 
 	response, _ := http.Get(user["profile_picture"].(string))
 
-	require.Equal(testingT{t}, 200, response.StatusCode)
+	require.Equal(t, 200, response.StatusCode)
 }
 
 func TestAccessTokenRequireWhenToViewUser(t *testing.T) {
@@ -568,8 +570,8 @@ func TestAccessTokenRequireWhenToViewUser(t *testing.T) {
 
 	errorData := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(testingT{t}, 401, status)
-	require.Equal(testingT{t}, "Access token error", errorData["title"])
+	require.Equal(t, 401, status)
+	require.Equal(t, "Access token error", errorData["title"])
 }
 
 func TestViewUserDetails(t *testing.T) {
@@ -591,15 +593,13 @@ func TestViewUserDetails(t *testing.T) {
 
 	data := body.(map[string]interface{})["data"].(map[string]interface{})
 
-	fmt.Println(data)
-
-	require.Equal(testingT{t}, 200, status)
-	require.Equal(testingT{t}, users[0].GUID, data["guid"])
-	require.Equal(testingT{t}, users[0].Name, data["name"])
-	require.Equal(testingT{t}, users[0].Email, data["email"])
-	require.Equal(testingT{t}, users[0].PhoneNo, data["phone_no"])
-	require.Equal(testingT{t}, users[0].RegisterBy, data["register_by"])
-	require.Equal(testingT{t}, users[0].ReferralCode, data["referral_code"])
+	require.Equal(t, 200, status)
+	require.Equal(t, users[0].GUID, data["guid"])
+	require.Equal(t, users[0].Name, data["name"])
+	require.Equal(t, users[0].Email, data["email"])
+	require.Equal(t, users[0].PhoneNo, data["phone_no"])
+	require.Equal(t, users[0].RegisterBy, data["register_by"])
+	require.Equal(t, users[0].ReferralCode, data["referral_code"])
 }
 
 func TestAccessTokenRequireWhenToUpdateUser(t *testing.T) {
@@ -611,8 +611,8 @@ func TestAccessTokenRequireWhenToUpdateUser(t *testing.T) {
 
 	errorData := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(testingT{t}, 401, status)
-	require.Equal(testingT{t}, "Access token error", errorData["title"])
+	require.Equal(t, 401, status)
+	require.Equal(t, "Access token error", errorData["title"])
 }
 
 func TestProfileImageSizeValidationForUpdateUser(t *testing.T) {
@@ -643,9 +643,8 @@ func TestProfileImageSizeValidationForUpdateUser(t *testing.T) {
 
 	errorData := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	fmt.Println(errorData)
-	require.Equal(testingT{t}, 413, status)
-	require.Equal(testingT{t}, "File size exceeded the limit.", errorData["title"])
+	require.Equal(t, 413, status)
+	require.Equal(t, "File size exceeded the limit.", errorData["title"])
 }
 
 func TestProfileImageTypeValidationForUpdateUser(t *testing.T) {
@@ -676,8 +675,8 @@ func TestProfileImageTypeValidationForUpdateUser(t *testing.T) {
 
 	errorData := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(testingT{t}, 400, status)
-	require.Equal(testingT{t}, "Invalid file type.", errorData["title"])
+	require.Equal(t, 400, status)
+	require.Equal(t, "Invalid file type.", errorData["title"])
 }
 
 func TestErrorAccessTokenBelongToOtherUserDuringUpdateUser(t *testing.T) {
@@ -699,8 +698,8 @@ func TestErrorAccessTokenBelongToOtherUserDuringUpdateUser(t *testing.T) {
 
 	errorData := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(testingT{t}, 401, status)
-	require.Equal(testingT{t}, "Your access token belong to other user", errorData["title"])
+	require.Equal(t, 401, status)
+	require.Equal(t, "Your access token belong to other user", errorData["title"])
 }
 
 func TestUpdateUser(t *testing.T) {
@@ -729,11 +728,11 @@ func TestUpdateUser(t *testing.T) {
 
 	data := body.(map[string]interface{})["data"].(map[string]interface{})
 
-	require.Equal(testingT{t}, 200, status)
-	require.Equal(testingT{t}, params["name"], data["name"])
-	require.Equal(testingT{t}, params["email"], data["email"])
+	require.Equal(t, 200, status)
+	require.Equal(t, params["name"], data["name"])
+	require.Equal(t, params["email"], data["email"])
 
 	response, _ := http.Get(data["profile_picture"].(string))
 
-	require.Equal(testingT{t}, 200, response.StatusCode)
+	require.Equal(t, 200, response.StatusCode)
 }

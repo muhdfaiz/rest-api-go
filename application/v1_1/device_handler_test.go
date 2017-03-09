@@ -29,13 +29,13 @@ func TestErrorRequiredFieldDuringCreateDevice(t *testing.T) {
 	error := body.(map[string]interface{})["errors"].(map[string]interface{})
 	errorDetail := error["detail"].(map[string]interface{})
 
-	require.Equal(testingT{t}, 422, status)
-	require.Equal(testingT{t}, "Validation failed.", error["title"])
-	require.NotEmpty(testingT{t}, errorDetail["os"])
-	require.NotEmpty(testingT{t}, errorDetail["model"])
-	require.NotEmpty(testingT{t}, errorDetail["uuid"])
-	require.NotEmpty(testingT{t}, errorDetail["push_token"])
-	require.NotEmpty(testingT{t}, errorDetail["app_version"])
+	require.Equal(t, 422, status)
+	require.Equal(t, "Validation failed.", error["title"])
+	require.NotEmpty(t, errorDetail["os"])
+	require.NotEmpty(t, errorDetail["model"])
+	require.NotEmpty(t, errorDetail["uuid"])
+	require.NotEmpty(t, errorDetail["push_token"])
+	require.NotEmpty(t, errorDetail["app_version"])
 }
 
 func TestErrorUserGUIDNotExistDuringCreateDevice(t *testing.T) {
@@ -57,9 +57,9 @@ func TestErrorUserGUIDNotExistDuringCreateDevice(t *testing.T) {
 	error := body.(map[string]interface{})["errors"].(map[string]interface{})
 	errorDetail := error["detail"].(map[string]interface{})
 
-	require.Equal(testingT{t}, 404, status)
-	require.Equal(testingT{t}, "User not exists.", error["title"])
-	require.NotEmpty(testingT{t}, errorDetail["guid"])
+	require.Equal(t, 404, status)
+	require.Equal(t, "User not exists.", error["title"])
+	require.NotEmpty(t, errorDetail["guid"])
 }
 
 func TestErrorDuplicateDeviceDuringCreateDevice(t *testing.T) {
@@ -85,8 +85,8 @@ func TestErrorDuplicateDeviceDuringCreateDevice(t *testing.T) {
 
 	error := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(testingT{t}, 409, status)
-	require.Equal(testingT{t}, "Device already exists.", error["title"])
+	require.Equal(t, 409, status)
+	require.Equal(t, "Device already exists.", error["title"])
 }
 
 func TestSuccessCreateDeviceWithUserGUID(t *testing.T) {
@@ -111,16 +111,15 @@ func TestSuccessCreateDeviceWithUserGUID(t *testing.T) {
 
 	status, _, body := TestHelper.Request("POST", jsonBytes, requestURL, "")
 
-	fmt.Println(body)
 	response := body.(map[string]interface{})["data"].(map[string]interface{})
 
-	require.Equal(testingT{t}, 200, status)
-	require.Equal(testingT{t}, params["user_guid"], response["user_guid"])
-	require.Equal(testingT{t}, params["os"], response["os"])
-	require.Equal(testingT{t}, params["model"], response["model"])
-	require.Equal(testingT{t}, params["uuid"], response["uuid"])
-	require.Equal(testingT{t}, params["push_token"], response["push_token"])
-	require.Equal(testingT{t}, params["app_version"], response["app_version"])
+	require.Equal(t, 200, status)
+	require.Equal(t, params["user_guid"], response["user_guid"])
+	require.Equal(t, params["os"], response["os"])
+	require.Equal(t, params["model"], response["model"])
+	require.Equal(t, params["uuid"], response["uuid"])
+	require.Equal(t, params["push_token"], response["push_token"])
+	require.Equal(t, params["app_version"], response["app_version"])
 
 }
 
@@ -141,16 +140,15 @@ func TestSuccessCreateDeviceWithoutUserGUID(t *testing.T) {
 
 	status, _, body := TestHelper.Request("POST", jsonBytes, requestURL, "")
 
-	fmt.Println(body)
 	response := body.(map[string]interface{})["data"].(map[string]interface{})
 
-	require.Equal(testingT{t}, 200, status)
-	require.Empty(testingT{t}, response["user_guid"])
-	require.Equal(testingT{t}, params["os"], response["os"])
-	require.Equal(testingT{t}, params["model"], response["model"])
-	require.Equal(testingT{t}, params["uuid"], response["uuid"])
-	require.Equal(testingT{t}, params["push_token"], response["push_token"])
-	require.Equal(testingT{t}, params["app_version"], response["app_version"])
+	require.Equal(t, 200, status)
+	require.Empty(t, response["user_guid"])
+	require.Equal(t, params["os"], response["os"])
+	require.Equal(t, params["model"], response["model"])
+	require.Equal(t, params["uuid"], response["uuid"])
+	require.Equal(t, params["push_token"], response["push_token"])
+	require.Equal(t, params["app_version"], response["app_version"])
 
 }
 
@@ -161,8 +159,8 @@ func TestErrorAccessTokenDuringDeleteDevice(t *testing.T) {
 
 	error := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(testingT{t}, 401, status)
-	require.Equal(testingT{t}, "Access token error", error["title"])
+	require.Equal(t, 401, status)
+	require.Equal(t, "Access token error", error["title"])
 }
 
 func TestErrorDeviceUUIDNotExistDuringDeleteDevice(t *testing.T) {
@@ -184,8 +182,8 @@ func TestErrorDeviceUUIDNotExistDuringDeleteDevice(t *testing.T) {
 
 	error := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(testingT{t}, 404, status)
-	require.Equal(testingT{t}, "Device not exists.", error["title"])
+	require.Equal(t, 404, status)
+	require.Equal(t, "Device not exists.", error["title"])
 }
 
 func TestSuccessfulSoftDeleteDevice(t *testing.T) {
@@ -205,13 +203,13 @@ func TestSuccessfulSoftDeleteDevice(t *testing.T) {
 
 	status, _, _ := TestHelper.Request("DELETE", []byte{}, requestURL, jwtToken.Token)
 
-	require.Equal(testingT{t}, 200, status)
+	require.Equal(t, 200, status)
 
 	deletedDevice := &Device{}
 
 	DB.Unscoped().Model(&Device{}).Where(&Device{UUID: device.UUID}).Find(&deletedDevice)
 
-	require.NotEmpty(testingT{t}, deletedDevice.DeletedAt)
+	require.NotEmpty(t, deletedDevice.DeletedAt)
 }
 
 func TestErrorDeviceNotExistDuringUpdateDevice(t *testing.T) {
@@ -242,8 +240,8 @@ func TestErrorDeviceNotExistDuringUpdateDevice(t *testing.T) {
 	status, _, body := TestHelper.Request("PATCH", jsonBytes, requestURL, jwtToken.Token)
 
 	error := body.(map[string]interface{})["errors"].(map[string]interface{})
-	require.Equal(testingT{t}, 404, status)
-	require.Equal(testingT{t}, "Device not exists.", error["title"])
+	require.Equal(t, 404, status)
+	require.Equal(t, "Device not exists.", error["title"])
 }
 
 func TestSuccessfulUpdateDevice(t *testing.T) {
@@ -274,9 +272,9 @@ func TestSuccessfulUpdateDevice(t *testing.T) {
 
 	response := body.(map[string]interface{})["data"].(map[string]interface{})
 
-	require.Equal(testingT{t}, 200, status)
-	require.Equal(testingT{t}, params["user_guid"], response["user_guid"])
-	require.Equal(testingT{t}, params["os"], response["os"])
-	require.Equal(testingT{t}, params["model"], response["model"])
-	require.Equal(testingT{t}, params["app_version"], response["app_version"])
+	require.Equal(t, 200, status)
+	require.Equal(t, params["user_guid"], response["user_guid"])
+	require.Equal(t, params["os"], response["os"])
+	require.Equal(t, params["model"], response["model"])
+	require.Equal(t, params["app_version"], response["app_version"])
 }

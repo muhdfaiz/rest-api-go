@@ -18,8 +18,8 @@ func TestViewShoppingListItemShouldReturnAccessTokenError(t *testing.T) {
 
 	errors := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(testingT{t}, 401, status)
-	require.Equal(testingT{t}, "Access token error", errors["title"])
+	require.Equal(t, 401, status)
+	require.Equal(t, "Access token error", errors["title"])
 }
 
 func TestViewShoppingListItemShouldReturnShoppingListNotExist(t *testing.T) {
@@ -39,9 +39,9 @@ func TestViewShoppingListItemShouldReturnShoppingListNotExist(t *testing.T) {
 
 	errors := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(testingT{t}, 404, status)
-	require.Equal(testingT{t}, "Shopping List not exists.", errors["title"])
-	require.NotEmpty(testingT{t}, errors["detail"].(map[string]interface{})["guid"])
+	require.Equal(t, 404, status)
+	require.Equal(t, "Shopping List not exists.", errors["title"])
+	require.NotEmpty(t, errors["detail"].(map[string]interface{})["guid"])
 }
 
 func TestViewShoppingListItemShouldReturnShoppingListItemNotExist(t *testing.T) {
@@ -65,9 +65,9 @@ func TestViewShoppingListItemShouldReturnShoppingListItemNotExist(t *testing.T) 
 
 	errors := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(testingT{t}, 404, status)
-	require.Equal(testingT{t}, "Shopping List Item not exists.", errors["title"])
-	require.NotEmpty(testingT{t}, errors["detail"].(map[string]interface{})["guid"])
+	require.Equal(t, 404, status)
+	require.Equal(t, "Shopping List Item not exists.", errors["title"])
+	require.NotEmpty(t, errors["detail"].(map[string]interface{})["guid"])
 }
 
 func TestViewShoppingListItemWithoutRelationShouldSuccess(t *testing.T) {
@@ -93,11 +93,11 @@ func TestViewShoppingListItemWithoutRelationShouldSuccess(t *testing.T) {
 
 	data := body.(map[string]interface{})["data"].(map[string]interface{})
 
-	require.Equal(testingT{t}, 200, status)
-	require.Equal(testingT{t}, shoppingListItem.GUID, data["guid"])
-	require.Equal(testingT{t}, users[0].GUID, data["user_guid"])
-	require.Equal(testingT{t}, shoppingList.GUID, data["shopping_list_guid"])
-	require.Equal(testingT{t}, shoppingListItem.Name, data["name"])
-	require.Nil(testingT{t}, data["cashback_amount"])
-	require.Equal(testingT{t}, 0.00, data["added_from_deal"])
+	require.Equal(t, 200, status)
+	require.Equal(t, shoppingListItem.GUID, data["guid"])
+	require.Equal(t, users[0].GUID, data["user_guid"])
+	require.Equal(t, shoppingList.GUID, data["shopping_list_guid"])
+	require.Equal(t, shoppingListItem.Name, data["name"])
+	require.Nil(t, data["cashback_amount"])
+	require.Equal(t, 0.00, data["added_from_deal"])
 }

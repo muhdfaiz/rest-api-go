@@ -6,7 +6,6 @@ import (
 
 	"encoding/json"
 
-	"github.com/kr/pretty"
 	"github.com/stretchr/testify/require"
 )
 
@@ -21,8 +20,8 @@ func TestCreateCashoutTransactionShouldReturnAccessTokenError(t *testing.T) {
 
 	errors := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(testingT{t}, 401, status)
-	require.Equal(testingT{t}, "Access token error", errors["title"])
+	require.Equal(t, 401, status)
+	require.Equal(t, "Access token error", errors["title"])
 }
 
 func TestCreateCashoutTransactionShouldReturnRequiredFieldValidationError(t *testing.T) {
@@ -53,13 +52,13 @@ func TestCreateCashoutTransactionShouldReturnRequiredFieldValidationError(t *tes
 
 	errorDetail := errors["detail"].(map[string]interface{})
 
-	require.Equal(testingT{t}, 422, status)
-	require.Equal(testingT{t}, "Validation failed.", errors["title"])
-	require.NotEmpty(testingT{t}, errorDetail["amount"])
-	require.NotEmpty(testingT{t}, errorDetail["bank_account_name"])
-	require.NotEmpty(testingT{t}, errorDetail["bank_account_number"])
-	require.NotEmpty(testingT{t}, errorDetail["bank_name"])
-	require.NotEmpty(testingT{t}, errorDetail["bank_country"])
+	require.Equal(t, 422, status)
+	require.Equal(t, "Validation failed.", errors["title"])
+	require.NotEmpty(t, errorDetail["amount"])
+	require.NotEmpty(t, errorDetail["bank_account_name"])
+	require.NotEmpty(t, errorDetail["bank_account_number"])
+	require.NotEmpty(t, errorDetail["bank_name"])
+	require.NotEmpty(t, errorDetail["bank_country"])
 }
 
 func TestCreateCashoutTransactionShouldReturnAmountGreaterThanZeroValidationError(t *testing.T) {
@@ -91,9 +90,9 @@ func TestCreateCashoutTransactionShouldReturnAmountGreaterThanZeroValidationErro
 
 	errorDetail := errors["detail"].(map[string]interface{})
 
-	require.Equal(testingT{t}, 422, status)
-	require.Equal(testingT{t}, "Validation failed.", errors["title"])
-	require.NotEmpty(testingT{t}, errorDetail["amount"])
+	require.Equal(t, 422, status)
+	require.Equal(t, "Validation failed.", errors["title"])
+	require.NotEmpty(t, errorDetail["amount"])
 }
 
 func TestCreateCashoutTransactionShouldReturnNumericValidationError(t *testing.T) {
@@ -124,10 +123,10 @@ func TestCreateCashoutTransactionShouldReturnNumericValidationError(t *testing.T
 	errors := body.(map[string]interface{})["errors"].(map[string]interface{})
 
 	errorDetail := errors["detail"].(map[string]interface{})
-	pretty.Println(errorDetail)
-	require.Equal(testingT{t}, 422, status)
-	require.Equal(testingT{t}, "Validation failed.", errors["title"])
-	require.NotEmpty(testingT{t}, errorDetail["bank_account_number"])
+
+	require.Equal(t, 422, status)
+	require.Equal(t, "Validation failed.", errors["title"])
+	require.NotEmpty(t, errorDetail["bank_account_number"])
 }
 
 func TestCreateCashoutTransactionShouldReturnCashoutAmountExceededLimitError(t *testing.T) {
@@ -157,9 +156,8 @@ func TestCreateCashoutTransactionShouldReturnCashoutAmountExceededLimitError(t *
 
 	errors := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	pretty.Println(errors)
-	require.Equal(testingT{t}, 422, status)
-	require.Equal(testingT{t}, "Cashout Amount Exceeded Limit.", errors["title"])
+	require.Equal(t, 422, status)
+	require.Equal(t, "Cashout Amount Exceeded Limit.", errors["title"])
 }
 
 func TestCreateCashoutTransactionShouldErrorIfUserStillHasPendingCashoutTransaction(t *testing.T) {
@@ -227,8 +225,8 @@ func TestCreateCashoutTransactionShouldErrorIfUserStillHasPendingCashoutTransact
 
 	errors := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(testingT{t}, 422, status)
-	require.Equal(testingT{t}, "Pending Cashout Transaction.", errors["title"])
+	require.Equal(t, 422, status)
+	require.Equal(t, "Pending Cashout Transaction.", errors["title"])
 }
 
 func TestCreateCashoutTransactionShouldCreateTransactionRecord(t *testing.T) {
@@ -301,14 +299,14 @@ func TestCreateCashoutTransactionShouldCreateTransactionRecord(t *testing.T) {
 
 	data := body.(map[string]interface{})["data"].(map[string]interface{})
 
-	require.Equal(testingT{t}, 200, status)
-	require.NotEmpty(testingT{t}, data["guid"])
-	require.Equal(testingT{t}, user.GUID, data["user_guid"])
-	require.Equal(testingT{t}, cashoutTransactionType.GUID, data["transaction_type_guid"])
-	require.Equal(testingT{t}, pendingTransactionStatus.GUID, data["transaction_status_guid"])
-	require.Equal(testingT{t}, 0, int(data["read_status"].(interface{}).(float64)))
-	require.NotEmpty(testingT{t}, data["reference_id"])
-	require.Equal(testingT{t}, cashoutTransactionData.Amount, data["total_amount"])
+	require.Equal(t, 200, status)
+	require.NotEmpty(t, data["guid"])
+	require.Equal(t, user.GUID, data["user_guid"])
+	require.Equal(t, cashoutTransactionType.GUID, data["transaction_type_guid"])
+	require.Equal(t, pendingTransactionStatus.GUID, data["transaction_status_guid"])
+	require.Equal(t, 0, int(data["read_status"].(interface{}).(float64)))
+	require.NotEmpty(t, data["reference_id"])
+	require.Equal(t, cashoutTransactionData.Amount, data["total_amount"])
 }
 
 func TestCreateCashoutTransactionShouldCreateCashoutTransactionRecord(t *testing.T) {
@@ -383,14 +381,14 @@ func TestCreateCashoutTransactionShouldCreateCashoutTransactionRecord(t *testing
 
 	cashoutTransaction := data["cashout_transaction"].(map[string]interface{})
 
-	require.Equal(testingT{t}, 200, status)
-	require.NotEmpty(testingT{t}, cashoutTransaction["guid"])
-	require.Equal(testingT{t}, user.GUID, cashoutTransaction["user_guid"])
-	require.Equal(testingT{t}, data["guid"], cashoutTransaction["transaction_guid"])
-	require.Equal(testingT{t}, cashoutTransactionData.BankAccountHolderName, cashoutTransaction["bank_account_name"])
-	require.Equal(testingT{t}, cashoutTransactionData.BankAccountNumber, cashoutTransaction["bank_account_number"])
-	require.Equal(testingT{t}, cashoutTransactionData.BankName, cashoutTransaction["bank_name"])
-	require.Equal(testingT{t}, cashoutTransactionData.BankCountry, cashoutTransaction["bank_country"])
-	require.Nil(testingT{t}, cashoutTransaction["receipt_image"])
-	require.Nil(testingT{t}, cashoutTransaction["transfer_date"])
+	require.Equal(t, 200, status)
+	require.NotEmpty(t, cashoutTransaction["guid"])
+	require.Equal(t, user.GUID, cashoutTransaction["user_guid"])
+	require.Equal(t, data["guid"], cashoutTransaction["transaction_guid"])
+	require.Equal(t, cashoutTransactionData.BankAccountHolderName, cashoutTransaction["bank_account_name"])
+	require.Equal(t, cashoutTransactionData.BankAccountNumber, cashoutTransaction["bank_account_number"])
+	require.Equal(t, cashoutTransactionData.BankName, cashoutTransaction["bank_name"])
+	require.Equal(t, cashoutTransactionData.BankCountry, cashoutTransaction["bank_country"])
+	require.Nil(t, cashoutTransaction["receipt_image"])
+	require.Nil(t, cashoutTransaction["transfer_date"])
 }

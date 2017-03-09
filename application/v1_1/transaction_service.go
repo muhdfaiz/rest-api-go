@@ -233,9 +233,23 @@ func (ts *TransactionService) PaginateTransactions(transactions []*Transaction, 
 	pageLimitInInt, _ := strconv.Atoi(pageLimit)
 
 	offset := 0
+	// page number = 1
+	// page limit = 1
+	// 1
 
-	if pageNumberInInt != 0 && pageNumberInInt != 1 {
-		offset = (pageNumberInInt * pageLimitInInt) - 1
+	// page number = 1
+	// page limit = 2
+	// 2
+
+	// page number = 2
+	// page limit = 4
+	// 4
+
+	// page number = 4
+	// page limit = 1
+	// = 3
+	if pageNumberInInt > 1 {
+		offset = pageNumberInInt*pageLimitInInt - pageLimitInInt
 	}
 
 	limit := offset + pageLimitInInt

@@ -2,13 +2,11 @@ package v1_1
 
 import (
 	"net/http/httptest"
-	"os"
 	"testing"
 
 	"bitbucket.org/cliqers/shoppermate-api/test/helper"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
-	"github.com/stretchr/testify/require"
 )
 
 var (
@@ -31,12 +29,4 @@ func TestMain(m *testing.M) {
 		TestHelper.Teardown()
 		TestServer.Close()
 	}
-}
-
-type testingT struct {
-	require.TestingT
-}
-
-func (t testingT) FailNow() {
-	os.Exit(-1)
 }

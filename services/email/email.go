@@ -2,7 +2,6 @@ package email
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -54,10 +53,8 @@ func (e EmailService) AddSubscriber(email, name string) *systems.ErrorData {
 
 	defer resp.Body.Close()
 
-	body, error := ioutil.ReadAll(resp.Body)
+	// body, _ := ioutil.ReadAll(resp.Body)
 
-	fmt.Println(error)
-	fmt.Println(body)
 	// if error != nil {
 	// 	return Error.InternalServerError(error, systems.ErrorAddSubscriberToMailchimp)
 	// }

@@ -20,8 +20,8 @@ func TestCreateDealCashbackTransactionShouldReturnAccessTokenError(t *testing.T)
 
 	errors := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(testingT{t}, 401, status)
-	require.Equal(testingT{t}, "Access token error", errors["title"])
+	require.Equal(t, 401, status)
+	require.Equal(t, "Access token error", errors["title"])
 }
 
 func TestCreateDealCashbackTransactionShouldReturnErrorDealCashbackGUIDsRequired(t *testing.T) {
@@ -45,9 +45,9 @@ func TestCreateDealCashbackTransactionShouldReturnErrorDealCashbackGUIDsRequired
 
 	errors := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(testingT{t}, 422, status)
-	require.Equal(testingT{t}, "Validation failed.", errors["title"])
-	require.NotEmpty(testingT{t}, errors["detail"].(map[string]interface{})["deal_cashback_guids"])
+	require.Equal(t, 422, status)
+	require.Equal(t, "Validation failed.", errors["title"])
+	require.NotEmpty(t, errors["detail"].(map[string]interface{})["deal_cashback_guids"])
 }
 
 func TestCreateDealCashbackTransactionShouldReturnReceiptImageRequired(t *testing.T) {
@@ -71,9 +71,9 @@ func TestCreateDealCashbackTransactionShouldReturnReceiptImageRequired(t *testin
 
 	errors := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(testingT{t}, 422, status)
-	require.Equal(testingT{t}, "Validation failed.", errors["title"])
-	require.Equal(testingT{t}, "The receipt_image parameter is required.", errors["detail"])
+	require.Equal(t, 422, status)
+	require.Equal(t, "Validation failed.", errors["title"])
+	require.Equal(t, "The receipt_image parameter is required.", errors["detail"])
 }
 
 func TestCreateDealCashbackTransactionShouldReturnErrorInvalidFileType(t *testing.T) {
@@ -98,8 +98,8 @@ func TestCreateDealCashbackTransactionShouldReturnErrorInvalidFileType(t *testin
 
 	errors := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(testingT{t}, 400, status)
-	require.Equal(testingT{t}, "Invalid file type.", errors["title"])
+	require.Equal(t, 400, status)
+	require.Equal(t, "Invalid file type.", errors["title"])
 }
 
 func TestCreateDealCashbackTransactionShouldReturnErrorDealCashbackGUIDsNotFound(t *testing.T) {
@@ -124,8 +124,8 @@ func TestCreateDealCashbackTransactionShouldReturnErrorDealCashbackGUIDsNotFound
 
 	errors := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(testingT{t}, 404, status)
-	require.Equal(testingT{t}, "Deal Cashback GUID not exists.", errors["title"])
+	require.Equal(t, 404, status)
+	require.Equal(t, "Deal Cashback GUID not exists.", errors["title"])
 }
 
 func TestCreateDealCashbackTransactionShouldCreateTransactionRecord(t *testing.T) {
@@ -182,14 +182,14 @@ func TestCreateDealCashbackTransactionShouldCreateTransactionRecord(t *testing.T
 
 	DB.Model(&TransactionType{}).Where("slug = ?", "deal_redemption").Find(&dealCashbackTransactionType)
 
-	require.Equal(testingT{t}, 200, status)
-	require.Equal(testingT{t}, user.GUID, data["user_guid"])
-	require.Equal(testingT{t}, 0, int(data["read_status"].(interface{}).(float64)))
-	require.Equal(testingT{t}, deals[0].CashbackAmount+deals[1].CashbackAmount, data["total_amount"])
-	require.NotEmpty(testingT{t}, data["reference_id"])
-	require.Nil(testingT{t}, data["deleted_at"])
-	require.Equal(testingT{t}, pendingTransactionStatus.GUID, data["transaction_status_guid"])
-	require.Equal(testingT{t}, dealCashbackTransactionType.GUID, data["transaction_type_guid"])
+	require.Equal(t, 200, status)
+	require.Equal(t, user.GUID, data["user_guid"])
+	require.Equal(t, 0, int(data["read_status"].(interface{}).(float64)))
+	require.Equal(t, deals[0].CashbackAmount+deals[1].CashbackAmount, data["total_amount"])
+	require.NotEmpty(t, data["reference_id"])
+	require.Nil(t, data["deleted_at"])
+	require.Equal(t, pendingTransactionStatus.GUID, data["transaction_status_guid"])
+	require.Equal(t, dealCashbackTransactionType.GUID, data["transaction_type_guid"])
 }
 
 func TestCreateDealCashbackTransactionShouldCreateDealCashbackTransactionRecord(t *testing.T) {
@@ -240,16 +240,16 @@ func TestCreateDealCashbackTransactionShouldCreateDealCashbackTransactionRecord(
 
 	dealCashbackTransaction := data["deal_cashback_transaction"].(map[string]interface{})
 
-	require.Equal(testingT{t}, 200, status)
-	require.Equal(testingT{t}, dealCashbackTransaction["user_guid"], data["user_guid"])
-	require.Equal(testingT{t}, data["guid"], dealCashbackTransaction["transaction_guid"])
-	require.Nil(testingT{t}, dealCashbackTransaction["deleted_at"])
-	require.Nil(testingT{t}, dealCashbackTransaction["verification_date"])
-	require.NotEmpty(testingT{t}, dealCashbackTransaction["guid"])
-	require.Len(testingT{t}, dealCashbackTransaction["deal_cashbacks"].([]interface{}), 2)
+	require.Equal(t, 200, status)
+	require.Equal(t, dealCashbackTransaction["user_guid"], data["user_guid"])
+	require.Equal(t, data["guid"], dealCashbackTransaction["transaction_guid"])
+	require.Nil(t, dealCashbackTransaction["deleted_at"])
+	require.Nil(t, dealCashbackTransaction["verification_date"])
+	require.NotEmpty(t, dealCashbackTransaction["guid"])
+	require.Len(t, dealCashbackTransaction["deal_cashbacks"].([]interface{}), 2)
 
 	response, _ := http.Get(dealCashbackTransaction["receipt_url"].(string))
-	require.Equal(testingT{t}, 200, response.StatusCode)
+	require.Equal(t, 200, response.StatusCode)
 
 }
 
@@ -309,9 +309,9 @@ func TestCreateDealCashbackTransactionShouldUpdateTransactionGUIDInDealCashbacks
 
 	DB.Model(&DealCashback{}).Where(&DealCashback{GUID: dealCashback2.GUID}).First(updatedDealCashback2)
 
-	require.Equal(testingT{t}, 200, status)
-	require.Equal(testingT{t}, dealCashbackTransaction["guid"], *updatedDealCashback1.DealCashbackTransactionGUID)
-	require.Equal(testingT{t}, dealCashbackTransaction["guid"], *updatedDealCashback2.DealCashbackTransactionGUID)
+	require.Equal(t, 200, status)
+	require.Equal(t, dealCashbackTransaction["guid"], *updatedDealCashback1.DealCashbackTransactionGUID)
+	require.Equal(t, dealCashbackTransaction["guid"], *updatedDealCashback2.DealCashbackTransactionGUID)
 }
 
 func TestCreateDealCashbackTransactionShouldAddShoppingListItemToCart(t *testing.T) {
@@ -374,21 +374,21 @@ func TestCreateDealCashbackTransactionShouldAddShoppingListItemToCart(t *testing
 
 	DB.Model(&ShoppingListItem{}).Where(&ShoppingListItem{GUID: shoppingListItemForDealCashback2.GUID}).First(updatedShoppingListItemForDealCashback2)
 
-	require.Equal(testingT{t}, 200, status)
+	require.Equal(t, 200, status)
 
 	// Verify API update added to cart value to 1 or not for shopping list item deal cashback 1 after user
 	// successfuly redeem deal cashback.
-	require.Equal(testingT{t}, 1, updatedShoppingListItemForDealCashback1.AddedToCart)
-	require.Equal(testingT{t}, 1, updatedShoppingListItemForDealCashback1.AddedFromDeal)
-	require.Equal(testingT{t}, deals[0].GUID, *updatedShoppingListItemForDealCashback1.DealGUID)
-	require.Nil(testingT{t}, updatedShoppingListItemForDealCashback1.DealExpired)
+	require.Equal(t, 1, updatedShoppingListItemForDealCashback1.AddedToCart)
+	require.Equal(t, 1, updatedShoppingListItemForDealCashback1.AddedFromDeal)
+	require.Equal(t, deals[0].GUID, *updatedShoppingListItemForDealCashback1.DealGUID)
+	require.Nil(t, updatedShoppingListItemForDealCashback1.DealExpired)
 
 	// Verify API update added to cart value to 1 or not for shopping list item deal cashback 2 after user
 	// successfuly redeem deal cashback.
-	require.Equal(testingT{t}, 1, updatedShoppingListItemForDealCashback2.AddedToCart)
-	require.Equal(testingT{t}, 1, updatedShoppingListItemForDealCashback2.AddedFromDeal)
-	require.Equal(testingT{t}, deals[1].GUID, *updatedShoppingListItemForDealCashback2.DealGUID)
-	require.Nil(testingT{t}, updatedShoppingListItemForDealCashback1.DealExpired)
+	require.Equal(t, 1, updatedShoppingListItemForDealCashback2.AddedToCart)
+	require.Equal(t, 1, updatedShoppingListItemForDealCashback2.AddedFromDeal)
+	require.Equal(t, deals[1].GUID, *updatedShoppingListItemForDealCashback2.DealGUID)
+	require.Nil(t, updatedShoppingListItemForDealCashback1.DealExpired)
 
 	notUpdateShoppingList1 := &ShoppingListItem{}
 
@@ -399,6 +399,6 @@ func TestCreateDealCashbackTransactionShouldAddShoppingListItemToCart(t *testing
 	DB.Model(&ShoppingListItem{}).Where(&ShoppingListItem{GUID: shoppingListItem2.GUID}).First(notUpdateShoppingList2)
 
 	// Make Sure API didn't update other shopping list item added to cart value
-	require.Equal(testingT{t}, 0, notUpdateShoppingList1.AddedToCart)
-	require.Equal(testingT{t}, 0, notUpdateShoppingList2.AddedToCart)
+	require.Equal(t, 0, notUpdateShoppingList1.AddedToCart)
+	require.Equal(t, 0, notUpdateShoppingList2.AddedToCart)
 }

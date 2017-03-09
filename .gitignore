@@ -9,3 +9,7 @@ cert.pem
 fullchain.pem
 privkey.pem
 chain.pem
+glide.lock
+*.xml
+*.out
+*.output

@@ -69,6 +69,10 @@ node {
                 sh 'printenv'
             }
 
+            dir('src/bitbucket.org/cliqers/shoppermate-api/vendor/github.com/tebeka/go2xunit') {
+                sh 'go build -o ../../../../go2xunit'
+            }
+
         } catch (e) {
             currentBuild.result = "FAILED"
             slackSend (color: '#FF0000', message: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
@@ -79,7 +83,11 @@ node {
     stage('Test') {
         try {
             dir('src/bitbucket.org/cliqers/shoppermate-api/application/v1_1') {
-                sh 'go test -v'
+                sh 'go test -v | tee ../../test_result.out'
+            }
+
+            dir('src/bitbucket.org/cliqers/shoppermate-api/') {
+                sh './go2xunit -fail -input test_result.out -output tests.xml'
             }
             
             slackSend (color: '#00FF00', message: "SUCCESSFUL: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
@@ -89,5 +97,9 @@ node {
             throw e
         }
 
+    }
+
+    stage('Result') {
+        junit '*.xml'
     }
 }

@@ -140,9 +140,9 @@ func TestFacebookIDMustUniqueDuringCreateUser(t *testing.T) {
 func TestReferralCodeMustValidDuringCreateUser(t *testing.T) {
 	TestHelper.TruncateDatabase()
 
-	DB.Model(&Setting{}).Where("slug = ?", "referral_active").Update("value", "true")
-
 	sampleData := SampleData{DB: DB}
+
+	sampleData.Settings("true", "2", "5")
 
 	device, _ := sampleData.DeviceWithoutUserGUID()
 

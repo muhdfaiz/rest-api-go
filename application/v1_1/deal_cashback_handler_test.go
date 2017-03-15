@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 
 	"bitbucket.org/cliqers/shoppermate-api/systems"
-	"github.com/kr/pretty"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -522,8 +521,6 @@ func TestViewUserDealCashbacksShouldSuccess(t *testing.T) {
 	response := body.(map[string]interface{})["data"]
 
 	shoppingListResponse := response.([]interface{})
-
-	pretty.Println(response)
 
 	// Assert Shopping List
 	assert.Equal(t, 200, status)

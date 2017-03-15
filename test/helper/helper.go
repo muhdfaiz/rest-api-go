@@ -62,6 +62,7 @@ func (h *Helper) TruncateDatabase() {
 	DB.Exec("TRUNCATE TABLE ads;")
 	DB.Exec("TRUNCATE TABLE category;")
 	DB.Exec("TRUNCATE TABLE subcategory;")
+	DB.Exec("TRUNCATE TABLE item")
 	DB.Exec("TRUNCATE TABLE generic;")
 	DB.Exec("TRUNCATE TABLE deal_cashbacks;")
 	DB.Exec("TRUNCATE TABLE deal_cashback_status;")

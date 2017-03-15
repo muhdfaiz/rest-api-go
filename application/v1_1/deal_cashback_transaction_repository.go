@@ -21,6 +21,7 @@ func (dctr *DealCashbackTransactionRepository) Create(dbTransaction *gorm.DB, us
 		ReceiptURL:      receiptURL,
 		RemarkTitle:     nil,
 		RemarkBody:      nil,
+		Status:          "pending cleaning",
 	}
 
 	result := dbTransaction.Create(dealCashbackTransaction)

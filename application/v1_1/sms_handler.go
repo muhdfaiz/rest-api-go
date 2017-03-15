@@ -144,7 +144,7 @@ func (sh *SmsHandler) Verify(context *gin.Context) {
 		}
 	}
 
-	error = sh.DeviceService.ReactivateDevice(dbTransaction, device.GUID)
+	error := sh.DeviceService.ReactivateDevice(dbTransaction, device.GUID)
 
 	if error != nil {
 		dbTransaction.Rollback()

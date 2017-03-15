@@ -112,7 +112,13 @@ func (sh *SmsHandler) Verify(context *gin.Context) {
 		context.JSON(http.StatusNotFound, Error.ResourceNotFoundError("Device", "device_uuid", smsData.DeviceUUID))
 	}
 
-	user := sh.UserRepository.GetByPhoneNo(smsData.PhoneNo, "")
+	user, error := sh.UserService.CheckUserGUIDExistOrNot(*device.UserGUID)
+
+	if error != nil {
+		errorCode, _ := strconv.Atoi(error.Error.Status)
+		context.JSON(errorCode, error)
+		return
+	}
 
 	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
 
@@ -135,7 +141,7 @@ func (sh *SmsHandler) Verify(context *gin.Context) {
 		}
 	}
 
-	error := sh.DeviceService.ReactivateDevice(dbTransaction, device.GUID)
+	error = sh.DeviceService.ReactivateDevice(dbTransaction, device.GUID)
 
 	if error != nil {
 		dbTransaction.Rollback()

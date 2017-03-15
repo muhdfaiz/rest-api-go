@@ -100,7 +100,6 @@ func (sh *SmsHandler) Send(context *gin.Context) {
 func (sh *SmsHandler) Verify(context *gin.Context) {
 	smsData := SmsVerification{}
 
-	// Bind request based on content type and validate request data
 	if error := Binding.Bind(&smsData, context); error != nil {
 		context.JSON(http.StatusBadRequest, error)
 		return
@@ -112,11 +111,10 @@ func (sh *SmsHandler) Verify(context *gin.Context) {
 		context.JSON(http.StatusNotFound, Error.ResourceNotFoundError("Device", "device_uuid", smsData.DeviceUUID))
 	}
 
-	user, error := sh.UserService.CheckUserGUIDExistOrNot(*device.UserGUID)
+	_, error := sh.UserService.CheckUserPhoneNumberExistOrNot(smsData.NewPhoneNo)
 
-	if error != nil {
-		errorCode, _ := strconv.Atoi(error.Error.Status)
-		context.JSON(errorCode, error)
+	if error == nil {
+		context.JSON(http.StatusConflict, Error.DuplicateValueErrors("Phone Number", "phone_no", smsData.NewPhoneNo))
 		return
 	}
 
@@ -125,9 +123,11 @@ func (sh *SmsHandler) Verify(context *gin.Context) {
 	debug := context.Query("debug")
 
 	event := "login"
+	accessTokenPhoneNo := smsData.PhoneNo
 
-	if user.PhoneNo != smsData.PhoneNo {
+	if smsData.NewPhoneNo != "" {
 		event = "update"
+		accessTokenPhoneNo = smsData.NewPhoneNo
 	}
 
 	if debug != "1" {
@@ -149,7 +149,15 @@ func (sh *SmsHandler) Verify(context *gin.Context) {
 		return
 	}
 
-	_, error = sh.DeviceService.UpdateByDeviceUUID(dbTransaction, smsData.DeviceUUID, UpdateDevice{UserGUID: user.GUID})
+	userWithOldPhoneNo, error := sh.UserService.CheckUserPhoneNumberExistOrNot(smsData.PhoneNo)
+
+	if error != nil {
+		dbTransaction.Rollback()
+		context.JSON(http.StatusInternalServerError, error)
+		return
+	}
+
+	_, error = sh.DeviceService.UpdateByDeviceUUID(dbTransaction, smsData.DeviceUUID, UpdateDevice{UserGUID: userWithOldPhoneNo.GUID})
 
 	if error != nil {
 		dbTransaction.Rollback()
@@ -159,7 +167,7 @@ func (sh *SmsHandler) Verify(context *gin.Context) {
 
 	debugToken := context.Query("debug_token")
 
-	jwtToken, error := JWT.GenerateToken(user.GUID, smsData.PhoneNo, smsData.DeviceUUID, debugToken)
+	jwtToken, error := JWT.GenerateToken(userWithOldPhoneNo.GUID, accessTokenPhoneNo, smsData.DeviceUUID, debugToken)
 
 	if error != nil {
 		dbTransaction.Rollback()
@@ -168,10 +176,10 @@ func (sh *SmsHandler) Verify(context *gin.Context) {
 
 	dbTransaction.Commit()
 
-	user = sh.UserService.CalculateAllTimeAmountAndPendingAmount(user)
+	userWithOldPhoneNo = sh.UserService.CalculateAllTimeAmountAndPendingAmount(userWithOldPhoneNo)
 
 	response := make(map[string]interface{})
-	response["user"] = user
+	response["user"] = userWithOldPhoneNo
 	response["access_token"] = jwtToken
 
 	context.JSON(http.StatusOK, gin.H{"data": response})

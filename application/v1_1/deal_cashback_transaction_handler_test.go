@@ -6,6 +6,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/kr/pretty"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -239,7 +240,7 @@ func TestCreateDealCashbackTransactionShouldCreateDealCashbackTransactionRecord(
 	data := body.(map[string]interface{})["data"].(map[string]interface{})
 
 	dealCashbackTransaction := data["deal_cashback_transaction"].(map[string]interface{})
-
+	pretty.Println(data)
 	assert.Equal(t, 200, status)
 	assert.Equal(t, dealCashbackTransaction["user_guid"], data["user_guid"])
 	assert.Equal(t, data["guid"], dealCashbackTransaction["transaction_guid"])
@@ -247,6 +248,7 @@ func TestCreateDealCashbackTransactionShouldCreateDealCashbackTransactionRecord(
 	assert.Nil(t, dealCashbackTransaction["verification_date"])
 	assert.NotEmpty(t, dealCashbackTransaction["guid"])
 	assert.Len(t, dealCashbackTransaction["deal_cashbacks"].([]interface{}), 2)
+	assert.Equal(t, "pending cleaning", dealCashbackTransaction["status"])
 
 	response, _ := http.Get(dealCashbackTransaction["receipt_url"].(string))
 	assert.Equal(t, 200, response.StatusCode)

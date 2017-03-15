@@ -111,11 +111,13 @@ func (sh *SmsHandler) Verify(context *gin.Context) {
 		context.JSON(http.StatusNotFound, Error.ResourceNotFoundError("Device", "device_uuid", smsData.DeviceUUID))
 	}
 
-	_, error := sh.UserService.CheckUserPhoneNumberExistOrNot(smsData.NewPhoneNo)
+	if smsData.NewPhoneNo != "" {
+		_, error := sh.UserService.CheckUserPhoneNumberExistOrNot(smsData.NewPhoneNo)
 
-	if error == nil {
-		context.JSON(http.StatusConflict, Error.DuplicateValueErrors("Phone Number", "phone_no", smsData.NewPhoneNo))
-		return
+		if error == nil {
+			context.JSON(http.StatusConflict, Error.DuplicateValueErrors("Phone Number", "phone_no", smsData.NewPhoneNo))
+			return
+		}
 	}
 
 	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
@@ -123,6 +125,7 @@ func (sh *SmsHandler) Verify(context *gin.Context) {
 	debug := context.Query("debug")
 
 	event := "login"
+
 	accessTokenPhoneNo := smsData.PhoneNo
 
 	if smsData.NewPhoneNo != "" {
@@ -141,7 +144,7 @@ func (sh *SmsHandler) Verify(context *gin.Context) {
 		}
 	}
 
-	error = sh.DeviceService.ReactivateDevice(dbTransaction, device.GUID)
+	error := sh.DeviceService.ReactivateDevice(dbTransaction, device.GUID)
 
 	if error != nil {
 		dbTransaction.Rollback()

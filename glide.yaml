@@ -46,3 +46,6 @@ import:
   subpackages:
   - assert
 - package: github.com/kr/pretty
+- package: github.com/tebeka/go2xunit
+  version: ~1.4.3
+- package: github.com/jstemmer/go-junit-report

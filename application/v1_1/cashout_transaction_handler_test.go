@@ -6,7 +6,6 @@ import (
 
 	"encoding/json"
 
-	"github.com/kr/pretty"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -124,7 +123,7 @@ func TestCreateCashoutTransactionShouldReturnNumericValidationError(t *testing.T
 	errors := body.(map[string]interface{})["errors"].(map[string]interface{})
 
 	errorDetail := errors["detail"].(map[string]interface{})
-	pretty.Println(errorDetail)
+
 	assert.Equal(t, 422, status)
 	assert.Equal(t, "Validation failed.", errors["title"])
 	assert.NotEmpty(t, errorDetail["bank_account_number"])
@@ -157,7 +156,6 @@ func TestCreateCashoutTransactionShouldReturnCashoutAmountExceededLimitError(t *
 
 	errors := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	pretty.Println(errors)
 	assert.Equal(t, 422, status)
 	assert.Equal(t, "Cashout Amount Exceeded Limit.", errors["title"])
 }

@@ -67,8 +67,8 @@ func TestCreateUserShouldReturnRequiredFieldValidationErrors(t *testing.T) {
 func TestPhoneNumberShouldUniqueDuringCreateUser(t *testing.T) {
 	sampleData := SampleData{DB: DB}
 
-	users := sampleData.Users()
-	fmt.Println(users)
+	sampleData.Users()
+
 	requestURL := fmt.Sprintf("%s/v1_1/users", TestServer.URL)
 
 	userData := map[string]string{
@@ -484,8 +484,22 @@ func TestCreateUserViaPhoneNumber(t *testing.T) {
 
 	user := data["user"].(map[string]interface{})
 
+	tokenExpiryTime, _ := time.Parse(time.RFC3339, accessToken["expired"].(string))
+
+	currentTime := time.Now().UTC().AddDate(0, 0, 7).Format(time.RFC3339)
+
+	currentTimeObject, _ := time.Parse(time.RFC3339, currentTime)
+
+	timeDiff := tokenExpiryTime.Sub(currentTimeObject)
+
 	assert.Equal(t, 200, status)
-	assert.Equal(t, time.Now().UTC().AddDate(0, 0, 7).Format(time.RFC3339), accessToken["expired"])
+	assert.Condition(t, func() bool {
+		if timeDiff.Seconds() < 4 {
+			return true
+		}
+
+		return false
+	})
 	assert.NotEmpty(t, accessToken["token"])
 	assert.NotEmpty(t, user["id"])
 	assert.NotEmpty(t, user["guid"])
@@ -537,9 +551,23 @@ func TestCreateUserViaFacebook(t *testing.T) {
 
 	DB.Model(&Device{}).Where("guid = ?", sampleDevice.GUID).Find(&device)
 
+	currentTime := time.Now().UTC().AddDate(0, 0, 7).Format(time.RFC3339)
+
+	tokenExpiryTime, _ := time.Parse(time.RFC3339, accessToken["expired"].(string))
+
+	currentTimeObject, _ := time.Parse(time.RFC3339, currentTime)
+
+	timeDiff := tokenExpiryTime.Sub(currentTimeObject)
+
 	assert.Equal(t, user["guid"], *device.UserGUID)
 	assert.Equal(t, 200, status)
-	assert.Equal(t, time.Now().UTC().AddDate(0, 0, 7).Format(time.RFC3339), accessToken["expired"])
+	assert.Condition(t, func() bool {
+		if timeDiff.Seconds() < 4 {
+			return true
+		}
+
+		return false
+	})
 	assert.NotEmpty(t, accessToken["token"])
 	assert.NotEmpty(t, user["id"])
 	assert.NotEmpty(t, user["guid"])
@@ -591,8 +619,6 @@ func TestViewUserDetails(t *testing.T) {
 
 	data := body.(map[string]interface{})["data"].(map[string]interface{})
 
-	fmt.Println(data)
-
 	assert.Equal(t, 200, status)
 	assert.Equal(t, users[0].GUID, data["guid"])
 	assert.Equal(t, users[0].Name, data["name"])
@@ -643,7 +669,6 @@ func TestProfileImageSizeValidationForUpdateUser(t *testing.T) {
 
 	errorData := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	fmt.Println(errorData)
 	assert.Equal(t, 413, status)
 	assert.Equal(t, "File size exceeded the limit.", errorData["title"])
 }

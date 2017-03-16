@@ -1,6 +1,7 @@
 package v1_1
 
 import (
+	"strconv"
 	"time"
 
 	"bitbucket.org/cliqers/shoppermate-api/systems"
@@ -1479,6 +1480,49 @@ func (sd *SampleData) DealCashbackTransactionWithCompletedStatus(dealCashbackGUI
 	return result.Value.(*DealCashbackTransaction)
 }
 
+func (sd *SampleData) CashoutTransaction(userGUID, transactionGUID string) *CashoutTransaction {
+	cashoutTransaction := &CashoutTransaction{
+		GUID:                  Helper.GenerateUUID(),
+		UserGUID:              userGUID,
+		TransactionGUID:       transactionGUID,
+		BankAccountHolderName: "Test Person",
+		BankAccountNumber:     "1234335345345",
+		BankName:              "Maybank",
+		BankCountry:           "Malaysia",
+	}
+
+	result := sd.DB.Create(cashoutTransaction)
+
+	return result.Value.(*CashoutTransaction)
+}
+
+func (sd *SampleData) ReferralCashbackTransaction(userGUID, referrerGUID, transactionGUID string) *ReferralCashbackTransaction {
+	referralCashbackTransaction := &ReferralCashbackTransaction{
+		GUID:            Helper.GenerateUUID(),
+		UserGUID:        userGUID,
+		ReferrerGUID:    referrerGUID,
+		TransactionGUID: transactionGUID,
+	}
+
+	result := sd.DB.Create(referralCashbackTransaction)
+
+	referralPriceSetting := &Setting{}
+
+	sd.DB.Model(&Setting{}).Where("slug = ?", "referral_price").First(&referralPriceSetting)
+
+	referralPriceValue, _ := strconv.ParseFloat(referralPriceSetting.Value, 64)
+
+	user := &User{}
+
+	sd.DB.Model(&User{}).Where(&User{GUID: userGUID}).First(&user)
+
+	sd.DB.Model(&User{}).Where(&User{GUID: userGUID}).Select("wallet").Updates(map[string]interface{}{
+		"wallet": referralPriceValue + user.Wallet,
+	})
+
+	return result.Value.(*ReferralCashbackTransaction)
+}
+
 // TransactionStatuses function used to create sample transaction statuses for test database.
 func (sd *SampleData) TransactionStatuses() []*TransactionStatus {
 	pendingStatus := &TransactionStatus{
@@ -1563,7 +1607,7 @@ func (sd *SampleData) Transaction(userGUID, transactionTypeGUID, transactionStat
 		UserGUID:              userGUID,
 		TransactionTypeGUID:   transactionTypeGUID,
 		TransactionStatusGUID: transactionStatusGUID,
-		ReadStatus:            0,
+		ReadStatus:            readStatus,
 		ReferenceID:           Helper.GenerateUniqueShortID(),
 		TotalAmount:           totalAmount,
 	}

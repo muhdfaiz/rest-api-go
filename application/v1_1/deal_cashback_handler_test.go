@@ -5,10 +5,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+
 	"encoding/json"
 
 	"bitbucket.org/cliqers/shoppermate-api/systems"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestCreateDealCashbackShouldReturnAccessTokenError(t *testing.T) {

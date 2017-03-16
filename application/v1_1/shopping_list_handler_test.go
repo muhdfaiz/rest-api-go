@@ -6,9 +6,9 @@ import (
 	"os"
 	"testing"
 
-	"encoding/json"
+	"github.com/stretchr/testify/assert"
 
-	"github.com/stretchr/testify/require"
+	"encoding/json"
 )
 
 func TestViewAllUserShoppingListsShouldReturnAccessTokenError(t *testing.T) {
@@ -22,8 +22,8 @@ func TestViewAllUserShoppingListsShouldReturnAccessTokenError(t *testing.T) {
 
 	errors := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(t, 401, status)
-	require.Equal(t, "Access token error", errors["title"])
+	assert.Equal(t, 401, status)
+	assert.Equal(t, "Access token error", errors["title"])
 }
 
 func TestViewAllUserShoppingListsWithoutRelationshipShouldSuccess(t *testing.T) {
@@ -51,10 +51,10 @@ func TestViewAllUserShoppingListsWithoutRelationshipShouldSuccess(t *testing.T) 
 
 	userShoppingLists := body.(map[string]interface{})["data"].([]interface{})
 
-	require.Equal(t, 200, status)
-	require.Len(t, userShoppingLists, 2)
-	require.Equal(t, users[0].GUID, userShoppingLists[0].(map[string]interface{})["user_guid"])
-	require.Equal(t, users[0].GUID, userShoppingLists[1].(map[string]interface{})["user_guid"])
+	assert.Equal(t, 200, status)
+	assert.Len(t, userShoppingLists, 2)
+	assert.Equal(t, users[0].GUID, userShoppingLists[0].(map[string]interface{})["user_guid"])
+	assert.Equal(t, users[0].GUID, userShoppingLists[1].(map[string]interface{})["user_guid"])
 }
 
 func TestViewAllUserShoppingListsWithRelationshipShouldSuccess(t *testing.T) {
@@ -84,14 +84,14 @@ func TestViewAllUserShoppingListsWithRelationshipShouldSuccess(t *testing.T) {
 
 	userShoppingLists := body.(map[string]interface{})["data"].([]interface{})
 
-	require.Equal(t, 200, status)
-	require.Len(t, userShoppingLists, 2)
-	require.Equal(t, users[0].GUID, userShoppingLists[0].(map[string]interface{})["user_guid"])
-	require.Equal(t, users[0].GUID, userShoppingLists[1].(map[string]interface{})["user_guid"])
+	assert.Equal(t, 200, status)
+	assert.Len(t, userShoppingLists, 2)
+	assert.Equal(t, users[0].GUID, userShoppingLists[0].(map[string]interface{})["user_guid"])
+	assert.Equal(t, users[0].GUID, userShoppingLists[1].(map[string]interface{})["user_guid"])
 
 	// Assert relationship data
-	require.NotEmpty(t, userShoppingLists[0].(map[string]interface{})["occasions"])
-	require.NotEmpty(t, userShoppingLists[0].(map[string]interface{})["items"])
+	assert.NotEmpty(t, userShoppingLists[0].(map[string]interface{})["occasions"])
+	assert.NotEmpty(t, userShoppingLists[0].(map[string]interface{})["items"])
 }
 
 func TestCreateNewShoppingListShouldReturnAccessTokenError(t *testing.T) {
@@ -112,8 +112,8 @@ func TestCreateNewShoppingListShouldReturnAccessTokenError(t *testing.T) {
 
 	errors := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(t, 401, status)
-	require.Equal(t, "Access token error", errors["title"])
+	assert.Equal(t, 401, status)
+	assert.Equal(t, "Access token error", errors["title"])
 }
 
 func TestCreateNewShoppingListShouldReturnValidationError(t *testing.T) {
@@ -140,10 +140,10 @@ func TestCreateNewShoppingListShouldReturnValidationError(t *testing.T) {
 
 	errors := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(t, 422, status)
-	require.Equal(t, "Validation failed.", errors["title"])
-	require.NotEmpty(t, errors["detail"].(map[string]interface{})["name"])
-	require.NotEmpty(t, errors["detail"].(map[string]interface{})["occasion_guid"])
+	assert.Equal(t, 422, status)
+	assert.Equal(t, "Validation failed.", errors["title"])
+	assert.NotEmpty(t, errors["detail"].(map[string]interface{})["name"])
+	assert.NotEmpty(t, errors["detail"].(map[string]interface{})["occasion_guid"])
 }
 
 func TestCreateNewShoppingListShouldReturnOccasionGUIDNotExistError(t *testing.T) {
@@ -170,9 +170,9 @@ func TestCreateNewShoppingListShouldReturnOccasionGUIDNotExistError(t *testing.T
 
 	errors := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(t, 404, status)
-	require.Equal(t, "Occasion not exists.", errors["title"])
-	require.NotEmpty(t, errors["detail"].(map[string]interface{})["guid"])
+	assert.Equal(t, 404, status)
+	assert.Equal(t, "Occasion not exists.", errors["title"])
+	assert.NotEmpty(t, errors["detail"].(map[string]interface{})["guid"])
 }
 
 func TestCreateNewShoppingListShouldReturnDuplicateError(t *testing.T) {
@@ -203,8 +203,8 @@ func TestCreateNewShoppingListShouldReturnDuplicateError(t *testing.T) {
 
 	errors := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(t, 409, status)
-	require.Equal(t, "Shopping List already exists.", errors["title"])
+	assert.Equal(t, 409, status)
+	assert.Equal(t, "Shopping List already exists.", errors["title"])
 }
 
 func TestCreateNewShoppingListShouldSuccess(t *testing.T) {
@@ -233,11 +233,11 @@ func TestCreateNewShoppingListShouldSuccess(t *testing.T) {
 
 	data := body.(map[string]interface{})["data"].(map[string]interface{})
 
-	require.Equal(t, 200, status)
-	require.NotEmpty(t, data["guid"])
-	require.Equal(t, users[0].GUID, data["user_guid"])
-	require.Equal(t, postData.Name, data["name"])
-	require.Equal(t, occasions[0].GUID, data["occasion_guid"])
+	assert.Equal(t, 200, status)
+	assert.NotEmpty(t, data["guid"])
+	assert.Equal(t, users[0].GUID, data["user_guid"])
+	assert.Equal(t, postData.Name, data["name"])
+	assert.Equal(t, occasions[0].GUID, data["occasion_guid"])
 }
 
 func TestUpdateShoppingListShouldReturnAccessTokenError(t *testing.T) {
@@ -258,8 +258,8 @@ func TestUpdateShoppingListShouldReturnAccessTokenError(t *testing.T) {
 
 	errors := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(t, 401, status)
-	require.Equal(t, "Access token error", errors["title"])
+	assert.Equal(t, 401, status)
+	assert.Equal(t, "Access token error", errors["title"])
 }
 
 func TestUpdateShoppingListShouldReturnShoppingListNotExistError(t *testing.T) {
@@ -288,9 +288,9 @@ func TestUpdateShoppingListShouldReturnShoppingListNotExistError(t *testing.T) {
 
 	errors := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(t, 404, status)
-	require.Equal(t, "Shopping List not exists.", errors["title"])
-	require.NotEmpty(t, errors["detail"].(map[string]interface{})["guid"])
+	assert.Equal(t, 404, status)
+	assert.Equal(t, "Shopping List not exists.", errors["title"])
+	assert.NotEmpty(t, errors["detail"].(map[string]interface{})["guid"])
 }
 
 func TestUpdateShoppingListShouldReturnOccasionNotExistError(t *testing.T) {
@@ -321,9 +321,9 @@ func TestUpdateShoppingListShouldReturnOccasionNotExistError(t *testing.T) {
 
 	errors := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(t, 404, status)
-	require.Equal(t, "Occasion not exists.", errors["title"])
-	require.NotEmpty(t, errors["detail"].(map[string]interface{})["guid"])
+	assert.Equal(t, 404, status)
+	assert.Equal(t, "Occasion not exists.", errors["title"])
+	assert.NotEmpty(t, errors["detail"].(map[string]interface{})["guid"])
 }
 
 func TestUpdateShoppingListUsingSameNameShouldReturnDuplicateError(t *testing.T) {
@@ -353,8 +353,8 @@ func TestUpdateShoppingListUsingSameNameShouldReturnDuplicateError(t *testing.T)
 
 	errors := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(t, 409, status)
-	require.Equal(t, "Shopping List already exists.", errors["title"])
+	assert.Equal(t, 409, status)
+	assert.Equal(t, "Shopping List already exists.", errors["title"])
 }
 
 func TestUpdateShoppingListNameShouldSuccess(t *testing.T) {
@@ -384,10 +384,10 @@ func TestUpdateShoppingListNameShouldSuccess(t *testing.T) {
 
 	data := body.(map[string]interface{})["data"].(map[string]interface{})
 
-	require.Equal(t, 200, status)
-	require.Equal(t, postData.Name, data["name"])
-	require.Equal(t, occasions[0].GUID, data["occasion_guid"])
-	require.Equal(t, users[0].GUID, data["user_guid"])
+	assert.Equal(t, 200, status)
+	assert.Equal(t, postData.Name, data["name"])
+	assert.Equal(t, occasions[0].GUID, data["occasion_guid"])
+	assert.Equal(t, users[0].GUID, data["user_guid"])
 }
 
 func TestUpdateShoppingListOccasionShouldSuccess(t *testing.T) {
@@ -417,10 +417,10 @@ func TestUpdateShoppingListOccasionShouldSuccess(t *testing.T) {
 
 	data := body.(map[string]interface{})["data"].(map[string]interface{})
 
-	require.Equal(t, 200, status)
-	require.Equal(t, shoppingList.Name, data["name"])
-	require.Equal(t, postData.OccasionGUID, data["occasion_guid"])
-	require.Equal(t, users[0].GUID, data["user_guid"])
+	assert.Equal(t, 200, status)
+	assert.Equal(t, shoppingList.Name, data["name"])
+	assert.Equal(t, postData.OccasionGUID, data["occasion_guid"])
+	assert.Equal(t, users[0].GUID, data["user_guid"])
 }
 
 func TestUpdateShoppingListOccasionAndNameShouldSuccess(t *testing.T) {
@@ -451,10 +451,10 @@ func TestUpdateShoppingListOccasionAndNameShouldSuccess(t *testing.T) {
 
 	data := body.(map[string]interface{})["data"].(map[string]interface{})
 
-	require.Equal(t, 200, status)
-	require.Equal(t, postData.Name, data["name"])
-	require.Equal(t, postData.OccasionGUID, data["occasion_guid"])
-	require.Equal(t, users[0].GUID, data["user_guid"])
+	assert.Equal(t, 200, status)
+	assert.Equal(t, postData.Name, data["name"])
+	assert.Equal(t, postData.OccasionGUID, data["occasion_guid"])
+	assert.Equal(t, users[0].GUID, data["user_guid"])
 }
 
 func TestDeleteShoppingListShouldReturnAccessTokenError(t *testing.T) {
@@ -468,8 +468,8 @@ func TestDeleteShoppingListShouldReturnAccessTokenError(t *testing.T) {
 
 	errors := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(t, 401, status)
-	require.Equal(t, "Access token error", errors["title"])
+	assert.Equal(t, 401, status)
+	assert.Equal(t, "Access token error", errors["title"])
 }
 
 func TestDeleteShoppingListShouldReturnShoppingListNotExistError(t *testing.T) {
@@ -489,9 +489,9 @@ func TestDeleteShoppingListShouldReturnShoppingListNotExistError(t *testing.T) {
 
 	errors := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(t, 404, status)
-	require.Equal(t, "Shopping List not exists.", errors["title"])
-	require.NotEmpty(t, errors["detail"].(map[string]interface{})["guid"])
+	assert.Equal(t, 404, status)
+	assert.Equal(t, "Shopping List not exists.", errors["title"])
+	assert.NotEmpty(t, errors["detail"].(map[string]interface{})["guid"])
 }
 
 func TestDeleteShoppingListShouldDeleteShoppingListAndShoppingListItemsAndItemImagesBelongsToTheUserOnly(t *testing.T) {
@@ -544,67 +544,67 @@ func TestDeleteShoppingListShouldDeleteShoppingListAndShoppingListItemsAndItemIm
 	data := body.(map[string]interface{})["data"].(map[string]interface{})
 
 	// Assert to make sure shopping list for user 1 deleted.
-	require.Equal(t, 200, status)
-	require.NotEmpty(t, data["message"])
+	assert.Equal(t, 200, status)
+	assert.NotEmpty(t, data["message"])
 
 	deletedShoppingListForUser1 := &ShoppingList{}
 
 	DB.Unscoped().Model(&ShoppingList{}).Where(&ShoppingList{GUID: shoppingListForUser1.GUID}).Find(deletedShoppingListForUser1)
 
-	require.NotNil(t, deletedShoppingListForUser1.DeletedAt)
+	assert.NotNil(t, deletedShoppingListForUser1.DeletedAt)
 
 	// Assert to make sure shopping list for user 2 not deleted.
 	undeletedShoppingListForUser2 := &ShoppingList{}
 
 	DB.Unscoped().Model(&ShoppingList{}).Where(&ShoppingList{GUID: shoppingListForUser2.GUID}).Find(undeletedShoppingListForUser2)
 
-	require.Nil(t, undeletedShoppingListForUser2.DeletedAt)
+	assert.Nil(t, undeletedShoppingListForUser2.DeletedAt)
 
 	// Assert to make sure shopping list items for User 1 deleted.
 	deletedShoppingListItem1ForUser1 := &ShoppingListItem{}
 
 	DB.Unscoped().Model(&ShoppingListItem{}).Where(&ShoppingListItem{GUID: shoppingListItem1ForUser1.GUID}).Find(deletedShoppingListItem1ForUser1)
 
-	require.NotNil(t, deletedShoppingListItem1ForUser1.DeletedAt)
+	assert.NotNil(t, deletedShoppingListItem1ForUser1.DeletedAt)
 
 	deletedShoppingListItem2ForUser1 := &ShoppingListItem{}
 
 	DB.Unscoped().Model(&ShoppingListItem{}).Where(&ShoppingListItem{GUID: shoppingListItem2ForUser1.GUID}).Find(deletedShoppingListItem2ForUser1)
 
-	require.NotNil(t, deletedShoppingListItem2ForUser1.DeletedAt)
+	assert.NotNil(t, deletedShoppingListItem2ForUser1.DeletedAt)
 
 	// Assert to make shopping list item images for Item 1 and for User 1 deleted from database and Amazon S3.
 	deletedShoppingListItemImageForItem1ForUser1 := &ShoppingListItemImage{}
 
 	DB.Unscoped().Model(&ShoppingListItemImage{}).Where(&ShoppingListItemImage{GUID: shoppingListItemImageForItem1ForUser1.GUID}).Find(deletedShoppingListItemImageForItem1ForUser1)
 
-	require.NotNil(t, deletedShoppingListItemImageForItem1ForUser1.DeletedAt)
+	assert.NotNil(t, deletedShoppingListItemImageForItem1ForUser1.DeletedAt)
 
 	response, _ := http.Get(deletedShoppingListItemImageForItem1ForUser1.URL)
 
-	require.Equal(t, 403, response.StatusCode)
+	assert.Equal(t, 403, response.StatusCode)
 
 	// Assert to make sure shopping list items for User 2 not deleted.
 	deletedShoppingListItem1ForUser2 := &ShoppingListItem{}
 
 	DB.Unscoped().Model(&ShoppingListItem{}).Where(&ShoppingListItem{GUID: shoppingListItem1ForUser2.GUID}).Find(deletedShoppingListItem1ForUser2)
 
-	require.Nil(t, deletedShoppingListItem1ForUser2.DeletedAt)
+	assert.Nil(t, deletedShoppingListItem1ForUser2.DeletedAt)
 
 	deletedShoppingListItem2ForUser2 := &ShoppingListItem{}
 
 	DB.Unscoped().Model(&ShoppingListItem{}).Where(&ShoppingListItem{GUID: shoppingListItem2ForUser2.GUID}).Find(deletedShoppingListItem2ForUser2)
 
-	require.Nil(t, deletedShoppingListItem2ForUser2.DeletedAt)
+	assert.Nil(t, deletedShoppingListItem2ForUser2.DeletedAt)
 
 	// Assert to make shopping list item images for Item 1 and for User 2 not deleted from database and Amazon S3.
 	undeletedShoppingListItemImageForItem1ForUser2 := &ShoppingListItemImage{}
 
 	DB.Unscoped().Model(&ShoppingListItemImage{}).Where(&ShoppingListItemImage{GUID: shoppingListItemImageForItem1ForUser2.GUID}).Find(undeletedShoppingListItemImageForItem1ForUser2)
 
-	require.Nil(t, undeletedShoppingListItemImageForItem1ForUser2.DeletedAt)
+	assert.Nil(t, undeletedShoppingListItemImageForItem1ForUser2.DeletedAt)
 
 	response, _ = http.Get(undeletedShoppingListItemImageForItem1ForUser2.URL)
 
-	require.Equal(t, 200, response.StatusCode)
+	assert.Equal(t, 200, response.StatusCode)
 }

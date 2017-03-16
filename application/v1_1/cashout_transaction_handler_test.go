@@ -6,7 +6,7 @@ import (
 
 	"encoding/json"
 
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestCreateCashoutTransactionShouldReturnAccessTokenError(t *testing.T) {
@@ -20,8 +20,8 @@ func TestCreateCashoutTransactionShouldReturnAccessTokenError(t *testing.T) {
 
 	errors := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(t, 401, status)
-	require.Equal(t, "Access token error", errors["title"])
+	assert.Equal(t, 401, status)
+	assert.Equal(t, "Access token error", errors["title"])
 }
 
 func TestCreateCashoutTransactionShouldReturnRequiredFieldValidationError(t *testing.T) {
@@ -52,13 +52,13 @@ func TestCreateCashoutTransactionShouldReturnRequiredFieldValidationError(t *tes
 
 	errorDetail := errors["detail"].(map[string]interface{})
 
-	require.Equal(t, 422, status)
-	require.Equal(t, "Validation failed.", errors["title"])
-	require.NotEmpty(t, errorDetail["amount"])
-	require.NotEmpty(t, errorDetail["bank_account_name"])
-	require.NotEmpty(t, errorDetail["bank_account_number"])
-	require.NotEmpty(t, errorDetail["bank_name"])
-	require.NotEmpty(t, errorDetail["bank_country"])
+	assert.Equal(t, 422, status)
+	assert.Equal(t, "Validation failed.", errors["title"])
+	assert.NotEmpty(t, errorDetail["amount"])
+	assert.NotEmpty(t, errorDetail["bank_account_name"])
+	assert.NotEmpty(t, errorDetail["bank_account_number"])
+	assert.NotEmpty(t, errorDetail["bank_name"])
+	assert.NotEmpty(t, errorDetail["bank_country"])
 }
 
 func TestCreateCashoutTransactionShouldReturnAmountGreaterThanZeroValidationError(t *testing.T) {
@@ -90,9 +90,9 @@ func TestCreateCashoutTransactionShouldReturnAmountGreaterThanZeroValidationErro
 
 	errorDetail := errors["detail"].(map[string]interface{})
 
-	require.Equal(t, 422, status)
-	require.Equal(t, "Validation failed.", errors["title"])
-	require.NotEmpty(t, errorDetail["amount"])
+	assert.Equal(t, 422, status)
+	assert.Equal(t, "Validation failed.", errors["title"])
+	assert.NotEmpty(t, errorDetail["amount"])
 }
 
 func TestCreateCashoutTransactionShouldReturnNumericValidationError(t *testing.T) {
@@ -124,9 +124,9 @@ func TestCreateCashoutTransactionShouldReturnNumericValidationError(t *testing.T
 
 	errorDetail := errors["detail"].(map[string]interface{})
 
-	require.Equal(t, 422, status)
-	require.Equal(t, "Validation failed.", errors["title"])
-	require.NotEmpty(t, errorDetail["bank_account_number"])
+	assert.Equal(t, 422, status)
+	assert.Equal(t, "Validation failed.", errors["title"])
+	assert.NotEmpty(t, errorDetail["bank_account_number"])
 }
 
 func TestCreateCashoutTransactionShouldReturnCashoutAmountExceededLimitError(t *testing.T) {
@@ -156,8 +156,8 @@ func TestCreateCashoutTransactionShouldReturnCashoutAmountExceededLimitError(t *
 
 	errors := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(t, 422, status)
-	require.Equal(t, "Cashout Amount Exceeded Limit.", errors["title"])
+	assert.Equal(t, 422, status)
+	assert.Equal(t, "Cashout Amount Exceeded Limit.", errors["title"])
 }
 
 func TestCreateCashoutTransactionShouldErrorIfUserStillHasPendingCashoutTransaction(t *testing.T) {
@@ -225,8 +225,8 @@ func TestCreateCashoutTransactionShouldErrorIfUserStillHasPendingCashoutTransact
 
 	errors := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(t, 422, status)
-	require.Equal(t, "Pending Cashout Transaction.", errors["title"])
+	assert.Equal(t, 422, status)
+	assert.Equal(t, "Pending Cashout Transaction.", errors["title"])
 }
 
 func TestCreateCashoutTransactionShouldCreateTransactionRecord(t *testing.T) {
@@ -299,14 +299,14 @@ func TestCreateCashoutTransactionShouldCreateTransactionRecord(t *testing.T) {
 
 	data := body.(map[string]interface{})["data"].(map[string]interface{})
 
-	require.Equal(t, 200, status)
-	require.NotEmpty(t, data["guid"])
-	require.Equal(t, user.GUID, data["user_guid"])
-	require.Equal(t, cashoutTransactionType.GUID, data["transaction_type_guid"])
-	require.Equal(t, pendingTransactionStatus.GUID, data["transaction_status_guid"])
-	require.Equal(t, 0, int(data["read_status"].(interface{}).(float64)))
-	require.NotEmpty(t, data["reference_id"])
-	require.Equal(t, cashoutTransactionData.Amount, data["total_amount"])
+	assert.Equal(t, 200, status)
+	assert.NotEmpty(t, data["guid"])
+	assert.Equal(t, user.GUID, data["user_guid"])
+	assert.Equal(t, cashoutTransactionType.GUID, data["transaction_type_guid"])
+	assert.Equal(t, pendingTransactionStatus.GUID, data["transaction_status_guid"])
+	assert.Equal(t, 0, int(data["read_status"].(interface{}).(float64)))
+	assert.NotEmpty(t, data["reference_id"])
+	assert.Equal(t, cashoutTransactionData.Amount, data["total_amount"])
 }
 
 func TestCreateCashoutTransactionShouldCreateCashoutTransactionRecord(t *testing.T) {
@@ -381,14 +381,14 @@ func TestCreateCashoutTransactionShouldCreateCashoutTransactionRecord(t *testing
 
 	cashoutTransaction := data["cashout_transaction"].(map[string]interface{})
 
-	require.Equal(t, 200, status)
-	require.NotEmpty(t, cashoutTransaction["guid"])
-	require.Equal(t, user.GUID, cashoutTransaction["user_guid"])
-	require.Equal(t, data["guid"], cashoutTransaction["transaction_guid"])
-	require.Equal(t, cashoutTransactionData.BankAccountHolderName, cashoutTransaction["bank_account_name"])
-	require.Equal(t, cashoutTransactionData.BankAccountNumber, cashoutTransaction["bank_account_number"])
-	require.Equal(t, cashoutTransactionData.BankName, cashoutTransaction["bank_name"])
-	require.Equal(t, cashoutTransactionData.BankCountry, cashoutTransaction["bank_country"])
-	require.Nil(t, cashoutTransaction["receipt_image"])
-	require.Nil(t, cashoutTransaction["transfer_date"])
+	assert.Equal(t, 200, status)
+	assert.NotEmpty(t, cashoutTransaction["guid"])
+	assert.Equal(t, user.GUID, cashoutTransaction["user_guid"])
+	assert.Equal(t, data["guid"], cashoutTransaction["transaction_guid"])
+	assert.Equal(t, cashoutTransactionData.BankAccountHolderName, cashoutTransaction["bank_account_name"])
+	assert.Equal(t, cashoutTransactionData.BankAccountNumber, cashoutTransaction["bank_account_number"])
+	assert.Equal(t, cashoutTransactionData.BankName, cashoutTransaction["bank_name"])
+	assert.Equal(t, cashoutTransactionData.BankCountry, cashoutTransaction["bank_country"])
+	assert.Nil(t, cashoutTransaction["receipt_image"])
+	assert.Nil(t, cashoutTransaction["transfer_date"])
 }

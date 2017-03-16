@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestLoginViaPhoneShouldReturnValidationError(t *testing.T) {
@@ -24,9 +24,9 @@ func TestLoginViaPhoneShouldReturnValidationError(t *testing.T) {
 
 	errors := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(t, 422, status)
-	require.Equal(t, "Validation failed.", errors["title"])
-	require.NotEmpty(t, errors["detail"].(map[string]interface{})["phone_no"])
+	assert.Equal(t, 422, status)
+	assert.Equal(t, "Validation failed.", errors["title"])
+	assert.NotEmpty(t, errors["detail"].(map[string]interface{})["phone_no"])
 }
 
 func TestLoginViaPhoneShouldReturnPhoneNumberNotExistError(t *testing.T) {
@@ -44,9 +44,9 @@ func TestLoginViaPhoneShouldReturnPhoneNumberNotExistError(t *testing.T) {
 
 	errors := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(t, 404, status)
-	require.Equal(t, "User not exists.", errors["title"])
-	require.NotEmpty(t, errors["detail"].(map[string]interface{})["phone_no"])
+	assert.Equal(t, 404, status)
+	assert.Equal(t, "User not exists.", errors["title"])
+	assert.NotEmpty(t, errors["detail"].(map[string]interface{})["phone_no"])
 }
 
 func TestLoginViaPhoneUsingDebugModeShouldNotSentSms(t *testing.T) {
@@ -70,14 +70,14 @@ func TestLoginViaPhoneUsingDebugModeShouldNotSentSms(t *testing.T) {
 
 	data := body.(map[string]interface{})["data"].(map[string]interface{})
 
-	require.Equal(t, 200, status)
-	require.Equal(t, users[0].GUID, data["user_guid"])
+	assert.Equal(t, 200, status)
+	assert.Equal(t, users[0].GUID, data["user_guid"])
 
 	smsHistory := &SmsHistory{}
 
 	DB.Model(&SmsHistory{}).First(&smsHistory)
 
-	require.Empty(t, smsHistory.GUID)
+	assert.Empty(t, smsHistory.GUID)
 }
 
 func TestLoginViaPhoneUsingDebugModeShouldSuccess(t *testing.T) {
@@ -101,16 +101,16 @@ func TestLoginViaPhoneUsingDebugModeShouldSuccess(t *testing.T) {
 
 	data := body.(map[string]interface{})["data"].(map[string]interface{})
 
-	require.Equal(t, 200, status)
-	require.Equal(t, user.GUID, data["user_guid"])
+	assert.Equal(t, 200, status)
+	assert.Equal(t, user.GUID, data["user_guid"])
 
 	smsHistory := &SmsHistory{}
 
 	DB.Model(&SmsHistory{}).First(&smsHistory)
 
-	require.Equal(t, user.PhoneNo, smsHistory.RecipientNo)
-	require.Equal(t, "login", smsHistory.Event)
-	require.NotEmpty(t, smsHistory.VerificationCode)
+	assert.Equal(t, user.PhoneNo, smsHistory.RecipientNo)
+	assert.Equal(t, "login", smsHistory.Event)
+	assert.NotEmpty(t, smsHistory.VerificationCode)
 }
 
 func TestLoginViaFacebookShouldReturnValidationError(t *testing.T) {
@@ -129,11 +129,11 @@ func TestLoginViaFacebookShouldReturnValidationError(t *testing.T) {
 
 	errors := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(t, 422, status)
-	require.Equal(t, 422, status)
-	require.Equal(t, "Validation failed.", errors["title"])
-	require.NotEmpty(t, errors["detail"].(map[string]interface{})["device_uuid"])
-	require.NotEmpty(t, errors["detail"].(map[string]interface{})["facebook_id"])
+	assert.Equal(t, 422, status)
+	assert.Equal(t, 422, status)
+	assert.Equal(t, "Validation failed.", errors["title"])
+	assert.NotEmpty(t, errors["detail"].(map[string]interface{})["device_uuid"])
+	assert.NotEmpty(t, errors["detail"].(map[string]interface{})["facebook_id"])
 
 }
 
@@ -153,9 +153,9 @@ func TestLoginViaFacebookShouldReturnFacebookIDNotExistError(t *testing.T) {
 
 	errors := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(t, 404, status)
-	require.Equal(t, "User not exists.", errors["title"])
-	require.NotEmpty(t, errors["detail"].(map[string]interface{})["facebook_id"])
+	assert.Equal(t, 404, status)
+	assert.Equal(t, "User not exists.", errors["title"])
+	assert.NotEmpty(t, errors["detail"].(map[string]interface{})["facebook_id"])
 }
 
 func TestLoginViaFacebookShouldReturnDeviceNotExistError(t *testing.T) {
@@ -178,9 +178,9 @@ func TestLoginViaFacebookShouldReturnDeviceNotExistError(t *testing.T) {
 
 	errors := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(t, 404, status)
-	require.Equal(t, "Device not exists.", errors["title"])
-	require.NotEmpty(t, errors["detail"].(map[string]interface{})["uuid"])
+	assert.Equal(t, 404, status)
+	assert.Equal(t, "Device not exists.", errors["title"])
+	assert.NotEmpty(t, errors["detail"].(map[string]interface{})["uuid"])
 }
 
 func TestLoginViaFacebookShouldUpdateDeviceUserGUIDWhenDeviceUserGUIDEmpty(t *testing.T) {
@@ -209,8 +209,8 @@ func TestLoginViaFacebookShouldUpdateDeviceUserGUIDWhenDeviceUserGUIDEmpty(t *te
 
 	DB.Model(&Device{}).Where(&Device{GUID: device.GUID}).Find(updatedDevice)
 
-	require.Equal(t, 200, status)
-	require.Equal(t, users[0].GUID, *updatedDevice.UserGUID)
+	assert.Equal(t, 200, status)
+	assert.Equal(t, users[0].GUID, *updatedDevice.UserGUID)
 }
 
 func TestLoginViaFacebookShouldSuccess(t *testing.T) {
@@ -243,11 +243,11 @@ func TestLoginViaFacebookShouldSuccess(t *testing.T) {
 
 	DB.Model(&Device{}).Where(&Device{GUID: device.GUID}).Find(updatedDevice)
 
-	require.Equal(t, 200, status)
-	require.Nil(t, updatedDevice.DeletedAt)
+	assert.Equal(t, 200, status)
+	assert.Nil(t, updatedDevice.DeletedAt)
 
-	require.Equal(t, time.Now().UTC().AddDate(0, 0, 7).Format(time.RFC3339), data["access_token"].(map[string]interface{})["expired"])
-	require.Equal(t, users[0].GUID, data["user"].(map[string]interface{})["guid"])
+	assert.Equal(t, time.Now().UTC().AddDate(0, 0, 7).Format(time.RFC3339), data["access_token"].(map[string]interface{})["expired"])
+	assert.Equal(t, users[0].GUID, data["user"].(map[string]interface{})["guid"])
 }
 
 func TestLogoutShouldReturnAccessTokenError(t *testing.T) {
@@ -261,8 +261,8 @@ func TestLogoutShouldReturnAccessTokenError(t *testing.T) {
 
 	errors := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(t, 401, status)
-	require.Equal(t, "Access token error", errors["title"])
+	assert.Equal(t, 401, status)
+	assert.Equal(t, "Access token error", errors["title"])
 }
 
 func TestLogoutShouldSuccess(t *testing.T) {
@@ -282,8 +282,8 @@ func TestLogoutShouldSuccess(t *testing.T) {
 
 	data := body.(map[string]interface{})["data"].(map[string]interface{})
 
-	require.Equal(t, 200, status)
-	require.Equal(t, "Successfully logout", data["message"])
+	assert.Equal(t, 200, status)
+	assert.Equal(t, "Successfully logout", data["message"])
 
 	deletedDevice := &Device{}
 
@@ -291,7 +291,7 @@ func TestLogoutShouldSuccess(t *testing.T) {
 
 	DB.Unscoped().Model(&Device{}).Where(&Device{UserGUID: &userGUID}).Find(deletedDevice)
 
-	require.NotNil(t, deletedDevice.DeletedAt)
+	assert.NotNil(t, deletedDevice.DeletedAt)
 }
 
 func TestRefreshAccessTokenShouldReturnAccessTokenError(t *testing.T) {
@@ -305,8 +305,8 @@ func TestRefreshAccessTokenShouldReturnAccessTokenError(t *testing.T) {
 
 	errors := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(t, 401, status)
-	require.Equal(t, "Access token error", errors["title"])
+	assert.Equal(t, 401, status)
+	assert.Equal(t, "Access token error", errors["title"])
 }
 
 func TestRefreshAccessTokenShouldSuccess(t *testing.T) {
@@ -326,7 +326,7 @@ func TestRefreshAccessTokenShouldSuccess(t *testing.T) {
 
 	data := body.(map[string]interface{})["data"].(map[string]interface{})
 
-	require.Equal(t, 200, status)
-	require.NotEmpty(t, data["token"])
-	require.Equal(t, time.Now().UTC().AddDate(0, 0, 7).Format(time.RFC3339), data["expired"])
+	assert.Equal(t, 200, status)
+	assert.NotEmpty(t, data["token"])
+	assert.Equal(t, time.Now().UTC().AddDate(0, 0, 7).Format(time.RFC3339), data["expired"])
 }

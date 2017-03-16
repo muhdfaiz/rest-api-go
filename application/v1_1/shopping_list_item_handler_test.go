@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestViewShoppingListItemShouldReturnAccessTokenError(t *testing.T) {
@@ -18,8 +18,8 @@ func TestViewShoppingListItemShouldReturnAccessTokenError(t *testing.T) {
 
 	errors := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(t, 401, status)
-	require.Equal(t, "Access token error", errors["title"])
+	assert.Equal(t, 401, status)
+	assert.Equal(t, "Access token error", errors["title"])
 }
 
 func TestViewShoppingListItemShouldReturnShoppingListNotExist(t *testing.T) {
@@ -39,9 +39,9 @@ func TestViewShoppingListItemShouldReturnShoppingListNotExist(t *testing.T) {
 
 	errors := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(t, 404, status)
-	require.Equal(t, "Shopping List not exists.", errors["title"])
-	require.NotEmpty(t, errors["detail"].(map[string]interface{})["guid"])
+	assert.Equal(t, 404, status)
+	assert.Equal(t, "Shopping List not exists.", errors["title"])
+	assert.NotEmpty(t, errors["detail"].(map[string]interface{})["guid"])
 }
 
 func TestViewShoppingListItemShouldReturnShoppingListItemNotExist(t *testing.T) {
@@ -65,9 +65,9 @@ func TestViewShoppingListItemShouldReturnShoppingListItemNotExist(t *testing.T) 
 
 	errors := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(t, 404, status)
-	require.Equal(t, "Shopping List Item not exists.", errors["title"])
-	require.NotEmpty(t, errors["detail"].(map[string]interface{})["guid"])
+	assert.Equal(t, 404, status)
+	assert.Equal(t, "Shopping List Item not exists.", errors["title"])
+	assert.NotEmpty(t, errors["detail"].(map[string]interface{})["guid"])
 }
 
 func TestViewShoppingListItemWithoutRelationShouldSuccess(t *testing.T) {
@@ -93,11 +93,11 @@ func TestViewShoppingListItemWithoutRelationShouldSuccess(t *testing.T) {
 
 	data := body.(map[string]interface{})["data"].(map[string]interface{})
 
-	require.Equal(t, 200, status)
-	require.Equal(t, shoppingListItem.GUID, data["guid"])
-	require.Equal(t, users[0].GUID, data["user_guid"])
-	require.Equal(t, shoppingList.GUID, data["shopping_list_guid"])
-	require.Equal(t, shoppingListItem.Name, data["name"])
-	require.Nil(t, data["cashback_amount"])
-	require.Equal(t, 0.00, data["added_from_deal"])
+	assert.Equal(t, 200, status)
+	assert.Equal(t, shoppingListItem.GUID, data["guid"])
+	assert.Equal(t, users[0].GUID, data["user_guid"])
+	assert.Equal(t, shoppingList.GUID, data["shopping_list_guid"])
+	assert.Equal(t, shoppingListItem.Name, data["name"])
+	assert.Nil(t, data["cashback_amount"])
+	assert.Equal(t, 0.00, data["added_from_deal"])
 }

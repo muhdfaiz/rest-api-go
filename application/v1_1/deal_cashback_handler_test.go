@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 
 	"encoding/json"
 
@@ -25,8 +25,8 @@ func TestCreateDealCashbackShouldReturnAccessTokenError(t *testing.T) {
 
 	errors := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(t, 401, status)
-	require.Equal(t, "Access token error", errors["title"])
+	assert.Equal(t, 401, status)
+	assert.Equal(t, "Access token error", errors["title"])
 }
 
 func TestCreateDealCashbackShouldReturnValidationError(t *testing.T) {
@@ -53,8 +53,8 @@ func TestCreateDealCashbackShouldReturnValidationError(t *testing.T) {
 
 	errors := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(t, 422, status)
-	require.Equal(t, "Validation failed.", errors["title"])
+	assert.Equal(t, 422, status)
+	assert.Equal(t, "Validation failed.", errors["title"])
 }
 
 func TestCreateDealCashbackShouldReturnShoppingListNotFoundError(t *testing.T) {
@@ -81,8 +81,8 @@ func TestCreateDealCashbackShouldReturnShoppingListNotFoundError(t *testing.T) {
 
 	errors := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(t, 404, status)
-	require.Equal(t, "Shopping List not exists.", errors["title"])
+	assert.Equal(t, 404, status)
+	assert.Equal(t, "Shopping List not exists.", errors["title"])
 }
 
 func TestCreateDealCashbackShouldReturnDealNotValidDueToDealNotPublish(t *testing.T) {
@@ -118,8 +118,8 @@ func TestCreateDealCashbackShouldReturnDealNotValidDueToDealNotPublish(t *testin
 
 	errors := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(t, 422, status)
-	require.Equal(t, "Deal already expired or not valid.", errors["title"])
+	assert.Equal(t, 422, status)
+	assert.Equal(t, "Deal already expired or not valid.", errors["title"])
 }
 
 func TestCreateDealCashbackShouldReturnDealNotValidDueToExceededQuota(t *testing.T) {
@@ -166,8 +166,8 @@ func TestCreateDealCashbackShouldReturnDealNotValidDueToExceededQuota(t *testing
 
 	errors := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(t, 422, status)
-	require.Equal(t, "Deal already expired or not valid.", errors["title"])
+	assert.Equal(t, 422, status)
+	assert.Equal(t, "Deal already expired or not valid.", errors["title"])
 }
 
 func TestCreateDealCashbackShouldReturnDealNotValidDueToExceededDealLimitPerUser(t *testing.T) {
@@ -212,8 +212,8 @@ func TestCreateDealCashbackShouldReturnDealNotValidDueToExceededDealLimitPerUser
 
 	errors := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(t, 422, status)
-	require.Equal(t, "Deal already expired or not valid.", errors["title"])
+	assert.Equal(t, 422, status)
+	assert.Equal(t, "Deal already expired or not valid.", errors["title"])
 }
 
 func TestCreateDealCashbackShouldReturnDealNotValidDueToExceededDealExpired(t *testing.T) {
@@ -251,8 +251,8 @@ func TestCreateDealCashbackShouldReturnDealNotValidDueToExceededDealExpired(t *t
 
 	errors := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(t, 422, status)
-	require.Equal(t, "Deal already expired or not valid.", errors["title"])
+	assert.Equal(t, 422, status)
+	assert.Equal(t, "Deal already expired or not valid.", errors["title"])
 }
 
 func TestCreateDealCashbackShouldFailedDueToUserAlreadyAddedSameDealIntoShoppingList(t *testing.T) {
@@ -294,8 +294,8 @@ func TestCreateDealCashbackShouldFailedDueToUserAlreadyAddedSameDealIntoShopping
 
 	errors := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(t, 409, status)
-	require.Equal(t, "Failed to add deal into the shopping list.", errors["title"])
+	assert.Equal(t, 409, status)
+	assert.Equal(t, "Failed to add deal into the shopping list.", errors["title"])
 }
 
 func TestCreateDealCashbackShouldSuccess(t *testing.T) {
@@ -336,8 +336,8 @@ func TestCreateDealCashbackShouldSuccess(t *testing.T) {
 
 	responseData := body.(map[string]interface{})["data"].(map[string]interface{})
 
-	require.Equal(t, 200, status)
-	require.Equal(t, "Successfully add deal guid "+deals[0].GUID+" to list.", responseData["message"])
+	assert.Equal(t, 200, status)
+	assert.Equal(t, "Successfully add deal guid "+deals[0].GUID+" to list.", responseData["message"])
 
 	createdShoppingList := &ShoppingListItem{}
 
@@ -345,13 +345,13 @@ func TestCreateDealCashbackShouldSuccess(t *testing.T) {
 		First(&createdShoppingList)
 
 	cashbackAmount := deals[0].CashbackAmount
-	require.Equal(t, "Drinks", createdShoppingList.Category)
-	require.Equal(t, "Carbonated Drink", createdShoppingList.SubCategory)
-	require.Equal(t, 1, createdShoppingList.AddedFromDeal)
-	require.Equal(t, 1, createdShoppingList.Quantity)
-	require.Equal(t, &cashbackAmount, createdShoppingList.CashbackAmount)
-	require.Equal(t, 0, createdShoppingList.AddedToCart)
-	require.Nil(t, createdShoppingList.DealExpired)
+	assert.Equal(t, "Drinks", createdShoppingList.Category)
+	assert.Equal(t, "Carbonated Drink", createdShoppingList.SubCategory)
+	assert.Equal(t, 1, createdShoppingList.AddedFromDeal)
+	assert.Equal(t, 1, createdShoppingList.Quantity)
+	assert.Equal(t, &cashbackAmount, createdShoppingList.CashbackAmount)
+	assert.Equal(t, 0, createdShoppingList.AddedToCart)
+	assert.Nil(t, createdShoppingList.DealExpired)
 
 }
 
@@ -368,8 +368,8 @@ func TestViewUserDealCashbacksShouldGiveAccessTokenError(t *testing.T) {
 
 	errors := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(t, 401, status)
-	require.Equal(t, "Access token error", errors["title"])
+	assert.Equal(t, 401, status)
+	assert.Equal(t, "Access token error", errors["title"])
 }
 
 func TestViewUserDealCashbacksShouldGiveAccessTokenBelongsToOtherUserError(t *testing.T) {
@@ -391,8 +391,8 @@ func TestViewUserDealCashbacksShouldGiveAccessTokenBelongsToOtherUserError(t *te
 
 	errors := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(t, 401, status)
-	require.Equal(t, "Your access token belong to other user", errors["title"])
+	assert.Equal(t, 401, status)
+	assert.Equal(t, "Your access token belong to other user", errors["title"])
 }
 
 func TestViewUserDealCashbacksShouldRemoveDealCashbackWhenExpiredMoreThan7days(t *testing.T) {
@@ -446,8 +446,8 @@ func TestViewUserDealCashbacksShouldRemoveDealCashbackWhenExpiredMoreThan7days(t
 
 	response := body.(map[string]interface{})["data"]
 
-	require.Equal(t, 200, status)
-	require.Empty(t, response)
+	assert.Equal(t, 200, status)
+	assert.Empty(t, response)
 }
 
 func TestViewUserDealCashbacksShouldSuccess(t *testing.T) {
@@ -524,31 +524,31 @@ func TestViewUserDealCashbacksShouldSuccess(t *testing.T) {
 	shoppingListResponse := response.([]interface{})
 
 	// Assert Shopping List
-	require.Equal(t, 200, status)
-	require.Len(t, response.([]interface{}), 2)
+	assert.Equal(t, 200, status)
+	assert.Len(t, response.([]interface{}), 2)
 
-	require.Equal(t, "Birthday Party", shoppingListResponse[0].(map[string]interface{})["name"])
-	require.Nil(t, shoppingListResponse[0].(map[string]interface{})["deleted_at"])
-	require.Equal(t, users[0].GUID, shoppingListResponse[0].(map[string]interface{})["user_guid"])
+	assert.Equal(t, "Birthday Party", shoppingListResponse[0].(map[string]interface{})["name"])
+	assert.Nil(t, shoppingListResponse[0].(map[string]interface{})["deleted_at"])
+	assert.Equal(t, users[0].GUID, shoppingListResponse[0].(map[string]interface{})["user_guid"])
 
-	require.Equal(t, "Deleted Shopping List", shoppingListResponse[1].(map[string]interface{})["name"])
+	assert.Equal(t, "Deleted Shopping List", shoppingListResponse[1].(map[string]interface{})["name"])
 
 	dealCashbacksResponse1 := shoppingListResponse[0].(map[string]interface{})["deal_cashbacks"].([]interface{})
 	dealCashbacksResponse2 := shoppingListResponse[1].(map[string]interface{})["deal_cashbacks"].([]interface{})
 
 	// Assert Deal Cashbacks
-	require.Len(t, dealCashbacksResponse1, 1)
-	require.Equal(t, users[0].GUID, dealCashbacksResponse1[0].(map[string]interface{})["user_guid"])
-	require.Equal(t, shoppingLists[1].GUID, dealCashbacksResponse1[0].(map[string]interface{})["shopping_list_guid"])
-	require.Equal(t, deals[2].GUID, dealCashbacksResponse1[0].(map[string]interface{})["deal_guid"])
-	require.NotEmpty(t, dealCashbacksResponse1[0].(map[string]interface{})["deal"])
-	require.Equal(t, deals[2].GUID, dealCashbacksResponse1[0].(map[string]interface{})["deal"].(map[string]interface{})["guid"])
+	assert.Len(t, dealCashbacksResponse1, 1)
+	assert.Equal(t, users[0].GUID, dealCashbacksResponse1[0].(map[string]interface{})["user_guid"])
+	assert.Equal(t, shoppingLists[1].GUID, dealCashbacksResponse1[0].(map[string]interface{})["shopping_list_guid"])
+	assert.Equal(t, deals[2].GUID, dealCashbacksResponse1[0].(map[string]interface{})["deal_guid"])
+	assert.NotEmpty(t, dealCashbacksResponse1[0].(map[string]interface{})["deal"])
+	assert.Equal(t, deals[2].GUID, dealCashbacksResponse1[0].(map[string]interface{})["deal"].(map[string]interface{})["guid"])
 
-	require.Len(t, dealCashbacksResponse2, 1)
-	require.Equal(t, users[0].GUID, dealCashbacksResponse2[0].(map[string]interface{})["user_guid"])
-	require.Equal(t, shoppingLists[2].GUID, dealCashbacksResponse2[0].(map[string]interface{})["shopping_list_guid"])
-	require.Equal(t, deals[3].GUID, dealCashbacksResponse2[0].(map[string]interface{})["deal_guid"])
-	require.NotEmpty(t, dealCashbacksResponse2[0].(map[string]interface{})["deal"])
-	require.Equal(t, deals[3].GUID, dealCashbacksResponse2[0].(map[string]interface{})["deal"].(map[string]interface{})["guid"])
+	assert.Len(t, dealCashbacksResponse2, 1)
+	assert.Equal(t, users[0].GUID, dealCashbacksResponse2[0].(map[string]interface{})["user_guid"])
+	assert.Equal(t, shoppingLists[2].GUID, dealCashbacksResponse2[0].(map[string]interface{})["shopping_list_guid"])
+	assert.Equal(t, deals[3].GUID, dealCashbacksResponse2[0].(map[string]interface{})["deal_guid"])
+	assert.NotEmpty(t, dealCashbacksResponse2[0].(map[string]interface{})["deal"])
+	assert.Equal(t, deals[3].GUID, dealCashbacksResponse2[0].(map[string]interface{})["deal"].(map[string]interface{})["guid"])
 
 }

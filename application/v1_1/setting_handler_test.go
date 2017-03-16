@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestViewAllSettingShouldBeSuccess(t *testing.T) {
@@ -20,9 +20,9 @@ func TestViewAllSettingShouldBeSuccess(t *testing.T) {
 
 	settings := body.(map[string]interface{})["data"].([]interface{})
 
-	require.Equal(t, 200, status)
-	require.Equal(t, 3, len(settings))
-	require.Equal(t, "referral_active", settings[0].(map[string]interface{})["slug"])
-	require.Equal(t, "referral_price", settings[1].(map[string]interface{})["slug"])
-	require.Equal(t, "max_referral_user", settings[2].(map[string]interface{})["slug"])
+	assert.Equal(t, 200, status)
+	assert.Equal(t, 3, len(settings))
+	assert.Equal(t, "referral_active", settings[0].(map[string]interface{})["slug"])
+	assert.Equal(t, "referral_price", settings[1].(map[string]interface{})["slug"])
+	assert.Equal(t, "max_referral_user", settings[2].(map[string]interface{})["slug"])
 }

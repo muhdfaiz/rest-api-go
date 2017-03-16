@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestViewAllActiveOccasionsShouldSuccess(t *testing.T) {
@@ -24,15 +24,15 @@ func TestViewAllActiveOccasionsShouldSuccess(t *testing.T) {
 	occasion1 := data[0].(map[string]interface{})
 	occasion2 := data[1].(map[string]interface{})
 
-	require.Equal(t, 200, status)
-	require.Len(t, data, 2)
-	require.Equal(t, "Field Trip", occasion1["name"])
-	require.Equal(t, "field_trip", occasion1["slug"])
-	require.Equal(t, 1.00, occasion1["active"])
+	assert.Equal(t, 200, status)
+	assert.Len(t, data, 2)
+	assert.Equal(t, "Field Trip", occasion1["name"])
+	assert.Equal(t, "field_trip", occasion1["slug"])
+	assert.Equal(t, 1.00, occasion1["active"])
 
-	require.Equal(t, "Travel", occasion2["name"])
-	require.Equal(t, "travel", occasion2["slug"])
-	require.Equal(t, 1.00, occasion2["active"])
+	assert.Equal(t, "Travel", occasion2["name"])
+	assert.Equal(t, "travel", occasion2["slug"])
+	assert.Equal(t, 1.00, occasion2["active"])
 }
 
 func TestViewLatestActiveOccasionsShouldSuccess(t *testing.T) {
@@ -52,9 +52,9 @@ func TestViewLatestActiveOccasionsShouldSuccess(t *testing.T) {
 
 	occasion1 := data[0].(map[string]interface{})
 
-	require.Equal(t, 200, status)
-	require.Len(t, data, 1)
-	require.Equal(t, "Field Trip", occasion1["name"])
-	require.Equal(t, "field_trip", occasion1["slug"])
-	require.Equal(t, 1.00, occasion1["active"])
+	assert.Equal(t, 200, status)
+	assert.Len(t, data, 1)
+	assert.Equal(t, "Field Trip", occasion1["name"])
+	assert.Equal(t, "field_trip", occasion1["slug"])
+	assert.Equal(t, 1.00, occasion1["active"])
 }

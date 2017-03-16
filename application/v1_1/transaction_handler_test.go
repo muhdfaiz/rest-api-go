@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestViewDealCashbackTransactionShouldReturnAccessTokenError(t *testing.T) {
@@ -19,8 +19,8 @@ func TestViewDealCashbackTransactionShouldReturnAccessTokenError(t *testing.T) {
 
 	errors := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(t, 401, status)
-	require.Equal(t, "Access token error", errors["title"])
+	assert.Equal(t, 401, status)
+	assert.Equal(t, "Access token error", errors["title"])
 }
 
 func TestViewDealCashbackTransactionShouldUpdateReadStatus(t *testing.T) {
@@ -75,13 +75,13 @@ func TestViewDealCashbackTransactionShouldUpdateReadStatus(t *testing.T) {
 
 	status, _, _ := TestHelper.Request("GET", []byte{}, requestURL, jwtToken.Token)
 
-	require.Equal(t, 200, status)
+	assert.Equal(t, 200, status)
 
 	updatedDealCashbackTransaction := &Transaction{}
 
 	DB.Model(&Transaction{}).Where(&Transaction{GUID: transaction.GUID}).First(&updatedDealCashbackTransaction)
 
-	require.Equal(t, 1, updatedDealCashbackTransaction.ReadStatus)
+	assert.Equal(t, 1, updatedDealCashbackTransaction.ReadStatus)
 }
 
 func TestViewDealCashbackTransactionShouldReturnTransactionDetailIncludingRelationship(t *testing.T) {
@@ -148,20 +148,20 @@ func TestViewDealCashbackTransactionShouldReturnTransactionDetailIncludingRelati
 
 	dealCashbacks := dealCashbackGroupByShoppingList[0].(map[string]interface{})["deal_cashbacks"].([]interface{})
 
-	require.Equal(t, 200, status)
-	require.Equal(t, transaction.GUID, data["guid"])
-	require.NotEmpty(t, data["deal_cashback_transaction"])
-	require.Equal(t, 2, int(data["deal_cashback_transaction"].(map[string]interface{})["total_deal"].(float64)))
-	require.NotEmpty(t, data["transaction_status"])
-	require.NotEmpty(t, data["transaction_type"])
-	require.NotEmpty(t, dealCashbackGroupByShoppingList)
-	require.Len(t, dealCashbackGroupByShoppingList, 1)
-	require.Equal(t, shoppingList.GUID, dealCashbackGroupByShoppingList[0].(map[string]interface{})["guid"])
-	require.Equal(t, shoppingList.Name, dealCashbackGroupByShoppingList[0].(map[string]interface{})["name"])
-	require.Equal(t, user.GUID, dealCashbackGroupByShoppingList[0].(map[string]interface{})["user_guid"])
-	require.NotEmpty(t, dealCashbackGroupByShoppingList[0].(map[string]interface{})["deal_cashbacks"])
-	require.Len(t, dealCashbacks, 2)
-	require.NotEmpty(t, dealCashbacks[0].(map[string]interface{})["deal"], 2)
+	assert.Equal(t, 200, status)
+	assert.Equal(t, transaction.GUID, data["guid"])
+	assert.NotEmpty(t, data["deal_cashback_transaction"])
+	assert.Equal(t, 2, int(data["deal_cashback_transaction"].(map[string]interface{})["total_deal"].(float64)))
+	assert.NotEmpty(t, data["transaction_status"])
+	assert.NotEmpty(t, data["transaction_type"])
+	assert.NotEmpty(t, dealCashbackGroupByShoppingList)
+	assert.Len(t, dealCashbackGroupByShoppingList, 1)
+	assert.Equal(t, shoppingList.GUID, dealCashbackGroupByShoppingList[0].(map[string]interface{})["guid"])
+	assert.Equal(t, shoppingList.Name, dealCashbackGroupByShoppingList[0].(map[string]interface{})["name"])
+	assert.Equal(t, user.GUID, dealCashbackGroupByShoppingList[0].(map[string]interface{})["user_guid"])
+	assert.NotEmpty(t, dealCashbackGroupByShoppingList[0].(map[string]interface{})["deal_cashbacks"])
+	assert.Len(t, dealCashbacks, 2)
+	assert.NotEmpty(t, dealCashbacks[0].(map[string]interface{})["deal"], 2)
 }
 
 func TestViewCashoutTransactionShouldReturnAccessTokenError(t *testing.T) {
@@ -175,8 +175,8 @@ func TestViewCashoutTransactionShouldReturnAccessTokenError(t *testing.T) {
 
 	errors := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(t, 401, status)
-	require.Equal(t, "Access token error", errors["title"])
+	assert.Equal(t, 401, status)
+	assert.Equal(t, "Access token error", errors["title"])
 }
 
 func TestViewCashoutTransactionShouldNotUpdateReadStatusWhenTransactionStatusPending(t *testing.T) {
@@ -212,13 +212,13 @@ func TestViewCashoutTransactionShouldNotUpdateReadStatusWhenTransactionStatusPen
 
 	status, _, _ := TestHelper.Request("GET", []byte{}, requestURL, jwtToken.Token)
 
-	require.Equal(t, 200, status)
+	assert.Equal(t, 200, status)
 
 	updatedCashoutTransaction := &Transaction{}
 
 	DB.Model(&Transaction{}).Where(&Transaction{GUID: transaction.GUID}).First(&updatedCashoutTransaction)
 
-	require.Equal(t, 0, updatedCashoutTransaction.ReadStatus)
+	assert.Equal(t, 0, updatedCashoutTransaction.ReadStatus)
 }
 
 func TestViewCashoutTransactionShouldUpdateReadStatusWhenTransactionStatusNotPending(t *testing.T) {
@@ -237,7 +237,7 @@ func TestViewCashoutTransactionShouldUpdateReadStatusWhenTransactionStatusNotPen
 	// Retrieve GUID for Approved Transaction Status
 	approvedTransactionStatus := &TransactionStatus{}
 
-	DB.Model(&TransactionStatus{}).Where("slug = ?", "pending").Find(&approvedTransactionStatus)
+	DB.Model(&TransactionStatus{}).Where("slug = ?", "approved").Find(&approvedTransactionStatus)
 
 	// Retrieve GUID for Cashout Transaction Type
 	cashoutTransactionType := &TransactionType{}
@@ -254,13 +254,13 @@ func TestViewCashoutTransactionShouldUpdateReadStatusWhenTransactionStatusNotPen
 
 	status, _, _ := TestHelper.Request("GET", []byte{}, requestURL, jwtToken.Token)
 
-	require.Equal(t, 200, status)
+	assert.Equal(t, 200, status)
 
 	updatedCashoutTransaction := &Transaction{}
 
 	DB.Model(&Transaction{}).Where(&Transaction{GUID: transaction.GUID}).First(&updatedCashoutTransaction)
 
-	require.Equal(t, 1, updatedCashoutTransaction.ReadStatus)
+	assert.Equal(t, 1, updatedCashoutTransaction.ReadStatus)
 }
 
 func TestViewCashoutTransactionShouldReturnTransactionDetailIncludingRelationship(t *testing.T) {
@@ -300,15 +300,15 @@ func TestViewCashoutTransactionShouldReturnTransactionDetailIncludingRelationshi
 
 	cashoutTransactionData := data["cashout_transaction"].(map[string]interface{})
 
-	require.Equal(t, 200, status)
-	require.Equal(t, transaction.GUID, data["guid"])
-	require.Equal(t, cashoutTransactionType.GUID, data["transaction_type_guid"])
-	require.Equal(t, pendingTransactionStatus.GUID, data["transaction_status_guid"])
-	require.Equal(t, user.GUID, data["user_guid"])
-	require.Equal(t, user.GUID, cashoutTransactionData["user_guid"])
-	require.Equal(t, transaction.GUID, cashoutTransactionData["transaction_guid"])
-	require.NotEmpty(t, data["transaction_status"])
-	require.NotEmpty(t, data["transaction_type"])
+	assert.Equal(t, 200, status)
+	assert.Equal(t, transaction.GUID, data["guid"])
+	assert.Equal(t, cashoutTransactionType.GUID, data["transaction_type_guid"])
+	assert.Equal(t, pendingTransactionStatus.GUID, data["transaction_status_guid"])
+	assert.Equal(t, user.GUID, data["user_guid"])
+	assert.Equal(t, user.GUID, cashoutTransactionData["user_guid"])
+	assert.Equal(t, transaction.GUID, cashoutTransactionData["transaction_guid"])
+	assert.NotEmpty(t, data["transaction_status"])
+	assert.NotEmpty(t, data["transaction_type"])
 }
 
 func TestViewReferralCashbackTransactionShouldReturnAccessTokenError(t *testing.T) {
@@ -322,8 +322,8 @@ func TestViewReferralCashbackTransactionShouldReturnAccessTokenError(t *testing.
 
 	errors := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(t, 401, status)
-	require.Equal(t, "Access token error", errors["title"])
+	assert.Equal(t, 401, status)
+	assert.Equal(t, "Access token error", errors["title"])
 }
 
 func TestViewReferralCashbackTransactionShouldReturnShouldReturnTransactionDetailIncludingRelationship(t *testing.T) {
@@ -375,17 +375,17 @@ func TestViewReferralCashbackTransactionShouldReturnShouldReturnTransactionDetai
 
 	referrerData := referralCashbackTransactionData["referrer"].(map[string]interface{})
 
-	require.Equal(t, 200, status)
-	require.Equal(t, transaction.GUID, data["guid"])
-	require.Equal(t, referralCashbackTransactionType.GUID, data["transaction_type_guid"])
-	require.Equal(t, approvedTransactionStatus.GUID, data["transaction_status_guid"])
-	require.Equal(t, user1.GUID, data["user_guid"])
-	require.Equal(t, user1.GUID, referralCashbackTransactionData["user_guid"])
-	require.Equal(t, transaction.GUID, referralCashbackTransactionData["transaction_guid"])
-	require.Equal(t, user2.GUID, referrerData["guid"])
-	require.NotEmpty(t, data["transaction_status"])
-	require.NotEmpty(t, data["transaction_type"])
-	require.Equal(t, user2.GUID, referrerData["guid"])
+	assert.Equal(t, 200, status)
+	assert.Equal(t, transaction.GUID, data["guid"])
+	assert.Equal(t, referralCashbackTransactionType.GUID, data["transaction_type_guid"])
+	assert.Equal(t, approvedTransactionStatus.GUID, data["transaction_status_guid"])
+	assert.Equal(t, user1.GUID, data["user_guid"])
+	assert.Equal(t, user1.GUID, referralCashbackTransactionData["user_guid"])
+	assert.Equal(t, transaction.GUID, referralCashbackTransactionData["transaction_guid"])
+	assert.Equal(t, user2.GUID, referrerData["guid"])
+	assert.NotEmpty(t, data["transaction_status"])
+	assert.NotEmpty(t, data["transaction_type"])
+	assert.Equal(t, user2.GUID, referrerData["guid"])
 }
 
 func TestViewUserTransactionsShouldReturnAccessTokenError(t *testing.T) {
@@ -399,8 +399,8 @@ func TestViewUserTransactionsShouldReturnAccessTokenError(t *testing.T) {
 
 	errors := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(t, 401, status)
-	require.Equal(t, "Access token error", errors["title"])
+	assert.Equal(t, 401, status)
+	assert.Equal(t, "Access token error", errors["title"])
 }
 
 func TestViewUserTransactionShouldReturnAllUserTransaction(t *testing.T) {
@@ -484,15 +484,15 @@ func TestViewUserTransactionShouldReturnAllUserTransaction(t *testing.T) {
 
 	innerData := data["data"].([]interface{})
 
-	require.Equal(t, 200, status)
-	require.Equal(t, 4, int(data["total_data"].(float64)))
-	require.Len(t, innerData, 4)
-	require.Equal(t, user1.GUID, innerData[0].(map[string]interface{})["user_guid"])
-	require.Equal(t, user1.GUID, innerData[1].(map[string]interface{})["user_guid"])
-	require.Equal(t, user1.GUID, innerData[2].(map[string]interface{})["user_guid"])
-	require.Equal(t, user1.GUID, innerData[3].(map[string]interface{})["user_guid"])
-	require.NotEmpty(t, innerData[0].(map[string]interface{})["transaction_type"])
-	require.NotEmpty(t, innerData[0].(map[string]interface{})["transaction_status"])
+	assert.Equal(t, 200, status)
+	assert.Equal(t, 4, int(data["total_data"].(float64)))
+	assert.Len(t, innerData, 4)
+	assert.Equal(t, user1.GUID, innerData[0].(map[string]interface{})["user_guid"])
+	assert.Equal(t, user1.GUID, innerData[1].(map[string]interface{})["user_guid"])
+	assert.Equal(t, user1.GUID, innerData[2].(map[string]interface{})["user_guid"])
+	assert.Equal(t, user1.GUID, innerData[3].(map[string]interface{})["user_guid"])
+	assert.NotEmpty(t, innerData[0].(map[string]interface{})["transaction_type"])
+	assert.NotEmpty(t, innerData[0].(map[string]interface{})["transaction_status"])
 }
 
 func TestPageNumberInViewUserTransaction(t *testing.T) {
@@ -576,9 +576,9 @@ func TestPageNumberInViewUserTransaction(t *testing.T) {
 
 	innerData := data["data"].([]interface{})
 
-	require.Equal(t, 200, status)
-	require.Equal(t, 4, int(data["total_data"].(float64)))
-	require.Len(t, innerData, 2)
+	assert.Equal(t, 200, status)
+	assert.Equal(t, 4, int(data["total_data"].(float64)))
+	assert.Len(t, innerData, 1)
 }
 
 func TestPageLimitInViewUserTransaction(t *testing.T) {
@@ -662,9 +662,9 @@ func TestPageLimitInViewUserTransaction(t *testing.T) {
 
 	innerData := data["data"].([]interface{})
 
-	require.Equal(t, 200, status)
-	require.Equal(t, 4, int(data["total_data"].(float64)))
-	require.Len(t, innerData, 3)
+	assert.Equal(t, 200, status)
+	assert.Equal(t, 4, int(data["total_data"].(float64)))
+	assert.Len(t, innerData, 3)
 }
 
 func TestViewUnreadUserTransactionShouldReturnUnreadUserTransaction(t *testing.T) {
@@ -748,13 +748,13 @@ func TestViewUnreadUserTransactionShouldReturnUnreadUserTransaction(t *testing.T
 
 	innerData := data["data"].([]interface{})
 
-	require.Equal(t, 200, status)
-	require.Equal(t, 2, int(data["total_data"].(float64)))
-	require.Len(t, innerData, 2)
-	require.Equal(t, user1.GUID, innerData[0].(map[string]interface{})["user_guid"])
-	require.Equal(t, user1.GUID, innerData[1].(map[string]interface{})["user_guid"])
-	require.Equal(t, 0, int(innerData[0].(map[string]interface{})["read_status"].(float64)))
-	require.Equal(t, 0, int(innerData[1].(map[string]interface{})["read_status"].(float64)))
+	assert.Equal(t, 200, status)
+	assert.Equal(t, 2, int(data["total_data"].(float64)))
+	assert.Len(t, innerData, 2)
+	assert.Equal(t, user1.GUID, innerData[0].(map[string]interface{})["user_guid"])
+	assert.Equal(t, user1.GUID, innerData[1].(map[string]interface{})["user_guid"])
+	assert.Equal(t, 0, int(innerData[0].(map[string]interface{})["read_status"].(float64)))
+	assert.Equal(t, 0, int(innerData[1].(map[string]interface{})["read_status"].(float64)))
 }
 
 func TestViewReadUserTransactionShouldReturnReadUserTransaction(t *testing.T) {
@@ -838,13 +838,13 @@ func TestViewReadUserTransactionShouldReturnReadUserTransaction(t *testing.T) {
 
 	innerData := data["data"].([]interface{})
 
-	require.Equal(t, 200, status)
-	require.Equal(t, 2, int(data["total_data"].(float64)))
-	require.Len(t, innerData, 2)
-	require.Equal(t, user1.GUID, innerData[0].(map[string]interface{})["user_guid"])
-	require.Equal(t, user1.GUID, innerData[1].(map[string]interface{})["user_guid"])
-	require.Equal(t, 1, int(innerData[0].(map[string]interface{})["read_status"].(float64)))
-	require.Equal(t, 1, int(innerData[1].(map[string]interface{})["read_status"].(float64)))
+	assert.Equal(t, 200, status)
+	assert.Equal(t, 2, int(data["total_data"].(float64)))
+	assert.Len(t, innerData, 2)
+	assert.Equal(t, user1.GUID, innerData[0].(map[string]interface{})["user_guid"])
+	assert.Equal(t, user1.GUID, innerData[1].(map[string]interface{})["user_guid"])
+	assert.Equal(t, 1, int(innerData[0].(map[string]interface{})["read_status"].(float64)))
+	assert.Equal(t, 1, int(innerData[1].(map[string]interface{})["read_status"].(float64)))
 }
 
 func TestViewPendingUserTransactionShouldReturnPendingUserTransaction(t *testing.T) {
@@ -928,11 +928,11 @@ func TestViewPendingUserTransactionShouldReturnPendingUserTransaction(t *testing
 
 	innerData := data["data"].([]interface{})
 
-	require.Equal(t, 200, status)
-	require.Equal(t, 1, int(data["total_data"].(float64)))
-	require.Len(t, innerData, 1)
-	require.Equal(t, user1.GUID, innerData[0].(map[string]interface{})["user_guid"])
-	require.Equal(t, pendingTransactionStatus.Slug, innerData[0].(map[string]interface{})["transaction_status"].(map[string]interface{})["slug"])
+	assert.Equal(t, 200, status)
+	assert.Equal(t, 1, int(data["total_data"].(float64)))
+	assert.Len(t, innerData, 1)
+	assert.Equal(t, user1.GUID, innerData[0].(map[string]interface{})["user_guid"])
+	assert.Equal(t, pendingTransactionStatus.Slug, innerData[0].(map[string]interface{})["transaction_status"].(map[string]interface{})["slug"])
 }
 
 func TestViewApprovedUserTransactionShouldReturnApprovedUserTransaction(t *testing.T) {
@@ -1016,11 +1016,11 @@ func TestViewApprovedUserTransactionShouldReturnApprovedUserTransaction(t *testi
 
 	innerData := data["data"].([]interface{})
 
-	require.Equal(t, 200, status)
-	require.Equal(t, 1, int(data["total_data"].(float64)))
-	require.Len(t, innerData, 1)
-	require.Equal(t, user1.GUID, innerData[0].(map[string]interface{})["user_guid"])
-	require.Equal(t, approvedTransactionStatus.Slug, innerData[0].(map[string]interface{})["transaction_status"].(map[string]interface{})["slug"])
+	assert.Equal(t, 200, status)
+	assert.Equal(t, 1, int(data["total_data"].(float64)))
+	assert.Len(t, innerData, 1)
+	assert.Equal(t, user1.GUID, innerData[0].(map[string]interface{})["user_guid"])
+	assert.Equal(t, approvedTransactionStatus.Slug, innerData[0].(map[string]interface{})["transaction_status"].(map[string]interface{})["slug"])
 }
 
 func TestViewRejectUserTransactionShouldReturnRejectUserTransaction(t *testing.T) {
@@ -1104,11 +1104,11 @@ func TestViewRejectUserTransactionShouldReturnRejectUserTransaction(t *testing.T
 
 	innerData := data["data"].([]interface{})
 
-	require.Equal(t, 200, status)
-	require.Equal(t, 1, int(data["total_data"].(float64)))
-	require.Len(t, innerData, 1)
-	require.Equal(t, user1.GUID, innerData[0].(map[string]interface{})["user_guid"])
-	require.Equal(t, rejectTransactionStatus.Slug, innerData[0].(map[string]interface{})["transaction_status"].(map[string]interface{})["slug"])
+	assert.Equal(t, 200, status)
+	assert.Equal(t, 1, int(data["total_data"].(float64)))
+	assert.Len(t, innerData, 1)
+	assert.Equal(t, user1.GUID, innerData[0].(map[string]interface{})["user_guid"])
+	assert.Equal(t, rejectTransactionStatus.Slug, innerData[0].(map[string]interface{})["transaction_status"].(map[string]interface{})["slug"])
 }
 
 func TestViewPartialSuccessUserTransactionShouldReturnPartialSuccessUserTransaction(t *testing.T) {
@@ -1192,11 +1192,11 @@ func TestViewPartialSuccessUserTransactionShouldReturnPartialSuccessUserTransact
 
 	innerData := data["data"].([]interface{})
 
-	require.Equal(t, 200, status)
-	require.Equal(t, 1, int(data["total_data"].(float64)))
-	require.Len(t, innerData, 1)
-	require.Equal(t, user1.GUID, innerData[0].(map[string]interface{})["user_guid"])
-	require.Equal(t, partialSuccessTransactionStatus.Slug, innerData[0].(map[string]interface{})["transaction_status"].(map[string]interface{})["slug"])
+	assert.Equal(t, 200, status)
+	assert.Equal(t, 1, int(data["total_data"].(float64)))
+	assert.Len(t, innerData, 1)
+	assert.Equal(t, user1.GUID, innerData[0].(map[string]interface{})["user_guid"])
+	assert.Equal(t, partialSuccessTransactionStatus.Slug, innerData[0].(map[string]interface{})["transaction_status"].(map[string]interface{})["slug"])
 }
 
 func TestViewPendingAndUnreadUserTransactionShouldReturnEmptyPendingAndUnreadUserTransaction(t *testing.T) {
@@ -1280,8 +1280,8 @@ func TestViewPendingAndUnreadUserTransactionShouldReturnEmptyPendingAndUnreadUse
 
 	innerData := data["data"].([]interface{})
 
-	require.Equal(t, 200, status)
-	require.Empty(t, innerData)
+	assert.Equal(t, 200, status)
+	assert.Empty(t, innerData)
 }
 
 func TestViewPendingAndApprovedAndReadUserTransactionShouldReturnPendingAndApprovedAndReadUserTransaction(t *testing.T) {
@@ -1365,12 +1365,12 @@ func TestViewPendingAndApprovedAndReadUserTransactionShouldReturnPendingAndAppro
 
 	innerData := data["data"].([]interface{})
 
-	require.Equal(t, 200, status)
-	require.Equal(t, 2, int(data["total_data"].(float64)))
-	require.Len(t, innerData, 2)
-	require.Equal(t, user1.GUID, innerData[0].(map[string]interface{})["user_guid"])
-	require.Equal(t, user1.GUID, innerData[1].(map[string]interface{})["user_guid"])
-	require.Equal(t, pendingTransactionStatus.Slug, innerData[0].(map[string]interface{})["transaction_status"].(map[string]interface{})["slug"])
-	require.Equal(t, approvedTransactionStatus.Slug, innerData[1].(map[string]interface{})["transaction_status"].(map[string]interface{})["slug"])
+	assert.Equal(t, 200, status)
+	assert.Equal(t, 2, int(data["total_data"].(float64)))
+	assert.Len(t, innerData, 2)
+	assert.Equal(t, user1.GUID, innerData[0].(map[string]interface{})["user_guid"])
+	assert.Equal(t, user1.GUID, innerData[1].(map[string]interface{})["user_guid"])
+	assert.Equal(t, pendingTransactionStatus.Slug, innerData[0].(map[string]interface{})["transaction_status"].(map[string]interface{})["slug"])
+	assert.Equal(t, approvedTransactionStatus.Slug, innerData[1].(map[string]interface{})["transaction_status"].(map[string]interface{})["slug"])
 
 }

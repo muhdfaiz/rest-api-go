@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 
 	"bitbucket.org/cliqers/shoppermate-api/systems"
 )
@@ -32,10 +32,10 @@ func TestCreateUserShouldReturnNumericValidationErrors(t *testing.T) {
 	errorData := body.(map[string]interface{})["errors"].(map[string]interface{})
 	errorDetail := errorData["detail"].(map[string]interface{})
 
-	require.Equal(t, 422, status, "Status code must be 422")
-	require.NotEmpty(t, errorDetail["facebook_id"])
-	require.NotEmpty(t, errorDetail["phone_no"])
-	require.NotEmpty(t, errorDetail["verification_code"])
+	assert.Equal(t, 422, status, "Status code must be 422")
+	assert.NotEmpty(t, errorDetail["facebook_id"])
+	assert.NotEmpty(t, errorDetail["phone_no"])
+	assert.NotEmpty(t, errorDetail["verification_code"])
 }
 
 // TestCreateUserShouldReturnRequiredFieldValidationErrors function used to test if API will return error if the input data not
@@ -54,12 +54,12 @@ func TestCreateUserShouldReturnRequiredFieldValidationErrors(t *testing.T) {
 	errorData := body.(map[string]interface{})["errors"].(map[string]interface{})
 	errorDetail := errorData["detail"].(map[string]interface{})
 
-	require.Equal(t, 422, status, "Status code must be 422")
-	require.NotEmpty(t, errorDetail["name"])
-	require.NotEmpty(t, errorDetail["email"])
-	require.NotEmpty(t, errorDetail["phone_no"])
-	require.NotEmpty(t, errorDetail["verification_code"])
-	require.NotEmpty(t, errorDetail["device_uuid"])
+	assert.Equal(t, 422, status, "Status code must be 422")
+	assert.NotEmpty(t, errorDetail["name"])
+	assert.NotEmpty(t, errorDetail["email"])
+	assert.NotEmpty(t, errorDetail["phone_no"])
+	assert.NotEmpty(t, errorDetail["verification_code"])
+	assert.NotEmpty(t, errorDetail["device_uuid"])
 }
 
 // TestPhoneNumberShouldUniqueDuringCreateUser function used to test if API return error or not when the input data
@@ -85,8 +85,8 @@ func TestPhoneNumberShouldUniqueDuringCreateUser(t *testing.T) {
 
 	errorData := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(t, 409, status, "Status code must be 409")
-	require.Equal(t, "Duplicate entry 'phone_no' for key '"+userData["phone_no"]+"'.", errorData["detail"].(map[string]interface{})["message"])
+	assert.Equal(t, 409, status, "Status code must be 409")
+	assert.Equal(t, "Duplicate entry 'phone_no' for key '"+userData["phone_no"]+"'.", errorData["detail"].(map[string]interface{})["message"])
 }
 
 // TestFacebookIDMustValid function used to test if API will validate the facebook id
@@ -109,8 +109,8 @@ func TestFacebookIDMustValidDuringCreateUser(t *testing.T) {
 
 	errorData := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(t, 400, status, "Status code must be 409")
-	require.NotEmpty(t, errorData["detail"].(map[string]interface{})["facebook_id"])
+	assert.Equal(t, 400, status, "Status code must be 409")
+	assert.NotEmpty(t, errorData["detail"].(map[string]interface{})["facebook_id"])
 }
 
 // TestFacebookIDMustUnique function used to check if API will return error or not
@@ -133,8 +133,8 @@ func TestFacebookIDMustUniqueDuringCreateUser(t *testing.T) {
 
 	errorData := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(t, 409, status, "Status code must be 409")
-	require.Equal(t, "Duplicate entry 'facebook_id' for key '100013413336774'.", errorData["detail"].(map[string]interface{})["message"])
+	assert.Equal(t, 409, status, "Status code must be 409")
+	assert.Equal(t, "Duplicate entry 'facebook_id' for key '100013413336774'.", errorData["detail"].(map[string]interface{})["message"])
 }
 
 func TestReferralCodeMustValidDuringCreateUser(t *testing.T) {
@@ -163,8 +163,8 @@ func TestReferralCodeMustValidDuringCreateUser(t *testing.T) {
 
 	errorData := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(t, 404, status, "Status code must be 404")
-	require.NotEmpty(t, errorData["detail"].(map[string]interface{})["referral_code"])
+	assert.Equal(t, 404, status, "Status code must be 404")
+	assert.NotEmpty(t, errorData["detail"].(map[string]interface{})["referral_code"])
 }
 
 func TestCreateUserWithReferralCodeNotActiveAndDeviceUUIDMustValid(t *testing.T) {
@@ -191,8 +191,8 @@ func TestCreateUserWithReferralCodeNotActiveAndDeviceUUIDMustValid(t *testing.T)
 
 	errorData := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(t, 404, status, "Status code must be 404")
-	require.NotEmpty(t, errorData["detail"].(map[string]interface{})["uuid"])
+	assert.Equal(t, 404, status, "Status code must be 404")
+	assert.NotEmpty(t, errorData["detail"].(map[string]interface{})["uuid"])
 }
 
 // TestDebug function used to test if API can create new user and generate access token without valid verification code.
@@ -219,9 +219,9 @@ func TestCreateUserWithDebugMode(t *testing.T) {
 
 	data := body.(map[string]interface{})["data"].(map[string]interface{})
 
-	require.Equal(t, 200, status)
-	require.NotEmpty(t, data["access_token"])
-	require.NotEmpty(t, data["user"])
+	assert.Equal(t, 200, status)
+	assert.NotEmpty(t, data["access_token"])
+	assert.NotEmpty(t, data["user"])
 }
 
 // TestDebugToken function used to test if API will generate access token based on debug token value.
@@ -250,9 +250,9 @@ func TestCreateUserWithDebugToken(t *testing.T) {
 
 	minutes := time.Minute * time.Duration(6)
 
-	require.Equal(t, 200, status)
-	require.Equal(t, time.Now().UTC().Add(minutes).Format(time.RFC3339), data["access_token"].(map[string]interface{})["expired"])
-	require.NotEmpty(t, data["user"])
+	assert.Equal(t, 200, status)
+	assert.Equal(t, time.Now().UTC().Add(minutes).Format(time.RFC3339), data["access_token"].(map[string]interface{})["expired"])
+	assert.NotEmpty(t, data["user"])
 }
 
 func TestCreateUserWithReferral(t *testing.T) {
@@ -307,16 +307,16 @@ func TestCreateUserWithReferral(t *testing.T) {
 
 	DB.Model(&User{}).Where("guid = ?", users[0].GUID).Find(&user1)
 
-	require.Equal(t, referralPriceSetting.Value, strconv.FormatFloat(user1.Wallet, 'f', 0, 64))
+	assert.Equal(t, referralPriceSetting.Value, strconv.FormatFloat(user1.Wallet, 'f', 0, 64))
 
 	referralCashbackTransaction := &ReferralCashbackTransaction{}
 
 	DB.Model(&ReferralCashbackTransaction{}).Where("user_guid = ?", user1.GUID).Find(&referralCashbackTransaction)
 
-	require.Equal(t, 200, status)
-	require.Equal(t, user1.GUID, referralCashbackTransaction.UserGUID)
-	require.Equal(t, newUser["guid"], referralCashbackTransaction.ReferrerGUID)
-	require.NotEmpty(t, referralCashbackTransaction.TransactionGUID)
+	assert.Equal(t, 200, status)
+	assert.Equal(t, user1.GUID, referralCashbackTransaction.UserGUID)
+	assert.Equal(t, newUser["guid"], referralCashbackTransaction.ReferrerGUID)
+	assert.NotEmpty(t, referralCashbackTransaction.TransactionGUID)
 
 	transaction := &Transaction{}
 
@@ -324,12 +324,12 @@ func TestCreateUserWithReferral(t *testing.T) {
 
 	referralPriceInFloat, _ := strconv.ParseFloat(referralPriceSetting.Value, 64)
 
-	require.NotEmpty(t, transaction.GUID)
-	require.Equal(t, user1.GUID, transaction.UserGUID)
-	require.Equal(t, referralCashbackTransactionType.GUID, transaction.TransactionTypeGUID)
-	require.Equal(t, approvedTransactionStatus.GUID, transaction.TransactionStatusGUID)
-	require.NotEmpty(t, transaction.ReferenceID)
-	require.Equal(t, referralPriceInFloat, transaction.TotalAmount)
+	assert.NotEmpty(t, transaction.GUID)
+	assert.Equal(t, user1.GUID, transaction.UserGUID)
+	assert.Equal(t, referralCashbackTransactionType.GUID, transaction.TransactionTypeGUID)
+	assert.Equal(t, approvedTransactionStatus.GUID, transaction.TransactionStatusGUID)
+	assert.NotEmpty(t, transaction.ReferenceID)
+	assert.Equal(t, referralPriceInFloat, transaction.TotalAmount)
 
 }
 
@@ -397,7 +397,7 @@ func TestMaxReferralPerUser(t *testing.T) {
 
 	DB.Table("users").Where("guid = ?", users[0].GUID).Find(&user1)
 
-	require.Equal(t, 4.00, user1.Wallet)
+	assert.Equal(t, 4.00, user1.Wallet)
 }
 
 func TestProfileImageSizeValidationForCreateUser(t *testing.T) {
@@ -424,8 +424,8 @@ func TestProfileImageSizeValidationForCreateUser(t *testing.T) {
 
 	errorData := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(t, 413, status)
-	require.Equal(t, "File size exceeded the limit.", errorData["title"])
+	assert.Equal(t, 413, status)
+	assert.Equal(t, "File size exceeded the limit.", errorData["title"])
 }
 
 func TestProfileImageTypeValidationForCreateUser(t *testing.T) {
@@ -452,8 +452,8 @@ func TestProfileImageTypeValidationForCreateUser(t *testing.T) {
 
 	errorData := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(t, 400, status)
-	require.Equal(t, "Invalid file type.", errorData["title"])
+	assert.Equal(t, 400, status)
+	assert.Equal(t, "Invalid file type.", errorData["title"])
 }
 
 func TestCreateUserViaPhoneNumber(t *testing.T) {
@@ -484,24 +484,38 @@ func TestCreateUserViaPhoneNumber(t *testing.T) {
 
 	user := data["user"].(map[string]interface{})
 
-	require.Equal(t, 200, status)
-	require.Equal(t, time.Now().UTC().AddDate(0, 0, 7).Format(time.RFC3339), accessToken["expired"])
-	require.NotEmpty(t, accessToken["token"])
-	require.NotEmpty(t, user["id"])
-	require.NotEmpty(t, user["guid"])
-	require.Equal(t, params["email"], user["email"])
-	require.Equal(t, params["name"], user["name"])
-	require.Equal(t, params["phone_no"], user["phone_no"])
-	require.Equal(t, "phone_no", user["register_by"])
-	require.NotEmpty(t, user["referral_code"])
-	require.Empty(t, user["bank_account_name"])
-	require.Empty(t, user["bank_account_number"])
-	require.Empty(t, user["bank_country"])
-	require.Empty(t, user["bank_name"])
+	tokenExpiryTime, _ := time.Parse(time.RFC3339, accessToken["expired"].(string))
+
+	currentTime := time.Now().UTC().AddDate(0, 0, 7).Format(time.RFC3339)
+
+	currentTimeObject, _ := time.Parse(time.RFC3339, currentTime)
+
+	timeDiff := tokenExpiryTime.Sub(currentTimeObject)
+
+	assert.Equal(t, 200, status)
+	assert.Condition(t, func() bool {
+		if timeDiff.Seconds() < 4 {
+			return true
+		}
+
+		return false
+	})
+	assert.NotEmpty(t, accessToken["token"])
+	assert.NotEmpty(t, user["id"])
+	assert.NotEmpty(t, user["guid"])
+	assert.Equal(t, params["email"], user["email"])
+	assert.Equal(t, params["name"], user["name"])
+	assert.Equal(t, params["phone_no"], user["phone_no"])
+	assert.Equal(t, "phone_no", user["register_by"])
+	assert.NotEmpty(t, user["referral_code"])
+	assert.Empty(t, user["bank_account_name"])
+	assert.Empty(t, user["bank_account_number"])
+	assert.Empty(t, user["bank_country"])
+	assert.Empty(t, user["bank_name"])
 
 	response, _ := http.Get(user["profile_picture"].(string))
 
-	require.Equal(t, 200, response.StatusCode)
+	assert.Equal(t, 200, response.StatusCode)
 }
 
 func TestCreateUserViaFacebook(t *testing.T) {
@@ -524,8 +538,6 @@ func TestCreateUserViaFacebook(t *testing.T) {
 
 	requestURL := fmt.Sprintf("%s/v1_1/users", TestServer.URL)
 
-	currentTime := time.Now().UTC().AddDate(0, 0, 7).Format(time.RFC3339)
-
 	status, _, body := TestHelper.MultipartRequest(requestURL, "POST", params, "profile_picture",
 		os.Getenv("GOPATH")+"src/bitbucket.org/cliqers/shoppermate-api/test/images/profile_image_smaller.png", "")
 
@@ -539,26 +551,40 @@ func TestCreateUserViaFacebook(t *testing.T) {
 
 	DB.Model(&Device{}).Where("guid = ?", sampleDevice.GUID).Find(&device)
 
-	require.Equal(t, user["guid"], *device.UserGUID)
-	require.Equal(t, 200, status)
-	require.Equal(t, currentTime, accessToken["expired"])
-	require.NotEmpty(t, accessToken["token"])
-	require.NotEmpty(t, user["id"])
-	require.NotEmpty(t, user["guid"])
-	require.Equal(t, params["facebook_id"], user["facebook_id"])
-	require.Equal(t, params["email"], user["email"])
-	require.Equal(t, params["name"], user["name"])
-	require.Equal(t, params["phone_no"], user["phone_no"])
-	require.Equal(t, "facebook", user["register_by"])
-	require.NotEmpty(t, user["referral_code"])
-	require.Empty(t, user["bank_account_name"])
-	require.Empty(t, user["bank_account_number"])
-	require.Empty(t, user["bank_country"])
-	require.Empty(t, user["bank_name"])
+	currentTime := time.Now().UTC().AddDate(0, 0, 7).Format(time.RFC3339)
+
+	tokenExpiryTime, _ := time.Parse(time.RFC3339, accessToken["expired"].(string))
+
+	currentTimeObject, _ := time.Parse(time.RFC3339, currentTime)
+
+	timeDiff := tokenExpiryTime.Sub(currentTimeObject)
+
+	assert.Equal(t, user["guid"], *device.UserGUID)
+	assert.Equal(t, 200, status)
+	assert.Condition(t, func() bool {
+		if timeDiff.Seconds() < 4 {
+			return true
+		}
+
+		return false
+	})
+	assert.NotEmpty(t, accessToken["token"])
+	assert.NotEmpty(t, user["id"])
+	assert.NotEmpty(t, user["guid"])
+	assert.Equal(t, params["facebook_id"], user["facebook_id"])
+	assert.Equal(t, params["email"], user["email"])
+	assert.Equal(t, params["name"], user["name"])
+	assert.Equal(t, params["phone_no"], user["phone_no"])
+	assert.Equal(t, "facebook", user["register_by"])
+	assert.NotEmpty(t, user["referral_code"])
+	assert.Empty(t, user["bank_account_name"])
+	assert.Empty(t, user["bank_account_number"])
+	assert.Empty(t, user["bank_country"])
+	assert.Empty(t, user["bank_name"])
 
 	response, _ := http.Get(user["profile_picture"].(string))
 
-	require.Equal(t, 200, response.StatusCode)
+	assert.Equal(t, 200, response.StatusCode)
 }
 
 func TestAccessTokenRequireWhenToViewUser(t *testing.T) {
@@ -570,8 +596,8 @@ func TestAccessTokenRequireWhenToViewUser(t *testing.T) {
 
 	errorData := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(t, 401, status)
-	require.Equal(t, "Access token error", errorData["title"])
+	assert.Equal(t, 401, status)
+	assert.Equal(t, "Access token error", errorData["title"])
 }
 
 func TestViewUserDetails(t *testing.T) {
@@ -593,13 +619,13 @@ func TestViewUserDetails(t *testing.T) {
 
 	data := body.(map[string]interface{})["data"].(map[string]interface{})
 
-	require.Equal(t, 200, status)
-	require.Equal(t, users[0].GUID, data["guid"])
-	require.Equal(t, users[0].Name, data["name"])
-	require.Equal(t, users[0].Email, data["email"])
-	require.Equal(t, users[0].PhoneNo, data["phone_no"])
-	require.Equal(t, users[0].RegisterBy, data["register_by"])
-	require.Equal(t, users[0].ReferralCode, data["referral_code"])
+	assert.Equal(t, 200, status)
+	assert.Equal(t, users[0].GUID, data["guid"])
+	assert.Equal(t, users[0].Name, data["name"])
+	assert.Equal(t, users[0].Email, data["email"])
+	assert.Equal(t, users[0].PhoneNo, data["phone_no"])
+	assert.Equal(t, users[0].RegisterBy, data["register_by"])
+	assert.Equal(t, users[0].ReferralCode, data["referral_code"])
 }
 
 func TestAccessTokenRequireWhenToUpdateUser(t *testing.T) {
@@ -611,8 +637,8 @@ func TestAccessTokenRequireWhenToUpdateUser(t *testing.T) {
 
 	errorData := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(t, 401, status)
-	require.Equal(t, "Access token error", errorData["title"])
+	assert.Equal(t, 401, status)
+	assert.Equal(t, "Access token error", errorData["title"])
 }
 
 func TestProfileImageSizeValidationForUpdateUser(t *testing.T) {
@@ -643,8 +669,8 @@ func TestProfileImageSizeValidationForUpdateUser(t *testing.T) {
 
 	errorData := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(t, 413, status)
-	require.Equal(t, "File size exceeded the limit.", errorData["title"])
+	assert.Equal(t, 413, status)
+	assert.Equal(t, "File size exceeded the limit.", errorData["title"])
 }
 
 func TestProfileImageTypeValidationForUpdateUser(t *testing.T) {
@@ -675,8 +701,8 @@ func TestProfileImageTypeValidationForUpdateUser(t *testing.T) {
 
 	errorData := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(t, 400, status)
-	require.Equal(t, "Invalid file type.", errorData["title"])
+	assert.Equal(t, 400, status)
+	assert.Equal(t, "Invalid file type.", errorData["title"])
 }
 
 func TestErrorAccessTokenBelongToOtherUserDuringUpdateUser(t *testing.T) {
@@ -698,8 +724,8 @@ func TestErrorAccessTokenBelongToOtherUserDuringUpdateUser(t *testing.T) {
 
 	errorData := body.(map[string]interface{})["errors"].(map[string]interface{})
 
-	require.Equal(t, 401, status)
-	require.Equal(t, "Your access token belong to other user", errorData["title"])
+	assert.Equal(t, 401, status)
+	assert.Equal(t, "Your access token belong to other user", errorData["title"])
 }
 
 func TestUpdateUser(t *testing.T) {
@@ -728,11 +754,11 @@ func TestUpdateUser(t *testing.T) {
 
 	data := body.(map[string]interface{})["data"].(map[string]interface{})
 
-	require.Equal(t, 200, status)
-	require.Equal(t, params["name"], data["name"])
-	require.Equal(t, params["email"], data["email"])
+	assert.Equal(t, 200, status)
+	assert.Equal(t, params["name"], data["name"])
+	assert.Equal(t, params["email"], data["email"])
 
 	response, _ := http.Get(data["profile_picture"].(string))
 
-	require.Equal(t, 200, response.StatusCode)
+	assert.Equal(t, 200, response.StatusCode)
 }

@@ -1,8 +1,8 @@
-hash: b024b456ffd5451c44ffd0e8108a65cb86fe960721e9e85034bf93a429cc0b6f
-updated: 2017-03-09T18:10:51.999039464+08:00
+hash: 5923960f40e31e93a505f12261b0050dd25673e5d3d8c89a7cc2834493ba3ef5
+updated: 2017-03-16T11:13:39.852906596+08:00
 imports:
 - name: github.com/agtorre/gocolorize
-  version: 99fea4bc9517f07eea8194702cb7076f4845b7de
+  version: f42b554bf7f006936130c9bb4f971afd2d87f671
 - name: github.com/aws/aws-sdk-go
   version: 00fb2125993965df739fa3398b03bef3eb2e198f
   subpackages:
@@ -34,16 +34,16 @@ imports:
 - name: github.com/dgrijalva/jwt-go
   version: d2709f9f1f31ebcda9651b03077758c1f3a0018c
 - name: github.com/elgs/gostrgen
-  version: 9d61ae07eeaeb54ce2100022b1fd3ea020093d09
+  version: 51e61e71cb55e44b910d3b86b1178a6a60c2f4f7
 - name: github.com/fatih/structs
-  version: a720dfa8df582c51dee1b36feabb906bde1588bd
+  version: dc3312cb1a4513a366c4c9e622ad55c32df12ed3
 - name: github.com/gin-gonic/gin
   version: e2212d40c62a98b388a5eb48ecbdcf88534688ba
   subpackages:
   - binding
   - render
 - name: github.com/go-ini/ini
-  version: c437d20015c2ab6454b7a66a13109ff0fb99e17a
+  version: 2ba15ac2dc9cdf88c110ec2dc0ced7fa45f5678c
 - name: github.com/go-playground/universal-translator
   version: a29831bde2603d919f793d6e133f50e26a55c6c9
 - name: github.com/go-sql-driver/mysql
@@ -57,13 +57,15 @@ imports:
 - name: github.com/jinzhu/gorm
   version: 5409931a1bb87e484d68d649af9367c207713ea2
 - name: github.com/jinzhu/inflection
-  version: 1c35d901db3da928c72a72d8458480cc9ade058f
+  version: 74387dc39a75e970e7a3ae6a3386b5bd2e5c5cff
 - name: github.com/jmespath/go-jmespath
   version: bd40a432e4c76585ef6b72d3fd96fb9b6dc7b68d
 - name: github.com/joho/godotenv
   version: a01a834e1654b4c9ca5b3ad05159445cc9c7ad08
+- name: github.com/jstemmer/go-junit-report
+  version: 6aeed679b62e1c77721907cb77076f2168c7a0f6
 - name: github.com/klauspost/compress
-  version: 14c9a76e3c95e47f8ccce949bba2c1101a8b85e6
+  version: e3b7981a12dd3cab49afa1d3a50e715846f23732
   subpackages:
   - flate
   - gzip
@@ -71,19 +73,19 @@ imports:
 - name: github.com/klauspost/cpuid
   version: 09cded8978dc9e80714c4d85b0322337b0a1e5e0
 - name: github.com/klauspost/crc32
-  version: 1bab8b35b6bb565f92cbc97939610af9369f942a
+  version: cb6bfca970f6908083f26f39a79009d608efd5cd
 - name: github.com/kr/pretty
   version: cfb55aafdaf3ec08f0db22699ab822c50091b1c4
 - name: github.com/manucorporat/sse
   version: ee05b128a739a0fb76c7ebd3ae4810c1de808d6d
 - name: github.com/mattn/go-isatty
-  version: 57fdcb988a5c543893cc61bce354a6e24ab70022
+  version: 30a891c33c7cde7b02a981314b4228ec99380cca
 - name: github.com/revel/config
   version: 75f5ee659b5338d1ce823536fe9b9e50b4de01b4
 - name: github.com/revel/revel
   version: 8d01a054f6bca9430b3e497fe7b4f20ec8f054ce
 - name: github.com/RichardKnop/machinery
-  version: f1563577ba2e9eca34985c8bd8c4983a42a696e3
+  version: c3c63751e2fc158adc5257457670496324176645
   subpackages:
   - v1
 - name: github.com/robfig/pathtree
@@ -93,9 +95,9 @@ imports:
 - name: github.com/serenize/snaker
   version: 543781d2b79bd95c51ffe70e70a55c946ca211ff
 - name: github.com/smallfish/simpleyaml
-  version: 0784bcdcc16a2d9ff2a25c44d9c19bfc4aab5624
+  version: f8280fef35a3fd1d4cf13c5a9fa638398eebb6ad
 - name: github.com/streadway/amqp
-  version: ce1c69d94c3efdb1f287015f851b17db8fa205b1
+  version: 63795daa9a446c920826655f26ba31c81c860fd6
 - name: github.com/stretchr/testify
   version: 69483b4bd14f5845b5a1e55bca19e954e827f1d0
   subpackages:
@@ -111,7 +113,7 @@ imports:
   - context
   - websocket
 - name: golang.org/x/sys
-  version: 99f16d856c9836c42d24e7ab64ea72916925fa97
+  version: d75a52659825e75fff6158388dddc6a5b04f9ba5
   subpackages:
   - unix
 - name: gopkg.in/fsnotify.v1
@@ -121,12 +123,12 @@ imports:
 - name: gopkg.in/h2non/filetype.v0
   version: 3093b8ebec6efb56ac813238b8beab4ed4eaac6a
 - name: gopkg.in/h2non/filetype.v1
-  version: 3093b8ebec6efb56ac813238b8beab4ed4eaac6a
+  version: e42395618f967c7925230905a29e63e787e88be6
   subpackages:
   - matchers
   - types
 - name: gopkg.in/yaml.v2
-  version: a3f3340b5840cee44f372bddb5880fcbc419b46a
+  version: a5b47d31c556af34a302ce5d659e6fea44d90de0
 testImports:
 - name: github.com/davecgh/go-spew
   version: 5215b55f46b2b919f50a1df0eaa5886afe4e3b3d

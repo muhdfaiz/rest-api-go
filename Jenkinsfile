@@ -15,9 +15,6 @@ node {
             env.GOPATH="${workspace}/"
             env.GOROOT="/usr/local/go"
             env.PATH="${env.PATH}:/usr/local/go/bin:${workspace}/bin"
-            
-            // Reload shell to take effect latest environment variables
-            sh "source ~/.profile"
     
             // Display all environment variables
             sh "printenv"
@@ -28,14 +25,15 @@ node {
             sh 'mkdir pkg'
     
             // Checkout shoppermate api repo in subfolder src/bitbucket.org/cliqers/shoppermate-api'
-            checkout([$class: 'GitSCM', branches: [[name: '**']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'src/bitbucket.org/cliqers/shoppermate-api']], submoduleCfg: [], userRemoteConfigs: [[credentialsId: '26ce324d-eab2-4d6f-b59b-ffa8100c6920', url: 'https://muhdfaiz@bitbucket.org/cliqers/shoppermate-api.git']]])
+            checkout([$class: 'GitSCM', branches: scm.branches, doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'src/bitbucket.org/cliqers/shoppermate-api']], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'ccbd457c-f55b-48a7-88d2-f78639575da6', url: 'https://muhdfaiz@bitbucket.org/cliqers/shoppermate-api.git']]])
             
             dir('src/bitbucket.org/cliqers/shoppermate-api') {
                 sh 'mkdir storages'
+                sh 'rm -rf glide.lock'
                 sh 'glide install'
                 sh 'touch .env'
                 sh 'echo -e "ENVIRONMENT:local" >> .env'
-                sh 'echo -e "DEBUG:false" >> .env'
+                sh 'echo -e "DEBUG:true" >> .env'
                 sh 'echo -e "DEBUG_DATABASE:false" >> .env'
                 sh 'echo -e "ENABLE_HTTPS:false" >> .env'
                 sh 'echo -e "SHOPPERMATE_EMAIL_API_URL:http://api.shoppermate.com:5000/" >> .env'
@@ -56,7 +54,7 @@ node {
                 sh 'echo -e "TEST_DB_PORT:3306" >> .env'
                 sh 'echo -e "TEST_DB_NAME:shoppermate_test" >> .env'
                 sh 'echo -e "TEST_DB_USERNAME:root" >> .env'
-                sh 'echo -e "TEST_DB_PASSWORD:123456" >> .env'
+                sh 'echo -e "TEST_DB_PASSWORD:pag999" >> .env'
                 sh 'echo -e "MOCEAN_SMS_URL:http://183.81.161.84:13016/cgi-bin/sendsms" >> .env'
                 sh 'echo -e "MOCEAN_SMS_USERNAME:shoppermate" >> .env'
                 sh 'echo -e "MOCEAN_SMS_PASSWORD:s28Dua3p" >> .env'
@@ -64,8 +62,8 @@ node {
                 sh 'echo -e "MCOEAN_SMS_SUBJECT:ShopperMate" >> .env'
                 sh 'echo -e "MAX_DEAL_RADIUS_IN_KM=10" >> .env'
                 sh 'echo -e "UTC_TIMEZONE=8" >> .env'
-                sh 'mysql -u root "-p123456" shoppermate_test -e "show tables" | grep -v Tables_in | grep -v "+" | gawk \'{print "drop table " $1 ";"}\' | mysql -u root "-p123456" shoppermate_test'
-                sh 'mysql -u root "-p123456" shoppermate_test < shoppermate_test.sql'
+                sh 'mysql -u root "-ppag999" shoppermate_test -e "show tables" | grep -v Tables_in | grep -v "+" | gawk \'{print "drop table " $1 ";"}\' | mysql -u root "-ppag999" shoppermate_test'
+                sh 'mysql -u root "-ppag999" shoppermate_test < shoppermate_test.sql'
                 sh 'printenv'
             }
 
@@ -83,13 +81,8 @@ node {
     stage('Test') {
         try {
             dir('src/bitbucket.org/cliqers/shoppermate-api/application/v1_1') {
-                sh 'go test -v | tee ../../test_result.out'
+                sh 'go test -v | go-junit-report > ../../report.xml'
             }
-
-            dir('src/bitbucket.org/cliqers/shoppermate-api/') {
-                sh './go2xunit -fail -input test_result.out -output tests.xml'
-            }
-            
             //slackSend (color: '#00FF00', message: "SUCCESSFUL: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
         } catch (e) {
             currentBuild.result = "FAILED"
@@ -100,6 +93,8 @@ node {
     }
 
     stage('Result') {
-        junit '*.xml'
+        dir('src/bitbucket.org/cliqers/shoppermate-api') {
+            junit '*.xml' 
+        }
     }
 }

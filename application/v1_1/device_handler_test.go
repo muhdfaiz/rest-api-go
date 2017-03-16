@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"testing"
 
-	"bitbucket.org/cliqers/shoppermate-api/systems"
 	"github.com/stretchr/testify/assert"
+
+	"bitbucket.org/cliqers/shoppermate-api/systems"
 )
 
 func TestErrorRequiredFieldDuringCreateDevice(t *testing.T) {
@@ -110,7 +111,6 @@ func TestSuccessCreateDeviceWithUserGUID(t *testing.T) {
 
 	status, _, body := TestHelper.Request("POST", jsonBytes, requestURL, "")
 
-	fmt.Println(body)
 	response := body.(map[string]interface{})["data"].(map[string]interface{})
 
 	assert.Equal(t, 200, status)
@@ -140,7 +140,6 @@ func TestSuccessCreateDeviceWithoutUserGUID(t *testing.T) {
 
 	status, _, body := TestHelper.Request("POST", jsonBytes, requestURL, "")
 
-	fmt.Println(body)
 	response := body.(map[string]interface{})["data"].(map[string]interface{})
 
 	assert.Equal(t, 200, status)

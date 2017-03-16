@@ -111,7 +111,6 @@ func TestLoginViaPhoneUsingDebugModeShouldSuccess(t *testing.T) {
 	assert.Equal(t, user.PhoneNo, smsHistory.RecipientNo)
 	assert.Equal(t, "login", smsHistory.Event)
 	assert.NotEmpty(t, smsHistory.VerificationCode)
-	assert.NotEmpty(t, smsHistory.SmsID)
 }
 
 func TestLoginViaFacebookShouldReturnValidationError(t *testing.T) {

@@ -1,10 +1,10 @@
-hash: f72c7ce38d0599b8d8c621283b3d8ce7b5cfd667ffc17966f5d7eef5bffec973
-updated: 2017-02-13T14:46:50.630156+08:00
+hash: 5923960f40e31e93a505f12261b0050dd25673e5d3d8c89a7cc2834493ba3ef5
+updated: 2017-03-16T11:13:39.852906596+08:00
 imports:
 - name: github.com/agtorre/gocolorize
   version: f42b554bf7f006936130c9bb4f971afd2d87f671
 - name: github.com/aws/aws-sdk-go
-  version: f615b0905b52177eb0efa0fe59340c05c0ea0ed9
+  version: 00fb2125993965df739fa3398b03bef3eb2e198f
   subpackages:
   - aws
   - aws/awserr
@@ -55,13 +55,15 @@ imports:
 - name: github.com/huandu/facebook
   version: 24ce8d1913aaad265ff4cb4af6a1d1b1801d3021
 - name: github.com/jinzhu/gorm
-  version: 5050a58b457286dbda1844991866a86a434636ab
+  version: 5409931a1bb87e484d68d649af9367c207713ea2
 - name: github.com/jinzhu/inflection
   version: 74387dc39a75e970e7a3ae6a3386b5bd2e5c5cff
 - name: github.com/jmespath/go-jmespath
   version: bd40a432e4c76585ef6b72d3fd96fb9b6dc7b68d
 - name: github.com/joho/godotenv
   version: a01a834e1654b4c9ca5b3ad05159445cc9c7ad08
+- name: github.com/jstemmer/go-junit-report
+  version: 6aeed679b62e1c77721907cb77076f2168c7a0f6
 - name: github.com/klauspost/compress
   version: e3b7981a12dd3cab49afa1d3a50e715846f23732
   subpackages:
@@ -100,6 +102,9 @@ imports:
   version: 69483b4bd14f5845b5a1e55bca19e954e827f1d0
   subpackages:
   - assert
+  - require
+- name: github.com/tebeka/go2xunit
+  version: 5856a592616c62734bf27dac02b6b5f076f96ba6
 - name: github.com/ventu-io/go-shortid
   version: 6c56cef5189ca1b3d5ef01dc07f4d611dfc0bb33
 - name: golang.org/x/net
@@ -116,7 +121,7 @@ imports:
 - name: gopkg.in/go-playground/validator.v8
   version: 5f57d2222ad794d0dffb07e664ea05e2ee07d60c
 - name: gopkg.in/h2non/filetype.v0
-  version: e42395618f967c7925230905a29e63e787e88be6
+  version: 3093b8ebec6efb56ac813238b8beab4ed4eaac6a
 - name: gopkg.in/h2non/filetype.v1
   version: e42395618f967c7925230905a29e63e787e88be6
   subpackages:
@@ -129,8 +134,6 @@ testImports:
   version: 5215b55f46b2b919f50a1df0eaa5886afe4e3b3d
   subpackages:
   - spew
-- name: github.com/kr/text
-  version: 7cafcd837844e784b526369c9bce262804aebc60
 - name: github.com/pmezard/go-difflib
   version: 792786c7400a136282c1664665ae0a8db921c6c2
   subpackages:

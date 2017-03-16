@@ -6,9 +6,9 @@ import (
 	"os"
 	"testing"
 
-	"encoding/json"
-
 	"github.com/stretchr/testify/assert"
+
+	"encoding/json"
 )
 
 func TestViewAllUserShoppingListsShouldReturnAccessTokenError(t *testing.T) {

@@ -416,24 +416,7 @@ ssh -i ~/path_to_key ubuntu@api.shoppermate.com
 
 - This server using Certbot Let's Encrypt client. Certbot is recommended client by Let's Encrypt. See here [https://letsencrypt.org/docs/client-options/](https://letsencrypt.org/docs/client-options/)
 
-- In production server, Let's Encrypt certificate automatically renew using cronjob. Use command below to list and update crontab.
-
-```
-- List Crontab Available
-sudo crontab -l
-
-- Edit Crontab 
-sudo crontab -e
-
-- Reload Cron
-sudo service cron restart
-```
-- You can see one of the crontab like below that used to renew Let's Encrypt Certificate automatically. It will everyday at 8.00 PM UTC+0.
-
-```
-* 20 * * * /home/ubuntu/certbot/certbot-auto renew --force-renew --standalone --pre-hook "sudo service nginx stop; sudo service mysql stop; sudo supervisorctl stop shoppermate_api_prod" --post-hook "sudo service nginx start; sudo service mysql start; sudo supervisorctl start shoppermate_api_prod"
-```
-- How to know if cron runnning or not. Check this file `/var/log/cron.log`
+- Certbot already installed in production server. The installation folder is in `/home/ubuntu/certbot/`
 
 - How to install Certbot
 
@@ -454,12 +437,6 @@ sudo apt install python-pip
 pip install setuptools
 ```
 
-- Renew Cert if expired with pre hook and post hook.
-
-```
-./certbot-auto renew --standalone --pre-hook "sudo service nginx stop; sudo service mysql stop; sudo supervisorctl stop shoppermate_api_prod" --post-hook "sudo service nginx start; sudo service mysql start; sudo supervisorctl start shoppermate_api_prod"
-```
-
 - Issue SSL Certificate for the first time
 
 ```
@@ -468,10 +445,38 @@ Note: This operation happens through the port 80, so in case your application li
 ./certbot-auto certonly --standalone-supported-challenges http-01 -d api.shoppermate.com
 ```
 
+- Renew Cert if expired with pre hook and post hook.
+
+```
+./certbot-auto renew --standalone --pre-hook "sudo service nginx stop; sudo service mysql stop; sudo supervisorctl stop shoppermate_api_prod" --post-hook "sudo service nginx start; sudo service mysql start; sudo supervisorctl start shoppermate_api_prod"
+```
+
 - Force Renew Cert with pre hook and post hook.
 
 ```
 ./certbot-auto renew --force-renew --standalone --pre-hook "sudo service nginx stop; sudo service mysql stop; sudo supervisorctl stop shoppermate_api_prod" --post-hook "sudo service nginx start; sudo service mysql start; sudo supervisorctl start shoppermate_api_prod"
 ```
+
+- The new SSL certificate will replace the old one. The SSL Certificate resize in this folder `/etc/letsencrypt/live/api.shoppermate.com/`
+
+- In production server, Let's Encrypt certificate automatically renew using cronjob. Use command below to list and update crontab.
+
+```
+- List Crontab Available
+sudo crontab -l
+
+- Edit Crontab 
+sudo crontab -e
+
+- Reload Cron
+sudo service cron restart
+```
+
+- You can see one of the crontab like below that used to renew Let's Encrypt Certificate automatically. It will everyday at 8.00 PM UTC+0.
+
+```
+* 20 * * * /home/ubuntu/certbot/certbot-auto renew --force-renew --standalone --pre-hook "sudo service nginx stop; sudo service mysql stop; sudo supervisorctl stop shoppermate_api_prod" --post-hook "sudo service nginx start; sudo service mysql start; sudo supervisorctl start shoppermate_api_prod"
+```
+- How to know if cron runnning or not. Check this file `/var/log/cron.log`
 
 

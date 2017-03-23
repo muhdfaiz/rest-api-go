@@ -363,19 +363,22 @@ type CreateUser struct {
 
 - 
 
-### Deployment To Staging
+### Deploy To Staging
 
 - SSH into staging server. Get the key file from trello.
+
 ```
 ssh -i ~/path_to_key ubuntu@edmund.shoppermate.com
 ```
 
 - Run this command to deploy
+
 ```
 ~/compile_admin.sh
 ```
 
 - What the command above doing?
+
 ```
 1. Pull latest code using git from develop branch.
 2. Compile project into executable build name shoppermate_api and place in the folder /home/ubuntu/golang/bin/.
@@ -383,9 +386,10 @@ ssh -i ~/path_to_key ubuntu@edmund.shoppermate.com
 4. Restart mysql to avoid unclosed transaction during restart supervisor process.
 ```
 
-### Deployment To Production
+### Deploy To Production
 
 - SSH into staging server. Get the key file from trello.
+
 ```
 ssh -i ~/path_to_key ubuntu@api.shoppermate.com
 ```
@@ -396,11 +400,78 @@ ssh -i ~/path_to_key ubuntu@api.shoppermate.com
 ```
 
 - What the command above doing?
+
 ```
 1. Pull latest code using git from master branch.
 2. Compile project into executable build name shoppermate_api and place in the folder /home/ubuntu/golang/bin/.
 3. Restart shoppermate_api supervisor process.
 4. Restart mysql to avoid unclosed transaction during restart supervisor process.
+```
+
+### How to renew SSL Certificate on production
+
+- SSL certificate only available on production only. SSL certificate provided for free by Let's Encrypt. It's only valid for 90 days.
+
+- To generate SSL certificate, you can generate manually or using Let's Encrypt client.
+
+- This server using Certbot Let's Encrypt client. Certbot is recommended client by Let's Encrypt. See here [https://letsencrypt.org/docs/client-options/](https://letsencrypt.org/docs/client-options/)
+
+- In production server, Let's Encrypt certificate automatically renew using cronjob. Use command below to list and update crontab.
+
+```
+- List Crontab Available
+sudo crontab -l
+
+- Edit Crontab 
+sudo crontab -e
+
+- Reload Cron
+sudo service cron restart
+```
+- You can see one of the crontab like below that used to renew Let's Encrypt Certificate automatically. It will everyday at 8.00 PM UTC+0.
+
+```
+* 20 * * * /home/ubuntu/certbot/certbot-auto renew --force-renew --standalone --pre-hook "sudo service nginx stop; sudo service mysql stop; sudo supervisorctl stop shoppermate_api_prod" --post-hook "sudo service nginx start; sudo service mysql start; sudo supervisorctl start shoppermate_api_prod"
+```
+- How to know if cron runnning or not. Check this file `/var/log/cron.log`
+
+- How to install Certbot
+
+```
+(go to the directory where you want to install the certbot client)
+
+git clone https://github.com/certbot/certbot
+
+cd certbot
+
+./certbot-auto --help
+```
+
+- Install PIP Python Package Management
+
+```
+sudo apt install python-pip
+pip install setuptools
+```
+
+- Renew Cert if expired with pre hook and post hook.
+
+```
+./certbot-auto renew --standalone --pre-hook "sudo service nginx stop; sudo service mysql stop; sudo supervisorctl stop shoppermate_api_prod" --post-hook "sudo service nginx start; sudo service mysql start; sudo supervisorctl start shoppermate_api_prod"
+```
+
+- Issue SSL Certificate for the first time
+
+```
+Note: This operation happens through the port 80, so in case your application listens on port 80, it needs to be switched off before running this command (which is very quick to run, by the way)
+
+./certbot-auto certonly --standalone-supported-challenges http-01 -d api.shoppermate.com
+```
+
+- Force Renew Cert with pre hook and post hook.
+
+```
+./certbot-auto renew --force-renew --standalone --pre-hook "sudo service nginx stop; sudo service mysql stop; sudo supervisorctl stop shoppermate_api_prod" --post-hook "sudo service nginx start; sudo service mysql start; sudo supervisorctl start shoppermate_api_prod"
 ```
 
 

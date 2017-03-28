@@ -4,6 +4,7 @@ import "github.com/jinzhu/gorm"
 
 // DefaultShoppingListRepository will handle all task related to CRUD
 type DefaultShoppingListRepository struct {
+	BaseRepository
 	DB *gorm.DB
 }
 
@@ -14,7 +15,7 @@ func (dslr *DefaultShoppingListRepository) GetAll(relations string) []*DefaultSh
 	DB := dslr.DB.Model(&DefaultShoppingList{})
 
 	if relations != "" {
-		DB = LoadRelations(DB, relations)
+		DB = dslr.LoadRelations(DB, relations)
 	}
 
 	DB.Find(&defaultShoppingLists)

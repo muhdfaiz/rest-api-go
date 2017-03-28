@@ -1,27 +1,82 @@
 ## Shoppermate API
 
-![Build Status](http://188.166.227.158:8080/buildStatus/icon?job=Shoppermate API](http://188.166.227.158:8080/job/Shoppermate%20API/
-
 ### Development Enviroment
 
 ### Prerequisite
+
 - Go Languange 1.7 above, MariaDB, Glide (Package Management For Go, GIT, supervisor
 
 #### Install MariaDB 10.x
+
 ```
 Refer here - https://www.linuxbabe.com/mariadb/install-mariadb-10-1-ubuntu14-04-15-10
 ```
 
 #### Install Git
+
 ```
 sudo apt-get update
 sudo apt-get install git
 ```
 
+#### Install Go Language 1.7.x
+
+- Download Go Language 1.7.x
+
+```
+sudo apt-get update
+sudo wget https://storage.googleapis.com/golang/go1.7.4.linux-amd64.tar.gz
+```
+
+- Extract Go Language 1.7.x
+
+```
+sudo tar -xvf go1.7.4.linux-amd64.tar.gz
+sudo mv go /usr/local
+```
+
+#### Setup Go Environment.
+
+- In Linux, edit file `~/.profile` or `~/bash_profile` and include 3 environment variables below. If you are using zsh shell you can edit file `.zshrc` If you are using Mac edit this file `~/.bash_profile`
+
+- Set GOROOT (location when Go package is installed on your system
+
+```
+export GOROOT=/usr/local/go
+```
+
+- Set GOPATH. Location of your project path. For example 
+
+```
+export GOPATH=$HOME/golang
+```
+
+- Set PATH variable to access go binary system wide.
+
+```
+export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
+```
+
+#### Verify Installation
+
+- Check Go Version
+
+```
+go version
+```
+
+- Verify all environment variable. Make sure GOROOT and GOPATH not empty and set to the correct folder.
+
+```
+go env
+```
+
 #### Install Glide - Package Management for Go (https://github.com/Masterminds/glide
+
 - Install Glide
 
 For Ubuntu
+
 ```
 sudo add-apt-repository ppa:masterminds/glide && sudo apt-get update
 sudo apt-get install glide
@@ -32,81 +87,48 @@ For Mac Os X
 brew install glide
 ```
 
-#### Install Go Language 1.7.x
-- Download Go Language 1.7.x
-```
-sudo apt-get update
-sudo wget https://storage.go ogleapis.com/golang/go1.7.4.linux-amd64.tar.gz
-```
+#### Create Additional Directory in $GOPATH folder
 
-- Extract Go Language 1.7.x
 ```
-sudo tar -xvf go1.7.linux-amd64.tar.
-sudo mv go /usr/local
-```
-
-#### Setup Go Environment.
-
-Edit file `~/.profile` and include 3 environment variables below.
-
-- Set GOROOT (location when Go package is installed on your system
-```
-export GOROOT=/usr/local/go
-```
-
-- Set GOPATH. Location of your project path. For example 
-```
-export GOPATH=$HOME/golang
-```
-
-- Set PATH variable to access go binary system wide.
-```
-export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
-```
-
-#### Verify Installation
-- Check Go Version
-```
-go version
-```
-
-- Verify all environment variable. Make sure GOROOT and GOPATH not empty and set to the correct folder.
-```
-go env
+mkdir -p $GOPATH/src/bitbucket.org/cliqers/
+mkdir pkg
+mkdir bin
 ```
 
 #### Setting Up Shoppermate API
-- Allow go get to retrieve shoppermate API from private bitbucket repositories. Enter code below in command line.
-
-```
-git config --global url."git@bitbucket.org:".insteadOf "https://bitbucket.org/"
-```
-
-Here, we say use git@bitbucket.org any time you’d use https://bitbucket.org. This works for everything, not just go get. It just has the nice side effect of using your SSH key any time you run go get too.
-
-- Verify .gitconfig file contain information like below
-```
-[url "git@bitbucket.org:"]
-        insteadOf = https://bitbucket.org/
-```
 
 - Generate Your SSH Key. Paste code below in your command line and press enter until finish.
+
 ```
 ssh-keygen
 ```
 
 - Copy the ssh key out from the command below and add the SSH key in Bitbucket Repository.
+
 ```
 cat ~/.ssh/id_rsa.pub
 ```
 
-- Go to shoppermate-api project path. For example `~/golang/src/` and then install package dependencies using Glide.
-Glide will install another package dependencies into `~/golang/src//vendor` folder
+- Clone Shoppermate API Repository
+
+```
+cd $GOPATH/src/bitbucket.org/cliqers/
+git clone git@bitbucket.org:cliqers/shoppermate-api.git shoppermate-api
+```
+
+- Go to shoppermate-api project path. Install package dependencies using Glide. Glide will install all package dependencies into this folder `~/golang/src/vendor`.
 ```
 glide install
 ```
 
 - Create new .env file and copy the content from .env.example file in root directory. Update all setting in .env file.
+
+- Go to root directory of project and import sample database.
+
+```
+tar -xzOf shoppermate_staging.sql.gz | mysql -u USERNAME -pPASSWORD your_database
+```
+
 
 - Go to project root directory and run Shoppermate API.
 ```
@@ -301,13 +323,30 @@ GET    /v1_1/device/:device_uuid/users/:user_guid/notifications                 
 
 #### Services
 
-- Service file will control application logics. All services resize in `application/{api_version}` and the naming always end with `_service.go`. One of the service is `UserService (user_service.go)`
+##### Resource Services
+
+- Every resources has their own service. For example, for `User Service (user_service.go)` is service for `User` resource.
+
+- Service file will control application logics. All services resize in `application/{api_version}` and the naming always end with `_service.go`.
 
 - For example API want to create new user. First thing, API will check if user already exist by checking user phone number in database.
 
 - If exist, return an error. If not exist continue with checking if user register using referral code.
 
 - If referral code not found, return an error. If referral code found, continue request with another application logic required during create user.
+
+##### Global Services
+
+- Global Service means the service not tie with any resources. Any resource can use global service.
+
+- Right now, API only have 4 global services.
+
+| Available Global Services|  Description
+| ------------- | -------------------- |
+| - Email     | - To send EDM for specific event by making a request to Shoppermate Email API (http://api.shoppermate.com:5000).
+| - Facebook      | To check facebook id valid or not.
+| - Filesystem | - To handle file uploading to local or Amazon S3 including file validation.
+| - Location | - To calculate distance in meter or kilometer between two coordinates.
 
 #### Repository
 
@@ -317,7 +356,7 @@ GET    /v1_1/device/:device_uuid/users/:user_guid/notifications                 
 
 - Model represent the data for the resources. For example User resource. All models reside in `application/{api_version}` and the naming always end with `_model.go`. One of the model is `User (user_repository.go)`
 
-- Model also used to specify database relationship. For example User has many shopping list. You can see the code to specify User relationship is like below.
+- Model also used to specify database relationship. For example User has many shopping list. You can see code below to specify the relationship.
 
 ```
 ShoppingLists []*ShoppingList `json:"shopping_lists,omitempty" gorm:"ForeignKey:UserGUID;AssociationForeignKey:GUID"`
@@ -329,9 +368,10 @@ ShoppingLists []*ShoppingList `json:"shopping_lists,omitempty" gorm:"ForeignKey:
 
 #### Validation
 
+##### Validate Request Body
 - To validate parameter in body, you must specify validation rules in `binding` files. For example `auth_binding.go`, `user_binding.go`.
 
-```
+```go
 type CreateUser struct {
 	FacebookID     string `form:"facebook_id" json:"facebook_id" binding:"omitempty,numeric"`
 	Name           string `form:"name" json:"name" binding:"required"`
@@ -346,6 +386,85 @@ type CreateUser struct {
 - Based on example above, refer to binding section to know if the parameter got validation rule or not.
 
 - When API receives request, API will bind request data into the struct specify in handler.
+
+##### Validate Query String
+
+- To validate query string, you can use validation class `systems/validation.go`  in system package.
+
+- Validation class is a wrapper for `go-playground/validator` package. Validation class used that package to validate input. You also can add new validation rule inside the class.
+
+| Available Validation Rules | Example Syntax
+| ------------- | -------------------- |
+| - required     | required
+| - uuid5      | uuid5
+| - alpha | alpha
+| - alphanum | alphanum
+| - numeric | numeric
+| - min | min=5
+| - max | max=5
+| - email | email
+| - len | len=5
+| - time | time
+| - latitude | latitude
+| - longitude | longitude
+
+- For example, you can see `application/v1_1/deal_cashback_handler.go` in `ViewByShoppingList` function.
+
+```go
+// Specify Validation Rules
+queryStringValidationRules := map[string]string {
+		"page_number": "numeric",
+		"page_limit":  "numeric",
+}
+
+// Validate input from query string
+error := Validation.Validate(context.Request.URL.Query(), queryStringValidationRules)
+
+// Return error if validation failed
+if error != nil {
+	context.JSON(http.StatusUnprocessableEntity, error)
+	return
+}
+```
+
+#### Validate File
+
+- To validate file upload, you can use `FileValidation` class inside `services/filesystem/filesystem.go`
+
+- API can validate file type and file size.
+
+- For example, see function `UploadUserProfilePicture` in `application/v1_1/user_service.go`. That function responsible to validate and upload profile image to Amazon S3.
+
+```go
+// Validate if profile picture type is `jpg`, `jpeg`, `png` or `gif`
+error := FileValidation.ValidateFileType([]string{"jpg", "jpeg", "png", "gif"}, profilePicture)
+
+// Return error if profile picture type is different from above.
+if error != nil {
+	return nil, error
+}
+
+// Validate profile picture size. File size must specify in byte. Profile picture size must below than 1MB.
+_, error = FileValidation.ValidateFileSize(profilePicture, 1000000, "profile_picture")
+
+if error != nil {
+	return nil, error
+}
+
+// Specify local upload path. API will upload to local first before upload to amazon S3. After finish uploading to Amazon S3, API will delete the local file.
+localUploadPath := os.Getenv("GOPATH") + os.Getenv("STORAGE_PATH")
+
+amazonS3UploadPath := "/profile_images/"
+
+// Upload file to Amazon S3
+uploadedFile, error := us.AmazonS3FileSystem.Upload(profilePicture, localUploadPath, amazonS3UploadPath)
+
+if error != nil {
+	return nil, error
+}
+
+return uploadedFile, nil
+```
 
 #### Request Lifecycle
 

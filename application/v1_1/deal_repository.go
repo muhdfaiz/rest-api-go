@@ -8,6 +8,7 @@ import (
 
 // DealRepository will handle all CRUD function for task related to Deal resource.
 type DealRepository struct {
+	BaseRepository
 	DB                    *gorm.DB
 	GrocerLocationService GrocerLocationServiceInterface
 }
@@ -54,7 +55,7 @@ func (dr *DealRepository) GetDealByIDWithRelations(dealID int, relations string)
 	DB := dr.DB.Model(&Ads{})
 
 	if relations != "" {
-		DB = LoadRelations(DB, relations)
+		DB = dr.LoadRelations(DB, relations)
 	}
 
 	DB.Where(&Ads{ID: dealID}).Preload("Grocers", func(db *gorm.DB) *gorm.DB {
@@ -163,7 +164,7 @@ func (dr *DealRepository) GetTodayDealsWithValidQuotaAndNearUserLocation(current
 
 	deals := []*Deal{}
 
-	offset := SetOffsetValue(pageNumber, pageLimit)
+	offset := dr.SetOffsetValue(pageNumber, pageLimit)
 
 	sqlQueryStatement := `SELECT SQL_CALC_FOUND_ROWS deals.*,
        count(deal_cashbacks.deal_guid) AS total_deal_cashback
@@ -235,7 +236,7 @@ func (dr *DealRepository) GetDealsWithinRangeAndDateRangeAndQuota(latitude, long
 
 	deals := []*Deal{}
 
-	offset := SetOffsetValue(pageNumber, pageLimit)
+	offset := dr.SetOffsetValue(pageNumber, pageLimit)
 
 	sqlQueryStatement := `SELECT SQL_CALC_FOUND_ROWS deals.*,
        count(deal_cashbacks.deal_guid) AS total_deal_cashback
@@ -317,7 +318,7 @@ func (dr *DealRepository) GetDealsWithinRangeAndDateRangeAndUserLimitAndQuotaAnd
 
 	deals := []*Deal{}
 
-	offset := SetOffsetValue(pageNumber, pageLimit)
+	offset := dr.SetOffsetValue(pageNumber, pageLimit)
 
 	sqlQueryStatement := `SELECT deals.*, count(deal_cashbacks.deal_guid) AS total_deal_cashback,
 	(SELECT count(*) FROM deal_cashbacks WHERE deal_cashbacks.deal_guid = deals.ads_guid AND user_guid = ?) AS total_user_deal_cashback
@@ -398,7 +399,7 @@ func (dr *DealRepository) GetDealsForCategoryWithinDateRangeAndQuota(category, c
 
 	deals := []*Deal{}
 
-	offset := SetOffsetValue(pageNumber, pageLimit)
+	offset := dr.SetOffsetValue(pageNumber, pageLimit)
 
 	sqlQueryStatement := `SELECT SQL_CALC_FOUND_ROWS deals.*,
        count(deal_cashbacks.deal_guid) AS total_deal_cashback
@@ -471,7 +472,7 @@ func (dr *DealRepository) GetDealsForCategoryWithinRangeAndDateRangeAndQuota(cat
 
 	deals := []*Deal{}
 
-	offset := SetOffsetValue(pageNumber, pageLimit)
+	offset := dr.SetOffsetValue(pageNumber, pageLimit)
 
 	sqlQueryStatement := `SELECT SQL_CALC_FOUND_ROWS deals.*, count(deal_cashbacks.deal_guid) AS total_deal_cashback
 		FROM
@@ -556,7 +557,7 @@ func (dr *DealRepository) GetDealsByCategoryNameWithinRangeAndDateRangeAndUserLi
 
 	deals := []*Deal{}
 
-	offset := SetOffsetValue(pageNumber, pageLimit)
+	offset := dr.SetOffsetValue(pageNumber, pageLimit)
 
 	sqlQueryStatement := `SELECT SQL_CALC_FOUND_ROWS deals.*, count(deal_cashbacks.deal_guid) AS total_deal_cashback,
 	(SELECT count(*) FROM deal_cashbacks WHERE deal_cashbacks.deal_guid = deals.ads_guid AND user_guid = ?) AS total_user_deal_cashback
@@ -642,7 +643,7 @@ func (dr *DealRepository) GetDealsBySubcategoryNameWithinRangeAndDateRangeAndUse
 
 	deals := []*Deal{}
 
-	offset := SetOffsetValue(pageNumber, pageLimit)
+	offset := dr.SetOffsetValue(pageNumber, pageLimit)
 
 	sqlQueryStatement := `SELECT SQL_CALC_FOUND_ROWS deals.*, count(deal_cashbacks.deal_guid) AS total_deal_cashback,
 	(SELECT count(*) FROM deal_cashbacks WHERE deal_cashbacks.deal_guid = deals.ads_guid AND user_guid = ?) AS total_user_deal_cashback
@@ -728,7 +729,7 @@ func (dr *DealRepository) GetDealsForGrocerWithinRangeAndDateRangeAndUserLimitAn
 
 	deals := []*Deal{}
 
-	offset := SetOffsetValue(pageNumber, pageLimit)
+	offset := dr.SetOffsetValue(pageNumber, pageLimit)
 
 	sqlQueryStatement := `SELECT deals.*, count(deal_cashbacks.deal_guid) AS total_deal_cashback,
 		(SELECT count(*) FROM deal_cashbacks WHERE deal_cashbacks.deal_guid = deals.ads_guid AND user_guid = ?) AS total_user_deal_cashback
@@ -884,7 +885,7 @@ func (dr *DealRepository) GetDealBySubCategoryGUIDWithinRangeAndDateRangeAndUser
 
 	deals := []*Deal{}
 
-	offset := SetOffsetValue(pageNumber, pageLimit)
+	offset := dr.SetOffsetValue(pageNumber, pageLimit)
 
 	sqlQueryStatement := `SELECT SQL_CALC_FOUND_ROWS deals.*, count(deal_cashbacks.deal_guid) AS total_deal_cashback,
 	(SELECT count(*) FROM deal_cashbacks WHERE deal_cashbacks.deal_guid = deals.ads_guid AND user_guid = ?) AS total_user_deal_cashback

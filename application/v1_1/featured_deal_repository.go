@@ -4,6 +4,7 @@ import "github.com/jinzhu/gorm"
 
 // FeaturedDealRepository will handle all CRUD function related to resource featured deal.
 type FeaturedDealRepository struct {
+	BaseRepository
 	DB *gorm.DB
 }
 
@@ -13,7 +14,7 @@ func (fdr *FeaturedDealRepository) GetActiveFeaturedDeals(pageNumber, pageLimit,
 
 	events := []*Event{}
 
-	offset := SetOffsetValue(pageNumber, pageLimit)
+	offset := fdr.SetOffsetValue(pageNumber, pageLimit)
 
 	if pageLimit != "" && pageNumber != "" {
 		fdr.DB.Model(Event{}).Where(&Event{Status: "publish"}).Find(&events).Offset(offset).Limit(pageLimit).Related(&featuredDeals, "Deals")

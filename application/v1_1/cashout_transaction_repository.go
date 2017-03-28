@@ -7,6 +7,7 @@ import (
 
 // CashoutTransactionRepository will handle all task related to Cashout Transaction CRUD.
 type CashoutTransactionRepository struct {
+	BaseRepository
 	DB *gorm.DB
 }
 

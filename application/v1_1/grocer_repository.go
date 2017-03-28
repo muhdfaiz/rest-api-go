@@ -4,6 +4,7 @@ import "github.com/jinzhu/gorm"
 
 // GrocerRepository contain all function to retrieve list of grocer in database
 type GrocerRepository struct {
+	BaseRepository
 	DB *gorm.DB
 }
 
@@ -11,12 +12,12 @@ type GrocerRepository struct {
 func (gr *GrocerRepository) GetAll(pageNumber string, pageLimit string, relations string) ([]*Grocer, int) {
 	grocers := []*Grocer{}
 
-	offset := SetOffsetValue(pageNumber, pageLimit)
+	offset := gr.SetOffsetValue(pageNumber, pageLimit)
 
 	DB := gr.DB.Model(&Grocer{})
 
 	if relations != "" {
-		DB = LoadRelations(DB, relations)
+		DB = gr.LoadRelations(DB, relations)
 	}
 
 	DB.Offset(offset).Limit(pageLimit).Find(&grocers)

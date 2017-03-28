@@ -85,7 +85,7 @@ node {
     stage('Test') {
         try {
             dir('src/bitbucket.org/cliqers/shoppermate-api') {
-                sh 'go test -v $(go list ./... | grep -v /vendor/) | go-junit-report > ../../report.xml'
+                sh 'go test -v $(go list ./... | grep -v /vendor/) | go-junit-report > report.xml'
             }
             //slackSend (color: '#00FF00', message: "SUCCESSFUL: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
         } catch (e) {

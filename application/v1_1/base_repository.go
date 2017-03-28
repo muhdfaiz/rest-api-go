@@ -7,7 +7,9 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-func LoadRelations(DB *gorm.DB, relations string) *gorm.DB {
+type BaseRepository struct{}
+
+func (bs *BaseRepository) LoadRelations(DB *gorm.DB, relations string) *gorm.DB {
 	// Split on comma.
 	splitRelations := strings.Split(relations, ",")
 
@@ -26,7 +28,7 @@ func LoadRelations(DB *gorm.DB, relations string) *gorm.DB {
 		splitNestedRelations := strings.Split(relation, ".")
 
 		if len(splitNestedRelations) > 0 {
-			DB = processNestedRelations(DB, splitNestedRelations)
+			DB = bs.processNestedRelations(DB, splitNestedRelations)
 		} else {
 			DB = DB.Preload(strings.Title(relation))
 		}
@@ -35,7 +37,7 @@ func LoadRelations(DB *gorm.DB, relations string) *gorm.DB {
 	return DB
 }
 
-func processNestedRelations(DB *gorm.DB, relations []string) *gorm.DB {
+func (bs *BaseRepository) processNestedRelations(DB *gorm.DB, relations []string) *gorm.DB {
 	nestedRelations := make([]string, len(relations))
 
 	for key, relation := range relations {
@@ -45,7 +47,7 @@ func processNestedRelations(DB *gorm.DB, relations []string) *gorm.DB {
 	return DB.Preload(strings.Join(nestedRelations, "."))
 }
 
-func SetOffsetValue(pageNumber string, pageLimit string) int {
+func (bs *BaseRepository) SetOffsetValue(pageNumber string, pageLimit string) int {
 	pageNumberInt, _ := strconv.Atoi(pageNumber)
 	pageLimitInt, _ := strconv.Atoi(pageLimit)
 

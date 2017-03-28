@@ -4,6 +4,7 @@ import "github.com/jinzhu/gorm"
 
 // GenericRepository will handle all task related CRUD.
 type GenericRepository struct {
+	BaseRepository
 	DB *gorm.DB
 }
 
@@ -12,10 +13,10 @@ func (gr *GenericRepository) GetAll(pageNumber, pageLimit, relations string) ([]
 	DB := gr.DB.Model(&Generic{})
 
 	if relations != "" {
-		DB = LoadRelations(DB, relations)
+		DB = gr.LoadRelations(DB, relations)
 	}
 
-	offset := SetOffsetValue(pageNumber, pageLimit)
+	offset := gr.SetOffsetValue(pageNumber, pageLimit)
 
 	generics := []*Generic{}
 
@@ -38,10 +39,10 @@ func (gr *GenericRepository) GetAll(pageNumber, pageLimit, relations string) ([]
 func (gr *GenericRepository) GetByUpdatedAtGreaterThanLastSyncDate(lastSyncDate, pageNumber, pageLimit, relations string) ([]*Generic, int) {
 	DB := gr.DB.Model(&Generic{})
 
-	offset := SetOffsetValue(pageNumber, pageLimit)
+	offset := gr.SetOffsetValue(pageNumber, pageLimit)
 
 	if relations != "" {
-		DB = LoadRelations(DB, relations)
+		DB = gr.LoadRelations(DB, relations)
 	}
 
 	generics := []*Generic{}
@@ -66,7 +67,7 @@ func (gr *GenericRepository) GetByUpdatedAtGreaterThanLastSyncDate(lastSyncDate,
 func (gr *GenericRepository) GetByID(genericID int, relations string) *Generic {
 	DB := gr.DB.Model(&Generic{})
 
-	DB = LoadRelations(DB, relations)
+	DB = gr.LoadRelations(DB, relations)
 
 	generic := &Generic{}
 
@@ -80,7 +81,7 @@ func (gr *GenericRepository) GetByID(genericID int, relations string) *Generic {
 func (gr *GenericRepository) GetByName(name, relations string) *Generic {
 	DB := gr.DB.Model(&Generic{})
 
-	DB = LoadRelations(DB, relations)
+	DB = gr.LoadRelations(DB, relations)
 
 	generic := &Generic{}
 

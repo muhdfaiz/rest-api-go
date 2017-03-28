@@ -7,6 +7,7 @@ import (
 
 // ShoppingListItemImageRepository will handle all CRUD task for shopping list item image resource.
 type ShoppingListItemImageRepository struct {
+	BaseRepository
 	DB *gorm.DB
 }
 
@@ -60,7 +61,7 @@ func (sliir *ShoppingListItemImageRepository) GetByUserGUIDAndShoppingListGUIDAn
 	DB := sliir.DB.Model(&ShoppingListItemImage{})
 
 	if relations != "" {
-		DB = LoadRelations(DB, relations)
+		DB = sliir.LoadRelations(DB, relations)
 	}
 
 	DB.Where(&ShoppingListItemImage{GUID: shoppingListItemImageGUID, ShoppingListItemGUID: shoppingListItemGUID}).First(&shoppingListItemImage)
@@ -75,7 +76,7 @@ func (sliir *ShoppingListItemImageRepository) GetByItemGUID(shoppingListItemGUID
 	DB := sliir.DB.Model(&ShoppingListItemImage{})
 
 	if relations != "" {
-		DB = LoadRelations(DB, relations)
+		DB = sliir.LoadRelations(DB, relations)
 	}
 
 	DB.Where(&ShoppingListItemImage{ShoppingListItemGUID: shoppingListItemGUID}).Find(&shoppingListItemImage)
@@ -90,7 +91,7 @@ func (sliir *ShoppingListItemImageRepository) GetByShoppingListGUID(shoppingList
 	DB := sliir.DB.Model(&ShoppingListItemImage{})
 
 	if relations != "" {
-		DB = LoadRelations(DB, relations)
+		DB = sliir.LoadRelations(DB, relations)
 	}
 
 	DB.Where(&ShoppingListItemImage{ShoppingListGUID: shoppingListGUID}).Find(&shoppingListItemImage)
@@ -105,7 +106,7 @@ func (sliir *ShoppingListItemImageRepository) GetByUserGUID(userGUID string, rel
 	DB := sliir.DB.Model(&ShoppingListItemImage{})
 
 	if relations != "" {
-		DB = LoadRelations(DB, relations)
+		DB = sliir.LoadRelations(DB, relations)
 	}
 
 	DB.Where(&ShoppingListItemImage{UserGUID: userGUID}).Find(&shoppingListItemImage)

@@ -1,5 +1,5 @@
 hash: 5923960f40e31e93a505f12261b0050dd25673e5d3d8c89a7cc2834493ba3ef5
-updated: 2017-03-16T11:13:39.852906596+08:00
+updated: 2017-03-28T14:51:52.234152281+08:00
 imports:
 - name: github.com/agtorre/gocolorize
   version: f42b554bf7f006936130c9bb4f971afd2d87f671
@@ -55,7 +55,7 @@ imports:
 - name: github.com/huandu/facebook
   version: 24ce8d1913aaad265ff4cb4af6a1d1b1801d3021
 - name: github.com/jinzhu/gorm
-  version: 5409931a1bb87e484d68d649af9367c207713ea2
+  version: 572d0a0ab1eb75410a2729e96239152d1da7a91f
 - name: github.com/jinzhu/inflection
   version: 74387dc39a75e970e7a3ae6a3386b5bd2e5c5cff
 - name: github.com/jmespath/go-jmespath
@@ -102,9 +102,8 @@ imports:
   version: 69483b4bd14f5845b5a1e55bca19e954e827f1d0
   subpackages:
   - assert
-  - require
 - name: github.com/tebeka/go2xunit
-  version: 5856a592616c62734bf27dac02b6b5f076f96ba6
+  version: 13c29c7515e660c2d5ccc1a2122b9ca38826a949
 - name: github.com/ventu-io/go-shortid
   version: 6c56cef5189ca1b3d5ef01dc07f4d611dfc0bb33
 - name: golang.org/x/net
@@ -134,6 +133,8 @@ testImports:
   version: 5215b55f46b2b919f50a1df0eaa5886afe4e3b3d
   subpackages:
   - spew
+- name: github.com/kr/text
+  version: 7cafcd837844e784b526369c9bce262804aebc60
 - name: github.com/pmezard/go-difflib
   version: 792786c7400a136282c1664665ae0a8db921c6c2
   subpackages:

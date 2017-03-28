@@ -7,6 +7,7 @@ import (
 
 // TransactionRepository contains all function that can be used for CRUD operations.
 type TransactionRepository struct {
+	BaseRepository
 	DB                          *gorm.DB
 	TransactionStatusRepository TransactionStatusRepositoryInterface
 }
@@ -55,7 +56,7 @@ func (tr *TransactionRepository) GetByGUID(GUID string, relations string) *Trans
 	DB := tr.DB.Model(&Transaction{})
 
 	if relations != "" {
-		DB = LoadRelations(DB, relations)
+		DB = tr.LoadRelations(DB, relations)
 	}
 
 	DB.Where(&Transaction{GUID: GUID}).First(&transaction)
@@ -70,7 +71,7 @@ func (tr *TransactionRepository) GetByUserGUID(userGUID string, relations string
 	DB := tr.DB.Model(&Transaction{})
 
 	if relations != "" {
-		DB = LoadRelations(DB, relations)
+		DB = tr.LoadRelations(DB, relations)
 	}
 
 	DB.Where(&Transaction{UserGUID: userGUID}).Find(&transactions)
@@ -85,7 +86,7 @@ func (tr *TransactionRepository) GetByUserGUIDAndTransactionTypeGUIDAndTransacti
 	DB := tr.DB.Model(&Transaction{})
 
 	if relations != "" {
-		DB = LoadRelations(DB, relations)
+		DB = tr.LoadRelations(DB, relations)
 	}
 
 	DB.Where(&Transaction{UserGUID: userGUID, TransactionTypeGUID: transactionTypeGUID, TransactionStatusGUID: transactionStatusGUID}).Find(&transactions)

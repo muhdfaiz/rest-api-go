@@ -4,6 +4,7 @@ import "github.com/jinzhu/gorm"
 
 // ItemRepository will handle task related to retrieve and search shopping list items in database
 type ItemRepository struct {
+	BaseRepository
 	DB *gorm.DB
 }
 
@@ -11,12 +12,12 @@ type ItemRepository struct {
 func (ir *ItemRepository) GetAll(pageNumber string, pageLimit string, relations string) ([]*Item, int) {
 	items := []*Item{}
 
-	offset := SetOffsetValue(pageNumber, pageLimit)
+	offset := ir.SetOffsetValue(pageNumber, pageLimit)
 
 	DB := ir.DB.Table("item").Select("item.*, category.name as category")
 
 	if relations != "" {
-		DB = LoadRelations(DB, relations)
+		DB = ir.LoadRelations(DB, relations)
 	}
 
 	DB.Joins("LEFT JOIN category ON item.category_id = category.id").Offset(offset).Limit(pageLimit).Order("updated_at desc").Find(&items)
@@ -32,12 +33,12 @@ func (ir *ItemRepository) GetAll(pageNumber string, pageLimit string, relations 
 func (ir *ItemRepository) GetLatestUpdate(lastSyncDate string, pageNumber string, pageLimit string, relations string) ([]*Item, int) {
 	items := []*Item{}
 
-	offset := SetOffsetValue(pageNumber, pageLimit)
+	offset := ir.SetOffsetValue(pageNumber, pageLimit)
 
 	DB := ir.DB.Table("item").Select("item.*, category.name as category")
 
 	if relations != "" {
-		DB = LoadRelations(DB, relations)
+		DB = ir.LoadRelations(DB, relations)
 	}
 
 	DB.Joins("LEFT JOIN category ON item.category_id = category.id").Where("item.updated_at > ?", lastSyncDate).Offset(offset).Limit(pageLimit).Order("updated_at desc").Find(&items)
@@ -56,7 +57,7 @@ func (ir *ItemRepository) GetByID(id int, relations string) *Item {
 	DB := ir.DB.Model(&Item{}).Where(&Item{ID: id})
 
 	if relations != "" {
-		DB = LoadRelations(DB, relations)
+		DB = ir.LoadRelations(DB, relations)
 	}
 
 	DB.First(&item)

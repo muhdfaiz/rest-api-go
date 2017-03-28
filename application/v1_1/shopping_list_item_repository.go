@@ -8,6 +8,7 @@ import (
 
 // ShoppingListItemRepository will handle all CRUD functions related to Shopping List resource.
 type ShoppingListItemRepository struct {
+	BaseRepository
 	DB *gorm.DB
 }
 
@@ -275,7 +276,7 @@ func (slir *ShoppingListItemRepository) GetByGUID(guid string, relations string)
 	DB := slir.DB.Model(&ShoppingListItem{})
 
 	if relations != "" {
-		DB = LoadRelations(DB, relations)
+		DB = slir.LoadRelations(DB, relations)
 	}
 
 	DB.Where(&ShoppingListItem{GUID: guid}).First(&shoppingListItem)
@@ -290,7 +291,7 @@ func (slir *ShoppingListItemRepository) GetByName(name string, relations string)
 	DB := slir.DB.Model(&ShoppingListItem{})
 
 	if relations != "" {
-		DB = LoadRelations(DB, relations)
+		DB = slir.LoadRelations(DB, relations)
 	}
 
 	DB.Where(&ShoppingListItem{Name: name}).First(&shoppingListItem)
@@ -307,7 +308,7 @@ func (slir *ShoppingListItemRepository) GetByGUIDUserGUIDAndShoppingListGUID(use
 	DB := slir.DB.Model(&ShoppingListItem{})
 
 	if relations != "" {
-		DB = LoadRelations(DB, relations)
+		DB = slir.LoadRelations(DB, relations)
 	}
 
 	DB.Where(&ShoppingListItem{GUID: shoppingListItemGUID, UserGUID: userGUID, ShoppingListGUID: shoppingListGUID}).First(&shoppingListItem)
@@ -322,7 +323,7 @@ func (slir *ShoppingListItemRepository) GetByUserGUIDAndShoppingListGUID(userGUI
 	DB := slir.DB.Model(&ShoppingListItem{})
 
 	if relations != "" {
-		DB = LoadRelations(DB, relations)
+		DB = slir.LoadRelations(DB, relations)
 	}
 
 	DB.Where(&ShoppingListItem{UserGUID: userGUID, ShoppingListGUID: shoppingListGUID}).Find(&shoppingListItem)
@@ -340,7 +341,7 @@ func (slir *ShoppingListItemRepository) GetByUserGUIDAndShoppingListGUIDAndSubCa
 	DB := slir.DB.Model(&ShoppingListItem{})
 
 	if relations != "" {
-		DB = LoadRelations(DB, relations)
+		DB = slir.LoadRelations(DB, relations)
 	}
 
 	DB.Where("user_guid = ? AND shopping_list_guid = ? AND sub_category = ?", userGUID, shoppingListGUID,
@@ -359,7 +360,7 @@ func (slir *ShoppingListItemRepository) GetByUserGUIDAndShoppingListGUIDAndAdded
 	DB := slir.DB.Model(&ShoppingListItem{})
 
 	if relations != "" {
-		DB = LoadRelations(DB, relations)
+		DB = slir.LoadRelations(DB, relations)
 	}
 
 	DB.Where("user_guid = ? AND shopping_list_guid = ? AND added_to_cart = ? AND sub_category = ?", userGUID, shoppingListGUID, addedToCart,

@@ -8,6 +8,7 @@ import (
 
 // ShoppingListRepository used to retrieve user shopping list.
 type ShoppingListRepository struct {
+	BaseRepository
 	DB *gorm.DB
 }
 
@@ -67,7 +68,7 @@ func (slr *ShoppingListRepository) GetByUserGUID(userGUID string, relations stri
 	DB := slr.DB.Model(&ShoppingList{})
 
 	if relations != "" {
-		DB = LoadRelations(DB, relations)
+		DB = slr.LoadRelations(DB, relations)
 	}
 
 	DB.Where(&ShoppingList{UserGUID: userGUID}).Find(&shoppingLists)
@@ -82,7 +83,7 @@ func (slr *ShoppingListRepository) GetByGUIDAndUserGUID(GUID string, userGUID st
 	DB := slr.DB.Model(&ShoppingList{})
 
 	if relations != "" {
-		DB = LoadRelations(DB, relations)
+		DB = slr.LoadRelations(DB, relations)
 	}
 
 	DB.Where(&ShoppingList{GUID: GUID, UserGUID: userGUID}).First(&shoppingLists)
@@ -97,7 +98,7 @@ func (slr *ShoppingListRepository) GetByGUID(GUID string, relations string) *Sho
 	DB := slr.DB.Model(&ShoppingList{})
 
 	if relations != "" {
-		DB = LoadRelations(DB, relations)
+		DB = slr.LoadRelations(DB, relations)
 	}
 
 	DB.Where(&ShoppingList{GUID: GUID}).First(&shoppingLists)
@@ -113,7 +114,7 @@ func (slr *ShoppingListRepository) GetUnscopedByGUID(GUID string, relations stri
 	DB := slr.DB.Unscoped()
 
 	if relations != "" {
-		DB = LoadRelations(DB, relations)
+		DB = slr.LoadRelations(DB, relations)
 	}
 
 	DB.Where(&ShoppingList{GUID: GUID}).First(&shoppingLists)
@@ -139,7 +140,7 @@ func (slr *ShoppingListRepository) GetByUserGUIDOccasionGUIDAndName(userGUID str
 	DB := slr.DB.Model(&ShoppingList{})
 
 	if relations != "" {
-		DB = LoadRelations(DB, relations)
+		DB = slr.LoadRelations(DB, relations)
 	}
 
 	DB.Where(&ShoppingList{UserGUID: userGUID, Name: name, OccasionGUID: occasionGUID}).First(&shoppingLists)

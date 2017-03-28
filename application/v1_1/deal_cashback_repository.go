@@ -7,6 +7,7 @@ import (
 
 // DealCashbackRepository will handle all CRUD function for Deal Cashback resource.
 type DealCashbackRepository struct {
+	BaseRepository
 	DB *gorm.DB
 }
 
@@ -77,10 +78,10 @@ func (dcr *DealCashbackRepository) GetByUserGUIDGroupByShoppingList(userGUID, pa
 
 	DB := dcr.DB.Model(&DealCashback{})
 
-	offset := SetOffsetValue(pageNumber, pageLimit)
+	offset := dcr.SetOffsetValue(pageNumber, pageLimit)
 
 	if relations != "" {
-		DB = LoadRelations(DB, relations)
+		DB = dcr.LoadRelations(DB, relations)
 	}
 
 	if pageLimit != "" {
@@ -110,10 +111,10 @@ func (dcr *DealCashbackRepository) GetByUserGUIDAndDealGUIDGroupByShoppingList(u
 
 	DB := dcr.DB.Model(&DealCashback{})
 
-	offset := SetOffsetValue(pageNumber, pageLimit)
+	offset := dcr.SetOffsetValue(pageNumber, pageLimit)
 
 	if relations != "" {
-		DB = LoadRelations(DB, relations)
+		DB = dcr.LoadRelations(DB, relations)
 	}
 
 	if pageLimit != "" {
@@ -234,12 +235,12 @@ func (dcr *DealCashbackRepository) GetByUserGUIDAndTransactionStatus(userGUID, t
 
 	dealCashbacks := []*DealCashback{}
 
-	offset := SetOffsetValue(pageNumber, pageLimit)
+	offset := dcr.SetOffsetValue(pageNumber, pageLimit)
 
 	DB := dcr.DB.Model(&DealCashback{})
 
 	if relations != "" {
-		DB = LoadRelations(DB, relations)
+		DB = dcr.LoadRelations(DB, relations)
 	}
 
 	DB = DB.Where(DealCashback{UserGUID: userGUID})
@@ -274,7 +275,7 @@ func (dcr *DealCashbackRepository) GetByUserGUIDShoppingListGUIDAndTransactionSt
 	DB := dcr.DB.Model(&DealCashback{})
 
 	if relations != "" {
-		DB = LoadRelations(DB, relations)
+		DB = dcr.LoadRelations(DB, relations)
 	}
 
 	DB = DB.Where(DealCashback{UserGUID: userGUID, ShoppingListGUID: shoppingListGUID})
@@ -293,7 +294,7 @@ func (dcr *DealCashbackRepository) GetByUserGUIDShoppingListGUIDAndTransactionSt
 	var totalDealCashback *int
 
 	if pageNumber != "" && pageLimit != "" {
-		offset := SetOffsetValue(pageNumber, pageLimit)
+		offset := dcr.SetOffsetValue(pageNumber, pageLimit)
 
 		DB.Offset(offset).Limit(pageLimit).Find(&dealCashbacks)
 

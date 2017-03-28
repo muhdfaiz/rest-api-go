@@ -8,6 +8,7 @@ import (
 
 // UserRepository will handle all CRUD function for User Resource.
 type UserRepository struct {
+	BaseRepository
 	DB *gorm.DB
 }
 
@@ -104,7 +105,7 @@ func (ur *UserRepository) GetByGUID(guid string, relations string) *User {
 	DB := ur.DB.Model(&User{})
 
 	if relations != "" {
-		DB = LoadRelations(DB, relations)
+		DB = ur.LoadRelations(DB, relations)
 	}
 
 	DB.Where(&User{GUID: guid}).First(&user)
@@ -120,7 +121,7 @@ func (ur *UserRepository) GetByPhoneNo(phoneNo string, relations string) *User {
 	DB := ur.DB.Model(&User{})
 
 	if relations != "" {
-		DB = LoadRelations(DB, relations)
+		DB = ur.LoadRelations(DB, relations)
 	}
 
 	DB.Where(&User{PhoneNo: phoneNo}).First(&user)
@@ -136,7 +137,7 @@ func (ur *UserRepository) GetByFacebookID(facebookID string, relations string) *
 	DB := ur.DB.Model(&User{})
 
 	if relations != "" {
-		DB = LoadRelations(DB, relations)
+		DB = ur.LoadRelations(DB, relations)
 	}
 
 	DB.Where(&User{FacebookID: &facebookID}).First(&user)
@@ -152,7 +153,7 @@ func (ur *UserRepository) SearchByReferralCode(referralCode string, relations st
 	DB := ur.DB.Model(&User{})
 
 	if relations != "" {
-		DB = LoadRelations(DB, relations)
+		DB = ur.LoadRelations(DB, relations)
 	}
 
 	DB.Where(&User{ReferralCode: referralCode}).First(&user)

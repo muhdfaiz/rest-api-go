@@ -10,9 +10,7 @@ import (
 	"github.com/revel/revel"
 )
 
-var DB *gorm.DB
-
-// Database struct
+// Database will handle database connection initiliazation.
 type Database struct {
 	host     string
 	port     string
@@ -21,7 +19,9 @@ type Database struct {
 	name     string
 }
 
-// SetConfigs will retrieve database info from config and initiliaze the config
+// SetConfigs will retrieve database config from .env and set all of the configs.
+// If environment parameter equal to `test`, API will used test database for the configs.
+// Otherwise API will use production database.
 func (database *Database) setConfigs(environment string) {
 	switch environment {
 	case "test":
@@ -39,7 +39,7 @@ func (database *Database) setConfigs(environment string) {
 	}
 }
 
-// Connect function will connect with the database
+// Connect function will initiate new connection with the database.
 func (database *Database) Connect(environment string) *gorm.DB {
 	database.setConfigs(environment)
 
@@ -62,7 +62,8 @@ func (database *Database) Connect(environment string) *gorm.DB {
 	return db
 }
 
-// SetConnection function used to set Database Connection.
+// SetConnection function used to customize database connection settings.
+// For example want to increate max idle connection and max open connection allowed.
 func (database *Database) SetConnection(db *gorm.DB, maxIdleConnection, maxOpenConnection int) *gorm.DB {
 	db.DB().SetMaxIdleConns(maxIdleConnection)
 	db.DB().SetMaxOpenConns(maxOpenConnection)
@@ -70,7 +71,7 @@ func (database *Database) SetConnection(db *gorm.DB, maxIdleConnection, maxOpenC
 	return db
 }
 
-// SetLogger function used to enable logging mode to stdout.
+// SetLogger function used to print out any mysql query to stdout.
 func (database *Database) SetLogger(db *gorm.DB) *gorm.DB {
 	if os.Getenv("DEBUG_DATABASE") == "true" {
 		db.SetLogger(gorm.Logger{revel.TRACE})

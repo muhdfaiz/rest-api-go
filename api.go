@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"bitbucket.org/cliqers/shoppermate-api/application/v1"
-	"bitbucket.org/cliqers/shoppermate-api/application/v1_1"
+	"bitbucket.org/cliqers/shoppermate-api/application/v11"
 	"bitbucket.org/cliqers/shoppermate-api/systems"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
@@ -36,11 +36,11 @@ func main() {
 
 	if os.Getenv("ENABLE_HTTPS") == "true" {
 		routerForSSL = v1.InitializeObjectAndSetRoutesV1(routerForSSL, DB)
-		routerForSSL = v1_1.InitializeObjectAndSetRoutesV1_1(routerForSSL, DB)
+		routerForSSL = v11.InitializeObjectAndSetRoutesV1_1(routerForSSL, DB)
 		go routerForSSL.RunTLS(":8081", os.Getenv("FULLCHAIN_KEY"), os.Getenv("PRIVATE_KEY"))
 	}
 
 	router = v1.InitializeObjectAndSetRoutesV1(router, DB)
-	router = v1_1.InitializeObjectAndSetRoutesV1_1(router, DB)
+	router = v11.InitializeObjectAndSetRoutesV1_1(router, DB)
 	router.Run(":8080")
 }

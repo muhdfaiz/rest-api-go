@@ -11,7 +11,7 @@ import (
 	"github.com/ventu-io/go-shortid"
 )
 
-// Helpers Struct
+// Helpers containsist of function that usefulfor the API.
 type Helpers struct {
 }
 

@@ -23,7 +23,7 @@ func (shs *SmsHistoryService) GetLatestSmsHistoryByPhoneNoAndEventName(phoneNo, 
 
 // CheckIfUserReachSmsLimitForToday function used to check if user already sent 3 SMS for today.
 func (shs *SmsHistoryService) CheckIfUserReachSmsLimitForToday(phoneNo, eventName string) *systems.ErrorData {
-	totalNumberOfSmsHistory := shs.SmsHistoryRepository.CountByPhoneNoForTodayDate(phoneNo, eventName)
+	totalNumberOfSmsHistory := shs.SmsHistoryRepository.CountByPhoneNoAndTodayDateAndEventName(phoneNo, eventName)
 
 	if totalNumberOfSmsHistory >= 3 {
 		return Error.GenericError(strconv.Itoa(http.StatusUnprocessableEntity), systems.ReachLimitSmsSentForToday,

@@ -18,15 +18,19 @@ type CashoutTransactionService struct {
 	EmailService                 email.EmailServiceInterface
 }
 
-// CreateCashoutTransaction function used to create cashout transaction through CashoutTransactionRepository.
+// CreateCashoutTransaction function used to create new cashout transaction for specific user using user GUID.
+// First, it will use user repository to retrieve user info using user GUID and get the wallet amount. API used wallet amount to know amount of user can cashout.
+// Then, it will check if amount of user want to checkout more than current amount available to cashout.
+// It will return an error if amount of user want checkout more than current amount available.
+// Then, it will retrieve pending transaction status and cashout transaction type because it needs
+// pending transaction status guid cashout transaction type to create transaction.
+// Then it will create transaction and cashout transaction. It needs to create transaction first because cashout transaction require transaction GUID.
+// After successfully created, it will commit database transaction.
+// Lastly, it will send email about cashout transaction if the user first time trying to cashout.
 func (cts *CashoutTransactionService) CreateCashoutTransaction(dbTransaction *gorm.DB, userGUID string, cashoutTransactionData *CreateCashoutTransaction) (*Transaction, *systems.ErrorData) {
 	user := cts.UserRepository.GetByGUID(userGUID, "")
 
 	availableCashoutAmount := user.Wallet
-
-	// fmt.Println("Number of cashout")
-	// fmt.Println(cts.CashoutTransactionRepository.CountByUserGUID(userGUID))
-	totalNumberOfPreviousCashout := cts.CashoutTransactionRepository.CountByUserGUID(userGUID)
 
 	if cashoutTransactionData.Amount > availableCashoutAmount {
 		dbTransaction.Rollback()
@@ -52,6 +56,8 @@ func (cts *CashoutTransactionService) CreateCashoutTransaction(dbTransaction *go
 	}
 
 	dbTransaction.Commit()
+
+	totalNumberOfPreviousCashout := cts.CashoutTransactionRepository.CountByUserGUID(userGUID)
 
 	if totalNumberOfPreviousCashout < 1 {
 		error = cts.EmailService.SendTemplate(map[string]string{

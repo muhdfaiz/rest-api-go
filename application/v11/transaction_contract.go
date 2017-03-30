@@ -21,7 +21,7 @@ type TransactionServiceInterface interface {
 	SumTotalAmountOfUserCashoutTransaction(userGUID string) float64
 }
 
-// TransactionRepositoryInterface is a contract that define the methods needed for Transaction Repository
+// TransactionRepositoryInterface is a contract that defines the methods needed for Transaction Repository
 type TransactionRepositoryInterface interface {
 	Create(dbTransaction *gorm.DB, createTransactionData *CreateTransaction) (*Transaction, *systems.ErrorData)
 	UpdateReadStatus(dbTransaction *gorm.DB, transactionGUID string, readStatus int) *systems.ErrorData
@@ -32,6 +32,7 @@ type TransactionRepositoryInterface interface {
 	SumTotalAmountOfUserCashoutTransaction(userGUID string) float64
 }
 
+// TransactionTransformerInterface is a contract that defines the method needed for Transaction Transformer.
 type TransactionTransformerInterface interface {
 	transformCollection(currentURI *http.Request, data interface{}, totalData int, limit string) *TransactionResponse
 }

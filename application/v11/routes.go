@@ -311,6 +311,7 @@ func InitializeObjectAndSetRoutesV1_1(router *gin.Engine, DB *gorm.DB) *gin.Engi
 		version1_1.GET("/device/:device_uuid/notifications", notificationHandler.ViewNotificationForGuest)
 
 		// Protected Routes
+		// Use auth middleware protect those routes below.
 		version1_1.Use(middlewares.Auth(DB))
 		{
 			// User Routes

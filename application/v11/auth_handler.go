@@ -15,6 +15,13 @@ type AuthHandler struct {
 }
 
 // LoginViaPhone function will handle user authentication using phone number.
+// First, it will bind request body to struct and validate the request data.
+// Then, it will check if phone number exist or not in database. If not exist return an error.
+// Then, it will start database transaction.
+// Then, it will continue authenticate user through user service.
+// It will return an error encountered from user service and rollback database transaction.
+// Lastly, if user service not return any error, it will commit database transaction and
+// return the response.
 func (ah *AuthHandler) LoginViaPhone(context *gin.Context) {
 	authData := &LoginViaPhone{}
 
@@ -53,7 +60,14 @@ func (ah *AuthHandler) LoginViaPhone(context *gin.Context) {
 	context.JSON(http.StatusOK, gin.H{"data": result})
 }
 
-// LoginViaFacebook function used to login user via facebook
+// LoginViaFacebook function will handle user authentication using facebook.
+// First, it will bind request body to struct and validate the request data.
+// Then, it will check if facebook id exist or not through user service. If not exist return an error.
+// Then, it will start database transaction.
+// Then, it will continue authenticate user through user service.
+// It will return an error encountered from user service and rollback database transaction.
+// Lastly, if user service not return any error, it will commit database transaction and
+// return the response contain user info and access token.
 func (ah *AuthHandler) LoginViaFacebook(context *gin.Context) {
 	authData := &LoginViaFacebook{}
 
@@ -90,8 +104,12 @@ func (ah *AuthHandler) LoginViaFacebook(context *gin.Context) {
 	context.JSON(http.StatusOK, gin.H{"data": response})
 }
 
-// Refresh function used to refresh device token. Example when user close the app and open the app again,
-// app must request this endpoint to avoid token expired
+// Refresh function used to refresh access token. Useful to avoid access token expired issue.
+// Example when user close the app and open the app again, app must request this endpoint to avoid access token expired.
+// First, it will retrieve access token in context. Incoming requests to a server should create a Context.
+// See auth middleware (middlewre/auth.go) how API store the access token in context when the request coming.
+// Then, it will generate new token through auth service. It will return an error encountered from auth service.
+// Lastly, it will return response contain new access token if auth service not return an error.
 func (ah *AuthHandler) Refresh(context *gin.Context) {
 	tokenData := context.MustGet("Token").(map[string]string)
 
@@ -107,7 +125,12 @@ func (ah *AuthHandler) Refresh(context *gin.Context) {
 }
 
 // Logout function used to logout user from application.
-// System will soft delete device by set deleted_at column to the current date & time.
+// It will soft delete device by setting current date & time as a value for deleted_at field.
+// First, it will retrieve access token and database connection in context. Incoming requests to a server should create a Context.
+// Then, it will logout user through auth service based on device uuid and user guid in token payload.
+// It will return an error encountered from auth service and rollback database transaction.
+// Lastly, if auth service not return any error, it will commit database transaction and
+// return the response.
 func (ah *AuthHandler) Logout(context *gin.Context) {
 	dbTransaction := context.MustGet("DB").(*gorm.DB).Begin()
 

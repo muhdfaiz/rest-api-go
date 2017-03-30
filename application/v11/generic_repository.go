@@ -2,7 +2,7 @@ package v11
 
 import "github.com/jinzhu/gorm"
 
-// GenericRepository will handle all task related CRUD.
+// GenericRepository will handle all CRUD function for Generic resource.
 type GenericRepository struct {
 	BaseRepository
 	DB *gorm.DB

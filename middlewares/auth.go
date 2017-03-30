@@ -15,43 +15,65 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
+// CustomClaims define the payload structure of JWT Token.
+// Add additional payload called phone number.
+// By default, JWT Standard Claims only contain payload below:
+// - Audience
+// - ExpiresAt
+// - Id
+// - IssuedAt
+// - Issuer
+// - NotBefore
+// - Subject
 type CustomClaims struct {
 	PhoneNo string `json:"phone_no"`
 	jwt.StandardClaims
 }
 
+// Auth Middleware. Use to protect API endpoint that require authorization.
+// It will validate JWT token valid or not.
 func Auth(DB *gorm.DB) gin.HandlerFunc {
 	jwtSecret := os.Getenv("JWT_TOKEN_SECRET")
 
 	return func(c *gin.Context) {
+		// Retrieve JWT token from `Authorization` key in request header.
+		// Example valid authorization header:
+		// Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwaG9uZV9ubyI6IjYwMTc0ODYyMTI3IiwiYXVkIjoiOGMyZ
 		authorizationHeader := c.Request.Header["Authorization"]
 
+		Error := &systems.Error{}
+
+		// Return an error and abort the request if JWT token not exist in request header.
 		if authorizationHeader == nil {
-			Error := &systems.Error{}
 			c.JSON(http.StatusUnauthorized, Error.GenericError(strconv.Itoa(http.StatusUnauthorized), systems.TokenNotValid,
 				systems.TitleErrorTokenNotValid, "", systems.ErrorTokenNotValid))
+
 			c.Abort()
+
 			return
 		}
 
+		// Split JWT token by empty space. Right now JWT token contain `Bearer` keyword in front of it.
+		// Example: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwaG9uZV9ubyI6IjYwMTc0ODYyMTI3IiwiYXVkIjoiOGMyZ
 		splitAuthorizationHeader := strings.SplitN(authorizationHeader[0], " ", 2)
 
+		// Check if JWT token was specified in correct way. Must have `Bearer`keyword in front following with space and then the JWT token.
+		// Return an error if JWT token not specified using correct way.
 		if len(splitAuthorizationHeader) != 2 {
-			Error := &systems.Error{}
 			c.JSON(http.StatusUnauthorized, Error.GenericError(strconv.Itoa(http.StatusUnauthorized), systems.TokenNotValid,
 				systems.TitleErrorTokenNotValid, "", systems.ErrorTokenNotValid))
+
 			c.Abort()
+
 			return
 		}
 
+		// Retrieve JWT token only.
 		tokenString := splitAuthorizationHeader[1]
 
-		// Parse takes the token string and a function for looking up the key. The latter is especially
-		// useful if you use multiple keys for your application.  The standard is to use 'kid' in the
-		// head of the token to identify which key to use, but the parsed token (head and claims) is provided
-		// to the callback, providing flexibility.
 		token, _ := jwt.ParseWithClaims(tokenString, &CustomClaims{}, func(token *jwt.Token) (interface{}, error) {
-			// Don't forget to validate the alg is what you expect:
+			// Check if JWT token using same algorithm with algorithm use during generate JWT token.
+			// In this API, HMAC algorithm has been used to generate JWT token.
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
 			}
@@ -59,6 +81,11 @@ func Auth(DB *gorm.DB) gin.HandlerFunc {
 			return []byte(jwtSecret), nil
 		})
 
+		// Check if JWT token valid or not.
+		// If JWT token not valid return an error and abort the request.
+		// If JWT Token valid, check device exist or not in database using device uuid and user guid in the token payload.
+		// If device exist, continue request.
+		// If device not exist, return an error and abort the request.
 		if claims, ok := token.Claims.(*CustomClaims); ok && token.Valid {
 			type Device struct {
 				ID           int        `json:"id"`
@@ -82,23 +109,30 @@ func Auth(DB *gorm.DB) gin.HandlerFunc {
 			if result.RowsAffected == 0 {
 				c.JSON(http.StatusUnauthorized, Error.GenericError(strconv.Itoa(http.StatusUnauthorized), systems.TokenNotValid,
 					systems.TitleErrorTokenNotValid, "", systems.ErrorTokenNotValid))
+
 				c.Abort()
+
 				return
 			}
 
+			// Set token data into the context.
 			tokenData := make(map[string]string)
 			tokenData["device_uuid"] = claims.Id
 			tokenData["user_guid"] = claims.Subject
 			tokenData["user_phone_no"] = claims.PhoneNo
 
 			c.Set("Token", tokenData)
+
 			c.Next()
+
 			return
 		}
 
 		c.JSON(http.StatusUnauthorized, Error.GenericError(strconv.Itoa(http.StatusUnauthorized), systems.TokenNotValid,
 			systems.TitleErrorTokenNotValid, "", systems.ErrorTokenNotValid))
+
 		c.Abort()
+
 		return
 
 	}

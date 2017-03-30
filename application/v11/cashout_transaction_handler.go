@@ -18,6 +18,13 @@ type CashoutTransactionHandler struct {
 }
 
 // Create new cashout transaction and store in database.
+// First, it will retrieve access token in context. Incoming requests to a server should create a Context.
+// See auth middleware (middlewre/auth.go) how API store the access token in context when the request coming.
+// Then it will grab user GUID in request URI and check if user GUIDin request URI same with user GUID in access token.
+// If user GUID not same, It will return an error.
+// Then it will check if user still has pending cashout transaction. It will return an error if user still has pending cashout transaction.
+// Then it will bind request body to struct and validate request data.
+// Lastly, it will create cashout transaction through cashout transaction service and return the newly created cashout transaction.
 func (cth CashoutTransactionHandler) Create(context *gin.Context) {
 	tokenData := context.MustGet("Token").(map[string]string)
 

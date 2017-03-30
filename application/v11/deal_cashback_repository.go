@@ -11,8 +11,7 @@ type DealCashbackRepository struct {
 	DB *gorm.DB
 }
 
-// Create function used to create new deal cashback and store in database.
-// It returns deal cashback data and error encountered.
+// Create function used to create new deal cashback for user using user GUID and store in database.
 func (dcr *DealCashbackRepository) Create(dbTransaction *gorm.DB, userGUID string, data CreateDealCashback) (*DealCashback, *systems.ErrorData) {
 	dealCashback := &DealCashback{
 		GUID:             Helper.GenerateUUID(),
@@ -30,7 +29,10 @@ func (dcr *DealCashbackRepository) Create(dbTransaction *gorm.DB, userGUID strin
 	return result.Value.(*DealCashback), nil
 }
 
-// UpdateDealCashbackTransactionGUID function used to update Deal Cashback Transaction GUID for multiple deal cashback by GUID.
+// UpdateDealCashbackTransactionGUID function used to set Deal Cashback Transaction GUID for multiple deal cashback using deal cashback GUID.
+// It's not update all fields available in user table but only update fields that exist in data parameter.
+// Use database transaction to create new user. Don't forget to commit the transaction after used this function.
+// Return nil if sucessfully updated deal cashback transaction GUID and return error if failed to update deal cashback transaction GUID.
 func (dcr *DealCashbackRepository) UpdateDealCashbackTransactionGUID(dbTransaction *gorm.DB, dealCashbackGUIDs []string, dealCashbackTransactionGUID string) *systems.ErrorData {
 	result := dbTransaction.Model(&DealCashback{}).Where("guid IN (?)", dealCashbackGUIDs).
 		Updates(map[string]interface{}{"deal_cashback_transaction_guid": dealCashbackTransactionGUID})
@@ -42,7 +44,10 @@ func (dcr *DealCashbackRepository) UpdateDealCashbackTransactionGUID(dbTransacti
 	return nil
 }
 
-// DeleteByUserGUIDAndDealGUID function used to soft delete Deal Cashback by User GUID and Deal GUID.
+// DeleteByUserGUIDAndDealGUID function used to soft delete Deal Cashback using user GUID and deal GUID.
+// Soft delete means it will set the current date and time to `deleted_at` field in deal cashback table.
+// Use database transaction to update existing user info. Don't forget to commit the transaction after used this function.
+// Return nil if sucessfully delete deal cashback GUID and return error if failed to delete deal cashback GUID.
 func (dcr *DealCashbackRepository) DeleteByUserGUIDAndDealGUID(dbTransaction *gorm.DB, userGUID string, dealGUID string) *systems.ErrorData {
 	result := dbTransaction.Model(&DealCashback{}).Where(&DealCashback{UserGUID: userGUID, DealGUID: dealGUID}).Delete(&DealCashback{})
 
@@ -53,7 +58,10 @@ func (dcr *DealCashbackRepository) DeleteByUserGUIDAndDealGUID(dbTransaction *go
 	return nil
 }
 
-// DeleteByUserGUIDAndShoppingListGUIDAndDealGUID function used to soft delete deal cashback by user GUID, shopping list GUID and deal GUID.
+// DeleteByUserGUIDAndShoppingListGUIDAndDealGUID function used to soft delete deal cashback using user GUID, shopping list GUID and deal GUID.
+// Soft delete means it will set the current date and time to `deleted_at` field in deal cashback table.
+// Use database transaction to update existing user info. Don't forget to commit the transaction after used this function.
+// Return nil if sucessfully delete deal cashback GUID and return error if failed to delete deal cashback GUID.
 func (dcr *DealCashbackRepository) DeleteByUserGUIDAndShoppingListGUIDAndDealGUID(dbTransaction *gorm.DB, userGUID string, shoppingListGUID string, dealGUID string) *systems.ErrorData {
 	result := dbTransaction.Model(&DealCashback{}).Where(&DealCashback{UserGUID: userGUID, ShoppingListGUID: shoppingListGUID, DealGUID: dealGUID}).Delete(&DealCashback{})
 
@@ -65,6 +73,7 @@ func (dcr *DealCashbackRepository) DeleteByUserGUIDAndShoppingListGUIDAndDealGUI
 }
 
 // GetByGUID function used to retrieve deal cashback by deal cashback GUID.
+// It will return empty deal cashback if cannot be found and return deal cashback data if matched.
 func (dcr *DealCashbackRepository) GetByGUID(GUID string) *DealCashback {
 	dealCashback := &DealCashback{}
 
@@ -73,7 +82,7 @@ func (dcr *DealCashbackRepository) GetByGUID(GUID string) *DealCashback {
 	return dealCashback
 }
 
-// GetByUserGUIDGroupByShoppingList function used to retrieve deal cashbacks by user GUID.
+// GetByUserGUIDGroupByShoppingList function used to retrieve multiple deal cashbacks by user GUID.
 func (dcr *DealCashbackRepository) GetByUserGUIDGroupByShoppingList(userGUID, pageNumber, pageLimit, relations string) ([]*DealCashback, int) {
 	dealCashbacks := []*DealCashback{}
 
@@ -106,7 +115,7 @@ func (dcr *DealCashbackRepository) GetByUserGUIDGroupByShoppingList(userGUID, pa
 	return dealCashbacks, len(dealCashbacks)
 }
 
-// GetByUserGUIDAndDealGUIDGroupByShoppingList function used to retrieve deal cashbacks by user GUID.
+// GetByUserGUIDAndDealGUIDGroupByShoppingList function used to retrieve deal cashbacks by user GUID and deal GUID.
 func (dcr *DealCashbackRepository) GetByUserGUIDAndDealGUIDGroupByShoppingList(userGUID, dealGUID, pageNumber, pageLimit, relations string) ([]*DealCashback, int) {
 	dealCashbacks := []*DealCashback{}
 
@@ -118,13 +127,17 @@ func (dcr *DealCashbackRepository) GetByUserGUIDAndDealGUIDGroupByShoppingList(u
 		DB = dcr.LoadRelations(DB, relations)
 	}
 
+	// This code will be executed when the request comewant API to return result deal cashbacks in paginaton.
+	// It will check if page limit parameter not empty.
 	if pageLimit != "" {
 		totalDealCashbacks := []*DealCashback{}
 
+		// Query to count total number of deal cashback filter by user GUID and deal GUID and group by shopping list guid.
 		DB.Joins("left join shopping_lists on shopping_lists.guid = deal_cashbacks.shopping_list_guid").
 			Where(&DealCashback{UserGUID: userGUID, DealGUID: dealGUID}).Group("shopping_lists.guid").
 			Find(&totalDealCashbacks)
 
+		// Query to retrieve deal cashbacks
 		DB.Joins("left join shopping_lists on shopping_lists.guid = deal_cashbacks.shopping_list_guid").
 			Where(&DealCashback{UserGUID: userGUID, DealGUID: dealGUID}).Group("shopping_lists.guid").
 			Offset(offset).Limit(pageLimit).Find(&dealCashbacks)
@@ -132,6 +145,7 @@ func (dcr *DealCashbackRepository) GetByUserGUIDAndDealGUIDGroupByShoppingList(u
 		return dealCashbacks, len(totalDealCashbacks)
 	}
 
+	// This code will be executed when the request want API to return deal cashbacks without pagination.
 	DB.Joins("left join shopping_lists on shopping_lists.guid = deal_cashbacks.shopping_list_guid").
 		Where(&DealCashback{UserGUID: userGUID, DealGUID: dealGUID}).Group("shopping_lists.guid").
 		Find(&dealCashbacks)

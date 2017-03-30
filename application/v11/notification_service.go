@@ -5,6 +5,7 @@ type NotificationService struct {
 	NotificationRepository NotificationRepositoryInterface
 }
 
+// GetNotificationsForGuest function used to retrieve notification guest including.
 func (ns *NotificationService) GetNotificationsForGuest(deviceUUID string) []*Notification {
 	notifications := ns.NotificationRepository.GetByDeviceUUIDAndBlastTypeAndEmptyUserGUIDAndType(deviceUUID, "all", "Transactions,Transactions.Transactiontypes,Transactions.Transactionstatuses")
 

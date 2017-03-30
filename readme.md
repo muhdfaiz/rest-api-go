@@ -148,7 +148,7 @@ go run api.go
 
 ```
 application/v1/routes.go 
-application/v1_1/routes.go 
+application/v11/routes.go 
 ```
 
 - List Of Endpoint And Associated Handler
@@ -408,7 +408,7 @@ type CreateUser struct {
 | - latitude | latitude
 | - longitude | longitude
 
-- For example, you can see `application/v1_1/deal_cashback_handler.go` in `ViewByShoppingList` function.
+- For example, you can see `application/v11/deal_cashback_handler.go` in `ViewByShoppingList` function.
 
 ```go
 // Specify Validation Rules
@@ -433,7 +433,7 @@ if error != nil {
 
 - API can validate file type and file size.
 
-- For example, see function `UploadUserProfilePicture` in `application/v1_1/user_service.go`. That function responsible to validate and upload profile image to Amazon S3.
+- For example, see function `UploadUserProfilePicture` in `application/v11/user_service.go`. That function responsible to validate and upload profile image to Amazon S3.
 
 ```go
 // Validate if profile picture type is `jpg`, `jpeg`, `png` or `gif`

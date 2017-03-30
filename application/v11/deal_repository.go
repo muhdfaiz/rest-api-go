@@ -717,13 +717,14 @@ func (dr *DealRepository) GetDealsBySubcategoryNameWithinRangeAndDateRangeAndUse
 	return deals, len(totalDeal)
 }
 
-// GetDealsForGrocerWithinRangeAndDateRangeAndUserLimitAndQuotaAndCategory used to retrieve deal within valid range (10KM), start date,
-// end date, user limit, category and the deal quota still available including the relations like grocers, grocer locations and item.
-// The deal is valid if item category same with shopping list item category.
-// The deal is valid if user location within valid range (10KM radius).
-// The deal is valid if today date is within deal start date and end date.
-// The deal is valid if total number of deal added to list by user not exceed deal perlimit.
-// The deal is valid when total deal added to list by all user below the deal quota.
+// GetDealsForGrocerWithinRangeAndDateRangeAndUserLimitAndQuotaAndCategory used to retrieve multiple deals based on criteria below:
+// - Deal status must be publish.
+// - Today date is within deal start date and end date.
+// - Deal grocer ID must be equal to grocer ID in parameter.
+// - Item category name must be same with shopping list item category.
+// - User location must be within valid range (10KM radius).
+// - Total number of deal added to list by user not more than deal perlimit.
+// - Total number of deal added to list by all user not more than deal quota.
 func (dr *DealRepository) GetDealsForGrocerWithinRangeAndDateRangeAndUserLimitAndQuotaAndCategory(userGUID, categoryGUID string, grocerID int,
 	latitude, longitude float64, currentDateInGMT8, pageNumber, pageLimit, relations string) ([]*Deal, int) {
 
@@ -803,13 +804,13 @@ func (dr *DealRepository) GetDealsForGrocerWithinRangeAndDateRangeAndUserLimitAn
 	return deals, len(totalDeal)
 }
 
-// CountDealsForGrocerWithinRangeAndDateRangeAndUserLimitAndQuota used to count total number of deal for grocer by grocer ID within valid range (10KM), start date,
-// end date, user limit, category and the deal quota still available including the relations like grocers, grocer locations and item.
-// The deal is valid if deal grocer ID equal to grocer ID.
-// The deal is valid if user location within valid range (10KM radius).
-// The deal is valid if today date is within deal start date and end date.
-// The deal is valid if total number of deal added to list by user not exceed deal perlimit.
-// The deal is valid when total deal added to list by all user below the deal quota.
+// CountDealsForGrocerWithinRangeAndDateRangeAndUserLimitAndQuota used to retrieve multiple deals based on criteria below:
+// - Deal status must be publish.
+// - Deal grocer ID must be equal to grocer ID in parameter.
+// - User location must be within valid range (10KM radius).
+// - Today date is within deal start date and end date.
+// - Total number of deal added to list by user not more than deal perlimit.
+// - Total number of deal added to list by all user not more than deal quota.
 func (dr *DealRepository) CountDealsForGrocerWithinRangeAndDateRangeAndUserLimitAndQuota(userGUID string, grocerID int,
 	latitude, longitude float64, currentDateInGMT8 string) int {
 
@@ -873,13 +874,13 @@ func (dr *DealRepository) CountDealsForGrocerWithinRangeAndDateRangeAndUserLimit
 	return len(deals)
 }
 
-// GetDealBySubCategoryGUIDWithinRangeAndDateRangeAndUserLimitAndQuota used to retrieve deal for subcategory within valid range (10KM), start date,
-// end date, user limit and the deal quota still available including the relations like grocers, grocer locations and item.
-// The deal is valid if item subcategory same with shopping list item subcategory.
-// The deal is valid if user location within valid range (10KM radius).
-// The deal is valid if today date is within deal start date and end date.
-// The deal is valid if total number of deal added to list by user not exceed deal perlimit.
-// The deal is valid when total deal added to list by all user below the deal quota.
+// GetDealBySubCategoryGUIDWithinRangeAndDateRangeAndUserLimitAndQuota used to retrieve multiple deals based on criteria below:
+// - Deal status must be publish.
+// - Item subcategory name must same with shopping list item subcategory name.
+// - User location must be within valid range (10KM radius).
+// - Today date is within deal start date and end date.
+// - Total number of deal added to list by user not more than deal perlimit.
+// - Total number of deal added to list by all user not more than deal quota.
 func (dr *DealRepository) GetDealBySubCategoryGUIDWithinRangeAndDateRangeAndUserLimitAndQuota(userGUID, subCategoryGUID string,
 	latitude, longitude float64, currentDateInGMT8, pageNumber, pageLimit, relations string) ([]*Deal, int) {
 

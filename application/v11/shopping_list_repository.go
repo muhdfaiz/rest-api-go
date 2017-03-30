@@ -6,13 +6,14 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-// ShoppingListRepository used to retrieve user shopping list.
+// ShoppingListRepository will handle all CRUD task for shopping list resource.
 type ShoppingListRepository struct {
 	BaseRepository
 	DB *gorm.DB
 }
 
-// Create function used to create user shopping list.
+// Create function used to create new shopping list for specific user using user GUID.
+// It's return newly created shopping list or internal server error if encountered.
 func (slr *ShoppingListRepository) Create(dbTransaction *gorm.DB, userGUID string, data CreateShoppingList) (*ShoppingList, *systems.ErrorData) {
 	shoppingList := &ShoppingList{
 		GUID:         Helper.GenerateUUID(),
@@ -107,7 +108,7 @@ func (slr *ShoppingListRepository) GetByGUID(GUID string, relations string) *Sho
 }
 
 // GetUnscopedByGUID function used to retrieve user shopping list by Shopping List GUID including
-// soft deleted records
+// soft deleted records.
 func (slr *ShoppingListRepository) GetUnscopedByGUID(GUID string, relations string) *ShoppingList {
 	shoppingLists := &ShoppingList{}
 

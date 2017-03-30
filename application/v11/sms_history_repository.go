@@ -14,6 +14,7 @@ type SmsHistoryRepository struct {
 }
 
 // Create function used to create new sms history and store in database.
+// Return newly created SMS History or internal server error if encountered.
 func (shr *SmsHistoryRepository) Create(dbTransaction *gorm.DB, data map[string]string) (interface{}, *systems.ErrorData) {
 	smsHistory := &SmsHistory{
 		GUID:             data["guid"],
@@ -34,9 +35,16 @@ func (shr *SmsHistoryRepository) Create(dbTransaction *gorm.DB, data map[string]
 	return result.Value, nil
 }
 
-// CountByPhoneNoForTodayDate total number of sms histories by specific criteria. For example count total number of sms
-// histories by phone number.
-func (shr *SmsHistoryRepository) CountByPhoneNoForTodayDate(phoneNo, event string) int64 {
+// CountByPhoneNoAndTodayDateAndEventName function used to count total number of SMS History for today date.
+// Filter by:
+// - recipient_no
+// - event
+// - created_at = today date
+//
+// Available events:
+// - login
+// - update
+func (shr *SmsHistoryRepository) CountByPhoneNoAndTodayDateAndEventName(phoneNo, event string) int64 {
 	todayDate := time.Now().UTC().Format("2006-01-02")
 
 	var totalNumberOfSmsHistory int64
@@ -46,7 +54,14 @@ func (shr *SmsHistoryRepository) CountByPhoneNoForTodayDate(phoneNo, event strin
 	return totalNumberOfSmsHistory
 }
 
-// GetLatestByRecipientNoAndEventName function used to retrieve latest sms history by recipient number and event name.
+// GetLatestByRecipientNoAndEventName function used to retrieve last latest sms history.
+// Filter by:
+// - recipient_no
+// - event
+//
+// Available events:
+// - login
+// - update
 func (shr *SmsHistoryRepository) GetLatestByRecipientNoAndEventName(recipientNo, eventName string) *SmsHistory {
 	smsHistory := &SmsHistory{}
 
@@ -55,7 +70,11 @@ func (shr *SmsHistoryRepository) GetLatestByRecipientNoAndEventName(recipientNo,
 	return smsHistory
 }
 
-// GetByPhoneNoAndVerificationCodeAndEventName function used to retrieve sms history by phone number and verification code and event name.
+// GetByPhoneNoAndVerificationCodeAndEventName function used to retrieve multiple sms history.
+// Filter by:
+// - recipient_no
+// - verification_code
+// - event
 func (shr *SmsHistoryRepository) GetByPhoneNoAndVerificationCodeAndEventName(phoneNo, verificationCode, eventName string) *SmsHistory {
 	smsHistory := &SmsHistory{}
 

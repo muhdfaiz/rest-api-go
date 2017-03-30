@@ -54,7 +54,7 @@ func (ur *UserRepository) Create(dbTransansaction *gorm.DB, data CreateUser) (*U
 
 // Update function used to update existing user information using user GUID.
 // It's not update all fields available in user table but only update fields that exist in data parameter.
-// Use database transaction to create new user. Don't forgot to commit the transaction after used this function.
+// Use database transaction to update existing user info. Don't forget to commit the transaction after used this function.
 // Return updated user and error if encountered.
 func (ur *UserRepository) Update(dbTransaction *gorm.DB, guid string, data map[string]interface{}) *systems.ErrorData {
 	updateData := map[string]interface{}{}

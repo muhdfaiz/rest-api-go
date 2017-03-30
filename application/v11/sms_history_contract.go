@@ -19,7 +19,7 @@ type SmsHistoryServiceInterface interface {
 // SmsHistoryRepositoryInterface is a contract that defines the method needed for SmsHistoryRepository.
 type SmsHistoryRepositoryInterface interface {
 	Create(dbTransaction *gorm.DB, data map[string]string) (interface{}, *systems.ErrorData)
-	CountByPhoneNoForTodayDate(phoneNo, eventName string) int64
+	CountByPhoneNoAndTodayDateAndEventName(phoneNo, eventName string) int64
 	GetLatestByRecipientNoAndEventName(recipientNo, eventName string) *SmsHistory
 	GetByPhoneNoAndVerificationCodeAndEventName(phoneNo, verificationCode, eventName string) *SmsHistory
 }

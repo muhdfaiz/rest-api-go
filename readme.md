@@ -117,6 +117,9 @@ git clone git@bitbucket.org:cliqers/shoppermate-api.git shoppermate-api
 ```
 
 - Go to shoppermate-api project path. Install package dependencies using Glide. Glide will install all package dependencies into this folder `~/golang/src/vendor`.
+
+- Refer file `glide.yaml` and `glide.lock` located in root project path to see what package glide will install.
+
 ```
 glide install
 ```
@@ -477,10 +480,6 @@ return uploadedFile, nil
 - Service will use Repository if the application login require to handle task related to CRUD.
 
 - Service will return back the data to handler and handler will output the result in JSON format.
-
-### How API load dynamic relationship based on parameter relation in query string.
-
-- 
 
 ### Deploy To Staging
 

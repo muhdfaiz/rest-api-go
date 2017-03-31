@@ -17,7 +17,7 @@ type DealHandler struct {
 	ItemSubCategoryRepository ItemSubCategoryRepositoryInterface
 }
 
-// View function used to view deal details
+// View function used to view deal details for specific deal using deal GUID.
 func (dh *DealHandler) View(context *gin.Context) {
 	tokenData := context.MustGet("Token").(map[string]string)
 	dealGUID := context.Param("deal_guid")
@@ -279,7 +279,7 @@ func (dh *DealHandler) ViewBySubCategory(context *gin.Context) {
 	context.JSON(http.StatusOK, gin.H{"data": result})
 }
 
-// ViewByGrocerAndCategory function used to retrieve valid deals group by subcategory
+// ViewByGrocerAndCategory function used to retrieve available deals group by category
 func (dh *DealHandler) ViewByGrocerAndCategory(context *gin.Context) {
 	tokenData := context.MustGet("Token").(map[string]string)
 	userGUID := context.Param("guid")

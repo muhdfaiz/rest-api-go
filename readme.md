@@ -1,4 +1,4 @@
-## Shoppermate API
+## Sample API in Go. Took from my abandoned project.
 
 ### Development Enviroment
 
@@ -87,36 +87,9 @@ For Mac Os X
 brew install glide
 ```
 
-#### Create Additional Directory in $GOPATH folder
+- Clone Repository
 
-```
-mkdir -p $GOPATH/src/bitbucket.org/cliqers/
-mkdir pkg
-mkdir bin
-```
-
-#### Setting Up Shoppermate API
-
-- Generate Your SSH Key. Paste code below in your command line and press enter until finish.
-
-```
-ssh-keygen
-```
-
-- Copy the ssh key out from the command below and add the SSH key in Bitbucket Repository.
-
-```
-cat ~/.ssh/id_rsa.pub
-```
-
-- Clone Shoppermate API Repository
-
-```
-cd $GOPATH/src/bitbucket.org/cliqers/
-git clone git@bitbucket.org:cliqers/shoppermate-api.git shoppermate-api
-```
-
-- Go to shoppermate-api project path. Install package dependencies using Glide. Glide will install all package dependencies into this folder `~/golang/src/vendor`.
+- Go to project path. Install package dependencies using Glide. Glide will install all package dependencies into this folder `~/golang/src/vendor`.
 
 - Refer file `glide.yaml` and `glide.lock` located in root project path to see what package glide will install.
 
@@ -126,14 +99,7 @@ glide install
 
 - Create new .env file and copy the content from .env.example file in root directory. Update all setting in .env file.
 
-- Go to root directory of project and import sample database.
-
-```
-tar -xzOf shoppermate_staging.sql.gz | mysql -u USERNAME -pPASSWORD your_database
-```
-
-
-- Go to project root directory and run Shoppermate API.
+- Go to project root directory and run the file.
 ```
 go run api.go 
 ```
@@ -338,19 +304,6 @@ GET    /v1_1/device/:device_uuid/users/:user_guid/notifications                 
 
 - If referral code not found, return an error. If referral code found, continue request with another application logic required during create user.
 
-##### Global Services
-
-- Global Service means the service not tie with any resources. Any resource can use global service.
-
-- Right now, API only have 4 global services.
-
-| Available Global Services|  Description
-| ------------- | -------------------- |
-| - Email     | - To send EDM for specific event by making a request to Shoppermate Email API (http://api.shoppermate.com:5000).
-| - Facebook      | To check facebook id valid or not.
-| - Filesystem | - To handle file uploading to local or Amazon S3 including file validation.
-| - Location | - To calculate distance in meter or kilometer between two coordinates.
-
 #### Repository
 
 - Repository handle all task related to CRUD function. All repositories reside in `application/{api_version}` and the naming always end with `_repository.go`. One of the repository is `UserRepository (user_repository.go)`
@@ -480,121 +433,3 @@ return uploadedFile, nil
 - Service will use Repository if the application login require to handle task related to CRUD.
 
 - Service will return back the data to handler and handler will output the result in JSON format.
-
-### Deploy To Staging
-
-- SSH into staging server. Get the key file from trello.
-
-```
-ssh -i ~/path_to_key ubuntu@edmund.shoppermate.com
-```
-
-- Run this command to deploy
-
-```
-~/compile_admin.sh
-```
-
-- What the command above doing?
-
-```
-1. Pull latest code using git from develop branch.
-2. Compile project into executable build name shoppermate_api and place in the folder /home/ubuntu/golang/bin/.
-3. Restart shoppermate_api supervisor process.
-4. Restart mysql to avoid unclosed transaction during restart supervisor process.
-```
-
-### Deploy To Production
-
-- SSH into staging server. Get the key file from trello.
-
-```
-ssh -i ~/path_to_key ubuntu@api.shoppermate.com
-```
-
-- Run this command to deploy
-```
-~/compile_admin.sh
-```
-
-- What the command above doing?
-
-```
-1. Pull latest code using git from master branch.
-2. Compile project into executable build name shoppermate_api and place in the folder /home/ubuntu/golang/bin/.
-3. Restart shoppermate_api supervisor process.
-4. Restart mysql to avoid unclosed transaction during restart supervisor process.
-```
-
-### How to renew SSL Certificate on production
-
-- SSL certificate only available on production only. SSL certificate provided for free by Let's Encrypt. It's only valid for 90 days.
-
-- To generate SSL certificate, you can generate manually or using Let's Encrypt client.
-
-- This server using Certbot Let's Encrypt client. Certbot is recommended client by Let's Encrypt. See here [https://letsencrypt.org/docs/client-options/](https://letsencrypt.org/docs/client-options/)
-
-- Certbot already installed in production server. The installation folder is in `/home/ubuntu/certbot/`
-
-- How to install Certbot
-
-```
-(go to the directory where you want to install the certbot client)
-
-git clone https://github.com/certbot/certbot
-
-cd certbot
-
-./certbot-auto --help
-```
-
-- Install PIP Python Package Management
-
-```
-sudo apt install python-pip
-pip install setuptools
-```
-
-- Issue SSL Certificate for the first time
-
-```
-Note: This operation happens through the port 80, so in case your application listens on port 80, it needs to be switched off before running this command (which is very quick to run, by the way)
-
-./certbot-auto certonly --standalone-supported-challenges http-01 -d api.shoppermate.com
-```
-
-- Renew Cert if expired with pre hook and post hook.
-
-```
-./certbot-auto renew --standalone --pre-hook "sudo service nginx stop; sudo service mysql stop; sudo supervisorctl stop shoppermate_api_prod" --post-hook "sudo service nginx start; sudo service mysql start; sudo supervisorctl start shoppermate_api_prod"
-```
-
-- Force Renew Cert with pre hook and post hook.
-
-```
-./certbot-auto renew --force-renew --standalone --pre-hook "sudo service nginx stop; sudo service mysql stop; sudo supervisorctl stop shoppermate_api_prod" --post-hook "sudo service nginx start; sudo service mysql start; sudo supervisorctl start shoppermate_api_prod"
-```
-
-- The new SSL certificate will replace the old one. The SSL Certificate resize in this folder `/etc/letsencrypt/live/api.shoppermate.com/`
-
-- In production server, Let's Encrypt certificate automatically renew using cronjob. Use command below to list and update crontab.
-
-```
-- List Crontab Available
-sudo crontab -l
-
-- Edit Crontab 
-sudo crontab -e
-
-- Reload Cron
-sudo service cron restart
-```
-
-- You can see one of the crontab like below that used to renew Let's Encrypt Certificate automatically. It will everyday at 8.00 PM UTC+0.
-
-```
-* 20 * * * /home/ubuntu/certbot/certbot-auto renew --force-renew --standalone --pre-hook "sudo service nginx stop; sudo service mysql stop; sudo supervisorctl stop shoppermate_api_prod" --post-hook "sudo service nginx start; sudo service mysql start; sudo supervisorctl start shoppermate_api_prod"
-```
-- How to know if cron runnning or not. Check this file `/var/log/cron.log`
-
-
